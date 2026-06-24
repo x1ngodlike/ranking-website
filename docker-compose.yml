@@ -1,14 +1,14 @@
 version: '3.8'
 
 services:
-  world-cup-betting:
+  ranking-website:
     build: .
-    container_name: world-cup-betting
+    container_name: ranking-website
     restart: unless-stopped
     ports:
-      - "3001:3001"
+      - "5936:5936"
     environment:
-      - PORT=3001
+      - PORT=5936
       - ADMIN_PASSWORD=159357
       - NODE_ENV=production
       - TZ=Asia/Shanghai
@@ -18,7 +18,7 @@ services:
       - ./data:/app/data
       - ./uploads:/app/uploads
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001/api/health"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5936/api/health"]
       interval: 30s
       timeout: 10s
       retries: 3

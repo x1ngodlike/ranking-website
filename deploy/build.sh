@@ -7,9 +7,9 @@
 set -e
 
 # 配置
-CONTAINER_NAME="world-cup-betting"
-IMAGE_NAME="world-cup-betting"
-PORT=3001
+CONTAINER_NAME="ranking-website"
+IMAGE_NAME="ranking-website"
+PORT=5936
 ADMIN_PASSWORD=${ADMIN_PASSWORD:-"159357"}
 DATA_DIR="${PROJECT_DIR}/data"
 UPLOADS_DIR="${PROJECT_DIR}/uploads"
