@@ -6,6 +6,10 @@
 
 set -e
 
+# 获取脚本所在目录（无论从哪里执行）
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_DIR="$(dirname "${SCRIPT_DIR}")"
+
 # 配置
 CONTAINER_NAME="ranking-website"
 IMAGE_NAME="ranking-website"
@@ -22,10 +26,6 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
-
-# 获取脚本所在目录（无论从哪里执行）
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_DIR="$(dirname "${SCRIPT_DIR}")"
 
 # 日志函数
 log_info() {
@@ -148,10 +148,13 @@ run_container() {
     docker run -d \
         --name ${CONTAINER_NAME} \
         --restart unless-stopped \
-        -p ${PORT}:3001 \
+        -p ${PORT}:${PORT} \
         -e PORT=${PORT} \
         -e ADMIN_PASSWORD=${ADMIN_PASSWORD} \
         -e TZ=Asia/Shanghai \
+        -e DATA_DIR=/app/data \
+        -e UPLOAD_DIR=/app/uploads \
+        -e DIST_DIR=/app/dist \
         -e AUTO_BACKUP_INTERVAL_MS=${AUTO_BACKUP_INTERVAL} \
         -e MAX_BACKUPS=${MAX_BACKUPS} \
         -v "${DATA_DIR}:/app/data" \
@@ -162,7 +165,7 @@ run_container() {
         --health-interval=30s \
         --health-timeout=10s \
         --health-retries=3 \
-        --health-start-period=10s \
+        --health-start-period=15s \
         ${IMAGE_NAME}:latest
     
     if [ $? -eq 0 ]; then
@@ -191,7 +194,12 @@ wait_for_service() {
     done
     
     echo ""
-    log_warn "服务启动可能需要更长时间，请在浏览器中访问验证"
+    log_error "服务启动失败！下面是容器日志："
+    echo "============================================"
+    docker logs ${CONTAINER_NAME} 2>&1 | tail -30
+    echo "============================================"
+    echo ""
+    log_warn "请检查上面的日志，或运行 'docker logs -f ${CONTAINER_NAME}' 查看完整日志"
     return 1
 }
 
