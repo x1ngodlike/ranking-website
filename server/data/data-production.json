@@ -60,8 +60,8 @@
       "matchTime": "2026-06-12T19:00:00Z",
       "stage": "group",
       "groupName": "GROUP_B",
-      "homeScore": null,
-      "awayScore": null,
+      "homeScore": 1,
+      "awayScore": 1,
       "status": "finished"
     },
     {
