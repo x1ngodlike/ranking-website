@@ -35,34 +35,34 @@ const RankingPage = () => {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="text-center mb-12"
+        className="text-center mb-8 md:mb-12"
       >
-        <h1 className="font-display text-5xl md:text-7xl text-gradient-gold mb-3">
+        <h1 className="font-display text-4xl sm:text-5xl md:text-6xl text-gradient-gold mb-2 md:mb-3">
           世界杯中奖排行榜
         </h1>
-        <p className="text-neutral-500 dark:text-neutral-500 text-lg">
+        <p className="text-neutral-500 dark:text-neutral-500 text-sm md:text-base">
           群雄逐鹿，谁是真正的预言家？
         </p>
 
-        <div className="flex items-center justify-center gap-6 md:gap-12 mt-6 flex-wrap">
+        <div className="flex items-center justify-center gap-3 sm:gap-5 md:gap-8 mt-5 md:mt-6">
           <div className="text-center">
-            <p className="font-display text-3xl text-primary-500">{rankings.length}</p>
-            <p className="text-sm text-neutral-500 dark:text-neutral-500">参赛人数</p>
+            <p className="font-display text-xl sm:text-2xl md:text-3xl text-primary-500">{rankings.length}</p>
+            <p className="text-xs sm:text-sm md:text-sm text-neutral-500 dark:text-neutral-500">参赛人数</p>
           </div>
-          <div className="w-px h-10 bg-primary/20" />
+          <div className="w-px h-7 sm:h-9 md:h-10 bg-primary/20" />
           <div className="text-center">
-            <p className="font-display text-3xl text-primary-500">{finishedMatches}</p>
-            <p className="text-sm text-neutral-500 dark:text-neutral-500">已赛场次</p>
+            <p className="font-display text-xl sm:text-2xl md:text-3xl text-primary-500">{finishedMatches}</p>
+            <p className="text-xs sm:text-sm md:text-sm text-neutral-500 dark:text-neutral-500">已赛场次</p>
           </div>
-          <div className="w-px h-10 bg-primary/20" />
+          <div className="w-px h-7 sm:h-9 md:h-10 bg-primary/20" />
           <div className="text-center">
-            <p className="font-display text-3xl text-primary-500">{bets.length}</p>
-            <p className="text-sm text-neutral-500 dark:text-neutral-500">记录总数</p>
+            <p className="font-display text-xl sm:text-2xl md:text-3xl text-primary-500">{bets.length}</p>
+            <p className="text-xs sm:text-sm md:text-sm text-neutral-500 dark:text-neutral-500">记录总数</p>
           </div>
-          <div className="w-px h-10 bg-primary/20" />
+          <div className="w-px h-7 sm:h-9 md:h-10 bg-primary/20" />
           <div className="text-center">
-            <p className="font-display text-3xl text-amber-600 dark:text-gold-400">¥{totalWinAmount.toFixed(0)}</p>
-            <p className="text-sm text-neutral-500 dark:text-neutral-500">中奖总额</p>
+            <p className="font-display text-xl sm:text-2xl md:text-3xl text-amber-600 dark:text-gold-400">¥{totalWinAmount.toFixed(0)}</p>
+            <p className="text-xs sm:text-sm md:text-sm text-neutral-500 dark:text-neutral-500">中奖总额</p>
           </div>
         </div>
       </motion.div>
