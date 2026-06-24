@@ -1,5 +1,6 @@
 import { useEffect, lazy, Suspense } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
 import Layout from './components/Layout/Layout';
 import RankingPage from './pages/RankingPage';
 import { useAppStore } from './store/useAppStore';
@@ -11,10 +12,61 @@ const MatchesPage = lazy(() => import('./pages/MatchesPage'));
 const UsersPage = lazy(() => import('./pages/UsersPage'));
 
 const PageLoader = () => (
-  <div className="flex items-center justify-center py-20">
-    <div className="w-8 h-8 border-4 border-primary-500/30 border-t-primary-500 rounded-full animate-spin" />
-  </div>
+  <motion.div
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    exit={{ opacity: 0 }}
+    className="flex items-center justify-center py-20"
+  >
+    <div className="w-10 h-10 border-4 border-primary-500/20 border-t-primary-500 rounded-full animate-spin" />
+  </motion.div>
 );
+
+function AnimatedRoutes() {
+  const location = useLocation();
+
+  return (
+    <AnimatePresence mode="wait" initial={false}>
+      <Routes location={location} key={location.pathname}>
+        <Route element={<Layout />}>
+          <Route path="/" element={<RankingPage />} />
+          <Route
+            path="/bets"
+            element={
+              <Suspense fallback={<PageLoader />}>
+                <BetsPage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/profile/:userId"
+            element={
+              <Suspense fallback={<PageLoader />}>
+                <ProfilePage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/matches"
+            element={
+              <Suspense fallback={<PageLoader />}>
+                <MatchesPage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/users"
+            element={
+              <Suspense fallback={<PageLoader />}>
+                <UsersPage />
+              </Suspense>
+            }
+          />
+        </Route>
+      </Routes>
+    </AnimatePresence>
+  );
+}
 
 export default function App() {
   const theme = useAppStore((state) => state.theme);
@@ -22,6 +74,9 @@ export default function App() {
 
   useEffect(() => {
     init();
+  }, [init]);
+
+  useEffect(() => {
     applyTheme(theme);
 
     if (theme === 'system') {
@@ -30,21 +85,11 @@ export default function App() {
       });
       return cleanup;
     }
-  }, [theme, init]);
+  }, [theme]);
 
   return (
     <Router>
-      <Suspense fallback={<PageLoader />}>
-        <Routes>
-          <Route element={<Layout />}>
-            <Route path="/" element={<RankingPage />} />
-            <Route path="/bets" element={<BetsPage />} />
-            <Route path="/profile/:userId" element={<ProfilePage />} />
-            <Route path="/matches" element={<MatchesPage />} />
-            <Route path="/users" element={<UsersPage />} />
-          </Route>
-        </Routes>
-      </Suspense>
+      <AnimatedRoutes />
     </Router>
   );
 }

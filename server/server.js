@@ -15,8 +15,8 @@ const BET_DIR = path.join(UPLOAD_DIR, 'bets');
 const DIST_DIR = process.env.DIST_DIR || path.join(__dirname, '..', 'dist');
 const BACKUP_DIR = path.join(DATA_DIR, 'backups');
 const DEFAULT_ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '159357';
-const AUTO_BACKUP_INTERVAL_MS = parseInt(process.env.AUTO_BACKUP_INTERVAL_MS || '3600000', 10);
-const MAX_BACKUPS = parseInt(process.env.MAX_BACKUPS || '30', 10);
+const AUTO_BACKUP_INTERVAL_MS = parseInt(process.env.AUTO_BACKUP_INTERVAL_MS || '900000', 10);
+const MAX_BACKUPS = parseInt(process.env.MAX_BACKUPS || '50', 10);
 
 let adminTokens = new Set();
 const TOKEN_TTL = 24 * 60 * 60 * 1000;
@@ -214,8 +214,10 @@ function listBackups(env) {
 
 function cleanOldBackups(env) {
   const backups = listBackups(env);
-  if (backups.length > MAX_BACKUPS) {
-    const toDelete = backups.slice(MAX_BACKUPS);
+  // 只清理自动备份，手动备份不删除
+  const autoBackups = backups.filter(b => b.label === 'auto');
+  if (autoBackups.length > MAX_BACKUPS) {
+    const toDelete = autoBackups.slice(MAX_BACKUPS);
     const dir = getBackupDir(env);
     toDelete.forEach((b) => {
       try {

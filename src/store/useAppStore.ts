@@ -30,6 +30,7 @@ interface AppState {
   environment: Environment;
   isAdminLoggedIn: boolean;
   isLoading: boolean;
+  isDataLoaded: boolean;
   showSettingsModal: boolean;
 
   init: () => Promise<void>;
@@ -76,6 +77,9 @@ interface AppState {
 }
 
 const saveToServer = async (state: AppState) => {
+  if (!state.isDataLoaded) {
+    return;
+  }
   try {
     await api.saveData({
       environment: state.environment,
@@ -144,6 +148,7 @@ const getInitialState = (): Omit<
     environment: 'production' as Environment,
     isAdminLoggedIn: false,
     isLoading: true,
+    isDataLoaded: false,
     showSettingsModal: false,
   };
 };
@@ -163,6 +168,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         currentUserId: data.currentUserId ?? 'user1',
         isAdminLoggedIn: isAdmin,
         isLoading: false,
+        isDataLoaded: true,
       });
       if (data.apiKey) {
         set((s) => ({ apiConfig: { ...s.apiConfig, apiKey: data.apiKey } }));
@@ -176,7 +182,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       }
     } catch (e) {
       console.warn('Failed to load data from server, using mock data:', e);
-      set({ isLoading: false });
+      set({ isLoading: false, isDataLoaded: true });
     }
   },
 
@@ -468,7 +474,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     const state = get();
     if (state.environment === env) return;
 
-    set({ environment: env, isLoading: true });
+    set({ environment: env, isLoading: true, isDataLoaded: false });
 
     try {
       const data = await api.getData(env);
@@ -478,6 +484,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         bets: data.bets || mockBets,
         currentUserId: data.currentUserId ?? 'user1',
         isLoading: false,
+        isDataLoaded: true,
       });
       if (data.apiKey) {
         set((s) => ({ apiConfig: { ...s.apiConfig, apiKey: data.apiKey } }));
@@ -493,6 +500,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         bets: mockBets,
         currentUserId: 'user1',
         isLoading: false,
+        isDataLoaded: true,
       });
     }
   },

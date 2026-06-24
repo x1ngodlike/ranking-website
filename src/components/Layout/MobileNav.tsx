@@ -3,7 +3,7 @@ import { Trophy, Ticket, Calendar, Users } from 'lucide-react';
 
 const navItems = [
   { path: '/', label: '排行榜', icon: Trophy },
-  { path: '/bets', label: '投注', icon: Ticket },
+  { path: '/bets', label: '中奖', icon: Ticket },
   { path: '/matches', label: '赛程', icon: Calendar },
   { path: '/users', label: '成员', icon: Users },
 ];

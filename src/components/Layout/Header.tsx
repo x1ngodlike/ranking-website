@@ -28,7 +28,7 @@ const Header = () => {
               <h1 className="font-display text-2xl text-gradient-gold leading-none">
                 WORLD CUP
               </h1>
-              <p className="text-xs text-neutral-600 dark:text-neutral-400 mt-0.5">投注排行榜</p>
+              <p className="text-xs text-neutral-600 dark:text-neutral-400 mt-0.5">世界杯中奖排行榜</p>
             </div>
           </Link>
 

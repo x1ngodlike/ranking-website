@@ -49,9 +49,10 @@ const UsersPage = () => {
 
   const getUserStats = (userId: string) => {
     const userBets = bets.filter((b) => b.userId === userId);
-    const winDays = userBets.filter((b) => (b.winAmount ?? 0) > 0).length;
+    const winBets = userBets.filter((b) => (b.winAmount ?? 0) > 0);
+    const winDaysSet = new Set(winBets.map((b) => b.date));
     const totalWinAmount = userBets.reduce((sum, b) => sum + (b.winAmount ?? 0), 0);
-    return { totalBets: userBets.length, winDays, totalWinAmount };
+    return { totalBets: userBets.length, winDays: winDaysSet.size, totalWinAmount };
   };
 
   return (
