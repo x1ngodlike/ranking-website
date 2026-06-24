@@ -1,4 +1,18 @@
 const API_BASE = import.meta.env.VITE_API_BASE || '';
+const TOKEN_STORAGE_KEY = 'ranking_admin_token';
+
+let adminToken: string | null = localStorage.getItem(TOKEN_STORAGE_KEY);
+
+export const setAdminToken = (token: string | null) => {
+  adminToken = token;
+  if (token) {
+    localStorage.setItem(TOKEN_STORAGE_KEY, token);
+  } else {
+    localStorage.removeItem(TOKEN_STORAGE_KEY);
+  }
+};
+
+export const getAdminToken = () => adminToken;
 
 export interface ServerData {
   users: any[];
@@ -10,15 +24,42 @@ export interface ServerData {
   currentUserId: string | null;
 }
 
-async function request<T>(url: string, options: RequestInit = {}): Promise<T> {
+async function request<T>(url: string, options: RequestInit = {}, requireAuth = false): Promise<T> {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(options.headers as Record<string, string> || {}),
+  };
+  if (requireAuth && adminToken) {
+    headers['Authorization'] = `Bearer ${adminToken}`;
+  }
   const res = await fetch(`${API_BASE}${url}`, {
-    headers: { 'Content-Type': 'application/json', ...options.headers },
     ...options,
+    headers,
   });
+  if (res.status === 401 && requireAuth) {
+    setAdminToken(null);
+  }
   if (!res.ok) {
     const err = await res.json().catch(() => ({ message: 'Request failed' }));
     throw new Error(err.message || `HTTP ${res.status}`);
   }
+  return res.json();
+}
+
+async function uploadRequest(url: string, formData: FormData, requireAuth = false): Promise<any> {
+  const headers: Record<string, string> = {};
+  if (requireAuth && adminToken) {
+    headers['Authorization'] = `Bearer ${adminToken}`;
+  }
+  const res = await fetch(`${API_BASE}${url}`, {
+    method: 'POST',
+    body: formData,
+    headers,
+  });
+  if (res.status === 401 && requireAuth) {
+    setAdminToken(null);
+  }
+  if (!res.ok) throw new Error('Upload failed');
   return res.json();
 }
 
@@ -32,41 +73,41 @@ export const api = {
     request<{ success: boolean }>('/api/data', {
       method: 'POST',
       body: JSON.stringify(data),
-    }),
+    }, true),
 
-  adminLogin: (password: string) =>
-    request<{ success: boolean; message?: string }>('/api/admin/login', {
+  adminLogin: async (password: string) => {
+    const res = await request<{ success: boolean; token?: string; message?: string }>('/api/admin/login', {
       method: 'POST',
       body: JSON.stringify({ password }),
-    }),
+    });
+    if (res.success && res.token) {
+      setAdminToken(res.token);
+    }
+    return res;
+  },
+
+  adminLogout: () =>
+    request<{ success: boolean }>('/api/admin/logout', {
+      method: 'POST',
+    }, true).then(() => setAdminToken(null)),
 
   changeAdminPassword: (oldPassword: string, newPassword: string) =>
     request<{ success: boolean; message?: string }>('/api/admin/password', {
       method: 'POST',
       body: JSON.stringify({ oldPassword, newPassword }),
-    }),
+    }, true),
 
   uploadAvatar: async (file: File | Blob, filename = 'avatar.png'): Promise<string> => {
     const formData = new FormData();
     formData.append('file', file, filename);
-    const res = await fetch(`${API_BASE}/api/upload/avatar`, {
-      method: 'POST',
-      body: formData,
-    });
-    if (!res.ok) throw new Error('Upload failed');
-    const data = await res.json();
+    const data = await uploadRequest('/api/upload/avatar', formData, true);
     return data.url;
   },
 
   uploadBetImage: async (file: File | Blob, filename = 'bet.jpg'): Promise<string> => {
     const formData = new FormData();
     formData.append('file', file, filename);
-    const res = await fetch(`${API_BASE}/api/upload/bet`, {
-      method: 'POST',
-      body: formData,
-    });
-    if (!res.ok) throw new Error('Upload failed');
-    const data = await res.json();
+    const data = await uploadRequest('/api/upload/bet', formData, true);
     return data.url;
   },
 
@@ -74,12 +115,12 @@ export const api = {
     request<{ success: boolean }>('/api/admin/clear-data', {
       method: 'POST',
       body: JSON.stringify({ environment }),
-    }),
+    }, true),
 
-  // 备份相关接口
   listBackups: (environment: string) =>
     request<{ success: boolean; backups: BackupInfo[] }>(
-      `/api/admin/backups?environment=${encodeURIComponent(environment)}`
+      `/api/admin/backups?environment=${encodeURIComponent(environment)}`,
+      {}, true
     ),
 
   createBackup: (environment: string, label = 'manual') =>
@@ -88,7 +129,7 @@ export const api = {
       {
         method: 'POST',
         body: JSON.stringify({ environment, label }),
-      }
+      }, true
     ),
 
   restoreBackup: (environment: string, filename: string) =>
@@ -97,7 +138,7 @@ export const api = {
       {
         method: 'POST',
         body: JSON.stringify({ environment, filename }),
-      }
+      }, true
     ),
 
   deleteBackup: (environment: string, filename: string) =>
@@ -106,7 +147,7 @@ export const api = {
       {
         method: 'POST',
         body: JSON.stringify({ environment, filename }),
-      }
+      }, true
     ),
 };
 

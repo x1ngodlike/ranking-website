@@ -104,15 +104,10 @@ export const calculateRankings = (
     const userBets = bets.filter((b) => b.userId === user.id);
     const settledBets = userBets.filter((b) => b.winAmount !== undefined);
     const winBets = settledBets.filter((b) => (b.winAmount ?? 0) > 0);
-    const pendingBets = userBets.filter((b) => b.winAmount === undefined);
     
     const totalWinAmount = winBets.reduce((sum, b) => sum + (b.winAmount ?? 0), 0);
-    // 按日期去重计算中奖天数
     const winDaysSet = new Set(winBets.map((b) => b.date));
     const winDays = winDaysSet.size;
-    // 按日期去重计算待结算天数
-    const pendingDaysSet = new Set(pendingBets.map((b) => b.date));
-    const pendingDays = pendingDaysSet.size;
     const biggestWin = winBets.length > 0
       ? Math.max(...winBets.map((b) => b.winAmount ?? 0))
       : 0;
@@ -125,7 +120,6 @@ export const calculateRankings = (
       totalWinAmount,
       totalBets: userBets.length,
       winDays,
-      pendingDays,
       biggestWin,
       avgWin,
     };

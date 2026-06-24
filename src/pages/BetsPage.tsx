@@ -30,15 +30,11 @@ const BetsPage = () => {
     const totalWinAmount = bets
       .filter((b) => (b.winAmount ?? 0) > 0)
       .reduce((sum, b) => sum + (b.winAmount ?? 0), 0);
-    const lossDays = bets.filter((b) => b.winAmount !== undefined && b.winAmount === 0).length;
-    const pendingDays = bets.filter((b) => b.winAmount === undefined).length;
     const biggestWin = Math.max(0, ...bets.filter((b) => (b.winAmount ?? 0) > 0).map((b) => b.winAmount ?? 0));
 
     return {
       total: bets.length,
       totalWinAmount,
-      lossDays,
-      pendingDays,
       biggestWin,
     };
   }, [bets]);
@@ -79,7 +75,7 @@ const BetsPage = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.1 }}
-        className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"
+        className="grid grid-cols-2 gap-4 mb-8"
       >
         <div className="card p-4">
           <div className="flex items-center gap-2 text-neutral-500 dark:text-neutral-500 text-sm mb-2">
@@ -96,20 +92,6 @@ const BetsPage = () => {
           <p className="font-display text-3xl text-amber-600 dark:text-gold-400">
             ¥{stats.totalWinAmount.toFixed(0)}
           </p>
-        </div>
-        <div className="card p-4">
-          <div className="flex items-center gap-2 text-loss-500 text-sm mb-2">
-            <TrendingDown size={16} />
-            <span>未中奖</span>
-          </div>
-          <p className="font-display text-3xl text-loss-500">{stats.lossDays}</p>
-        </div>
-        <div className="card p-4">
-          <div className="flex items-center gap-2 text-neutral-500 dark:text-neutral-400 text-sm mb-2">
-            <span className="font-medium">?</span>
-            <span>待结算</span>
-          </div>
-          <p className="font-display text-3xl text-amber-600 dark:text-gold-400">{stats.pendingDays}</p>
         </div>
       </motion.div>
 

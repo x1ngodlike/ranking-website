@@ -41,7 +41,6 @@ export interface RankingItem {
   totalWinAmount: number;
   totalBets: number;
   winDays: number;
-  pendingDays: number;
   biggestWin: number;
   avgWin: number;
 }

@@ -75,7 +75,7 @@ const BetForm = ({ onClose, preSelectedUserId }: BetFormProps) => {
           <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-3">
             选择用户
           </label>
-          <div className="grid grid-cols-4 sm:grid-cols-5 gap-3">
+          <div className="grid grid-cols-5 gap-2">
             {users.map((user) => {
               const isSelected = selectedUserId === user.id;
               return (
@@ -83,14 +83,14 @@ const BetForm = ({ onClose, preSelectedUserId }: BetFormProps) => {
                   key={user.id}
                   type="button"
                   onClick={() => setSelectedUserId(user.id)}
-                  className={`flex flex-col items-center gap-2 p-3 rounded-xl transition-all ${
+                  className={`flex flex-col items-center gap-1.5 p-2 rounded-xl transition-all ${
                     isSelected
                       ? 'bg-primary-500/10 border-2 border-primary-500'
                       : 'bg-white dark:bg-neutral-800 border-2 border-transparent hover:border-primary-500/30'
                   }`}
                 >
-                  <Avatar src={user.avatar} alt={user.nickname} size="md" />
-                  <span className={`text-xs truncate w-full text-center ${
+                  <Avatar src={user.avatar} alt={user.nickname} size="sm" />
+                  <span className={`text-[11px] truncate w-full text-center leading-tight ${
                     isSelected
                       ? 'text-primary-600 dark:text-primary-400 font-medium'
                       : 'text-neutral-600 dark:text-neutral-400'

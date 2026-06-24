@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const multer = require('multer');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 const path = require('path');
 const fs = require('fs');
 
@@ -16,6 +17,25 @@ const BACKUP_DIR = path.join(DATA_DIR, 'backups');
 const DEFAULT_ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '159357';
 const AUTO_BACKUP_INTERVAL_MS = parseInt(process.env.AUTO_BACKUP_INTERVAL_MS || '3600000', 10);
 const MAX_BACKUPS = parseInt(process.env.MAX_BACKUPS || '30', 10);
+
+let adminTokens = new Set();
+const TOKEN_TTL = 24 * 60 * 60 * 1000;
+
+const generateToken = () => {
+  const token = crypto.randomBytes(32).toString('hex');
+  adminTokens.add(token);
+  setTimeout(() => adminTokens.delete(token), TOKEN_TTL);
+  return token;
+};
+
+const requireAuth = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  const token = authHeader && authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  if (token && adminTokens.has(token)) {
+    return next();
+  }
+  res.status(401).json({ success: false, message: '未授权，请先登录' });
+};
 
 if (!fs.existsSync(DATA_DIR)) {
   fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -247,7 +267,7 @@ app.get('/api/data', (req, res) => {
   res.json({ ...data, environment });
 });
 
-app.post('/api/data', (req, res) => {
+app.post('/api/data', requireAuth, (req, res) => {
   const { environment = 'production', ...data } = req.body;
   writeData(environment, data);
   res.json({ success: true });
@@ -258,13 +278,21 @@ app.post('/api/admin/login', (req, res) => {
   const auth = readAuth();
   const valid = bcrypt.compareSync(password, auth.adminPasswordHash);
   if (valid) {
-    res.json({ success: true });
+    const token = generateToken();
+    res.json({ success: true, token });
   } else {
     res.status(401).json({ success: false, message: '密码错误' });
   }
 });
 
-app.post('/api/admin/password', (req, res) => {
+app.post('/api/admin/logout', requireAuth, (req, res) => {
+  const authHeader = req.headers.authorization;
+  const token = authHeader && authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  if (token) adminTokens.delete(token);
+  res.json({ success: true });
+});
+
+app.post('/api/admin/password', requireAuth, (req, res) => {
   const { oldPassword, newPassword } = req.body;
   const auth = readAuth();
   const valid = bcrypt.compareSync(oldPassword, auth.adminPasswordHash);
@@ -276,7 +304,7 @@ app.post('/api/admin/password', (req, res) => {
   res.json({ success: true });
 });
 
-app.post('/api/upload/avatar', upload.single('file'), (req, res) => {
+app.post('/api/upload/avatar', requireAuth, upload.single('file'), (req, res) => {
   if (!req.file) {
     return res.status(400).json({ success: false, message: 'No file uploaded' });
   }
@@ -284,7 +312,7 @@ app.post('/api/upload/avatar', upload.single('file'), (req, res) => {
   res.json({ success: true, url });
 });
 
-app.post('/api/upload/bet', uploadBet.single('file'), (req, res) => {
+app.post('/api/upload/bet', requireAuth, uploadBet.single('file'), (req, res) => {
   if (!req.file) {
     return res.status(400).json({ success: false, message: 'No file uploaded' });
   }
@@ -292,7 +320,7 @@ app.post('/api/upload/bet', uploadBet.single('file'), (req, res) => {
   res.json({ success: true, url });
 });
 
-app.post('/api/admin/clear-data', (req, res) => {
+app.post('/api/admin/clear-data', requireAuth, (req, res) => {
   const { environment = 'production' } = req.body;
 
   const oldData = readData(environment);
@@ -340,13 +368,13 @@ app.post('/api/admin/clear-data', (req, res) => {
 });
 
 // 备份相关API
-app.get('/api/admin/backups', (req, res) => {
+app.get('/api/admin/backups', requireAuth, (req, res) => {
   const environment = req.query.environment || 'production';
   const backups = listBackups(environment);
   res.json({ success: true, backups });
 });
 
-app.post('/api/admin/backups/create', (req, res) => {
+app.post('/api/admin/backups/create', requireAuth, (req, res) => {
   try {
     const { environment = 'production', label = 'manual' } = req.body;
     const result = createBackup(environment, label);
@@ -357,7 +385,7 @@ app.post('/api/admin/backups/create', (req, res) => {
   }
 });
 
-app.post('/api/admin/backups/restore', (req, res) => {
+app.post('/api/admin/backups/restore', requireAuth, (req, res) => {
   try {
     const { environment = 'production', filename } = req.body;
     if (!filename) {
@@ -371,7 +399,7 @@ app.post('/api/admin/backups/restore', (req, res) => {
   }
 });
 
-app.post('/api/admin/backups/delete', (req, res) => {
+app.post('/api/admin/backups/delete', requireAuth, (req, res) => {
   try {
     const { environment = 'production', filename } = req.body;
     if (!filename) {

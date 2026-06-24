@@ -24,7 +24,6 @@ const BetList = ({ bets, showUser = false, canDelete = false }: BetListProps) =>
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [viewerImage, setViewerImage] = useState<string | null>(null);
 
-  // 只有管理员登录后才能删除/编辑
   const canManage = canDelete && isAdminLoggedIn;
 
   const getUser = (userId: string) => {
@@ -62,7 +61,7 @@ const BetList = ({ bets, showUser = false, canDelete = false }: BetListProps) =>
     return (
       <div className="card p-12 text-center">
         <div className="text-5xl mb-4">📝</div>
-        <p className="text-neutral-500 dark:text-neutral-400">暂无投注记录</p>
+        <p className="text-neutral-500 dark:text-neutral-400">暂无记录</p>
       </div>
     );
   }
@@ -72,9 +71,6 @@ const BetList = ({ bets, showUser = false, canDelete = false }: BetListProps) =>
     <div className="space-y-3">
       {bets.map((bet, index) => {
         const user = bet.user || getUser(bet.userId);
-        const isWin = (bet.winAmount ?? 0) > 0;
-        const isLoss = bet.winAmount !== undefined && bet.winAmount === 0;
-        const isPending = bet.winAmount === undefined;
 
         return (
           <motion.div
@@ -115,7 +111,7 @@ const BetList = ({ bets, showUser = false, canDelete = false }: BetListProps) =>
                   >
                     <img
                       src={bet.imageUrl}
-                      alt="投注图片"
+                      alt="记录图片"
                       className="w-20 h-20 object-cover rounded-lg border border-neutral-200 dark:border-neutral-700 group-hover:opacity-80 transition-opacity"
                       loading="lazy"
                     />
@@ -148,33 +144,18 @@ const BetList = ({ bets, showUser = false, canDelete = false }: BetListProps) =>
                     </button>
                   </div>
                 ) : (
-                  <>
-                    <div
-                      className={`font-display text-xl ${
-                        isPending
-                          ? 'text-amber-600 dark:text-gold-400'
-                          : isWin
-                          ? 'text-profit-500'
-                          : isLoss
-                          ? 'text-loss-500'
-                          : 'text-neutral-500 dark:text-neutral-400'
-                      }`}
-                    >
-                      {isPending ? '待结算' : `¥${(bet.winAmount ?? 0).toFixed(0)}`}
-                    </div>
-                    <div className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
-                      {isPending ? '可补填' : isWin ? '中奖' : isLoss ? '未中奖' : '持平'}
-                    </div>
-                  </>
+                  <div className="font-display text-xl text-amber-600 dark:text-gold-400">
+                    ¥{(bet.winAmount ?? 0).toFixed(0)}
+                  </div>
                 )}
               </div>
 
               <div className="flex items-center gap-1 flex-shrink-0">
-                {isPending && canManage && (
+                {canManage && (
                   <button
                     onClick={() => handleStartEdit(bet)}
-                    className="p-2 rounded-lg hover:bg-amber-50 dark:hover:bg-gold-900/20 text-neutral-400 hover:text-amber-600 dark:hover:text-gold-400 transition-colors"
-                    title="补填中奖"
+                    className="p-2 rounded-lg hover:bg-primary-50 dark:hover:bg-primary-900/20 text-neutral-400 hover:text-primary-500 transition-colors"
+                    title="编辑"
                   >
                     <Edit2 size={18} />
                   </button>

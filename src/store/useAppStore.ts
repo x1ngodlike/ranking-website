@@ -11,7 +11,7 @@ import {
   applyTheme,
   type ThemeMode,
 } from '../utils/theme';
-import { api, type BackupInfo } from '../utils/api';
+import { api, getAdminToken, type BackupInfo } from '../utils/api';
 
 const DEFAULT_AVATAR = '⚽️';
 const ADMIN_STORAGE_KEY = 'ranking_website_admin_logged_in';
@@ -153,13 +153,13 @@ export const useAppStore = create<AppState>((set, get) => ({
     const state = get();
     try {
       const data = await api.getData(state.environment);
-      const savedAdminLoggedIn = localStorage.getItem(ADMIN_STORAGE_KEY) === 'true';
+      const isAdmin = !!getAdminToken();
       set({
         users: data.users || mockUsers,
         matches: data.matches || mockMatches,
         bets: data.bets || mockBets,
         currentUserId: data.currentUserId ?? 'user1',
-        isAdminLoggedIn: savedAdminLoggedIn,
+        isAdminLoggedIn: isAdmin,
         isLoading: false,
       });
       if (data.apiKey) {
@@ -429,7 +429,6 @@ export const useAppStore = create<AppState>((set, get) => ({
       const result = await api.adminLogin(password);
       if (result.success) {
         set({ isAdminLoggedIn: true });
-        localStorage.setItem(ADMIN_STORAGE_KEY, 'true');
         return true;
       }
       return false;
@@ -440,8 +439,8 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   adminLogout: () => {
+    api.adminLogout().catch(() => {});
     set({ isAdminLoggedIn: false });
-    localStorage.removeItem(ADMIN_STORAGE_KEY);
   },
 
   changeAdminPassword: async (oldPassword, newPassword) => {

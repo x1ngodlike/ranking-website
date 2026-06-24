@@ -22,7 +22,7 @@ const RankingList = ({ rankings, sortType }: RankingListProps) => {
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
-            <tr className="border-b border-neutral-200 dark:border-neutral-700">
+            <tr className="border-b border-neutral-100 dark:border-neutral-800/50">
               <th className="text-left py-3 px-4 text-neutral-500 dark:text-neutral-500 text-sm font-medium">
                 排名
               </th>
@@ -67,7 +67,7 @@ const RankingList = ({ rankings, sortType }: RankingListProps) => {
                         {item.nickname}
                       </p>
                       <p className="text-xs text-neutral-500 dark:text-neutral-500">
-                        中奖 {item.winDays} 天 / 待结算 {item.pendingDays} 天
+                        中奖 {item.winDays} 天
                       </p>
                     </div>
                   </Link>
