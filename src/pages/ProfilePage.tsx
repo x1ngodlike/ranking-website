@@ -1,21 +1,22 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAppStore } from '@/store/useAppStore';
-import { calculateRankings, getDailyProfitLoss } from '@/utils/calculations';
-import { formatCurrency } from '@/utils/helpers';
+import { calculateRankings, getDailyWinAmount } from '@/utils/calculations';
 import { ProfitChart } from '@/components/Charts/ProfitChart';
 import BetList from '@/components/BetList/BetList';
-import { ArrowLeft, TrendingUp, TrendingDown, Trophy, DollarSign, Calendar, Percent } from 'lucide-react';
-import { motion } from 'framer-motion';
+import BetForm from '@/components/BetForm/BetForm';
+import { ArrowLeft, TrendingUp, Trophy, DollarSign, Calendar, Plus } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import Avatar from '@/components/Avatar';
 
 const ProfilePage = () => {
   const { userId } = useParams<{ userId: string }>();
   const users = useAppStore((state) => state.users);
   const bets = useAppStore((state) => state.bets);
+  const [showForm, setShowForm] = useState(false);
 
   const rankings = useMemo(
-    () => calculateRankings(users, bets, 'profit'),
+    () => calculateRankings(users, bets, 'totalWin'),
     [users, bets]
   );
 
@@ -32,7 +33,7 @@ const ProfilePage = () => {
   }, [bets, userId]);
 
   const dailyData = useMemo(
-    () => (userId ? getDailyProfitLoss(userId, bets) : []),
+    () => (userId ? getDailyWinAmount(userId, bets) : []),
     [userId, bets]
   );
 
@@ -78,7 +79,7 @@ const ProfilePage = () => {
           </div>
 
           <div className="flex-1">
-            <h1 className="font-display text-4xl text-gradient-gold mb-1">
+            <h1 className="font-display text-4xl text-blue-600 dark:text-blue-400 mb-1">
               {user.nickname}
             </h1>
             <p className="text-neutral-500 dark:text-neutral-500">
@@ -87,31 +88,21 @@ const ProfilePage = () => {
 
             <div className="flex items-center gap-6 mt-4 flex-wrap">
               <div>
-                <p className="text-sm text-neutral-500 dark:text-neutral-500">总盈亏</p>
-                <p
-                  className={`font-display text-3xl ${
-                    ranking.totalProfitLoss >= 0
-                      ? 'text-profit-500'
-                      : 'text-loss-500'
-                  }`}
-                >
-                  {formatCurrency(ranking.totalProfitLoss)}
+                <p className="text-sm text-neutral-500 dark:text-neutral-500">中奖总额</p>
+                <p className="font-display text-3xl text-amber-600 dark:text-gold-400">
+                  ¥{ranking.totalWinAmount.toFixed(0)}
                 </p>
               </div>
               <div>
-                <p className="text-sm text-neutral-500 dark:text-neutral-500">回报率</p>
-                <p
-                  className={`font-display text-3xl ${
-                    ranking.avgReturn >= 0 ? 'text-profit-500' : 'text-loss-500'
-                  }`}
-                >
-                  {ranking.avgReturn >= 0 ? '+' : ''}{ranking.avgReturn.toFixed(1)}%
+                <p className="text-sm text-neutral-500 dark:text-neutral-500">平均中奖</p>
+                <p className="font-display text-3xl text-blue-600 dark:text-blue-400">
+                  ¥{ranking.avgWin.toFixed(0)}
                 </p>
               </div>
               <div>
-                <p className="text-sm text-neutral-500 dark:text-neutral-500">总投注</p>
+                <p className="text-sm text-neutral-500 dark:text-neutral-500">记录总数</p>
                 <p className="font-display text-3xl text-neutral-800 dark:text-neutral-200">
-                  ¥{ranking.totalAmount.toFixed(0)}
+                  {ranking.totalBets}
                 </p>
               </div>
             </div>
@@ -126,39 +117,39 @@ const ProfilePage = () => {
         className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"
       >
         <div className="card p-4">
+          <div className="flex items-center gap-2 text-amber-600 dark:text-gold-400 mb-2">
+            <Trophy size={20} />
+            <span className="text-sm">最大中奖</span>
+          </div>
+          <p className="font-display text-2xl text-amber-600 dark:text-gold-400">
+            ¥{ranking.biggestWin.toFixed(0)}
+          </p>
+        </div>
+        <div className="card p-4">
           <div className="flex items-center gap-2 text-profit-500 mb-2">
             <TrendingUp size={20} />
-            <span className="text-sm">最大盈利</span>
+            <span className="text-sm">中奖天数</span>
           </div>
           <p className="font-display text-2xl text-profit-500">
-            +¥{ranking.biggestWin.toFixed(0)}
-          </p>
-        </div>
-        <div className="card p-4">
-          <div className="flex items-center gap-2 text-loss-500 mb-2">
-            <TrendingDown size={20} />
-            <span className="text-sm">最大亏损</span>
-          </div>
-          <p className="font-display text-2xl text-loss-500">
-            ¥{ranking.biggestLoss.toFixed(0)}
-          </p>
-        </div>
-        <div className="card p-4">
-          <div className="flex items-center gap-2 text-profit-500 mb-2">
-            <Trophy size={20} />
-            <span className="text-sm">盈利天数</span>
-          </div>
-          <p className="font-display text-2xl text-neutral-800 dark:text-neutral-200">
             {ranking.winDays}
           </p>
         </div>
         <div className="card p-4">
-          <div className="flex items-center gap-2 text-neutral-500 dark:text-neutral-400 mb-2">
+          <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400 mb-2">
             <Calendar size={20} />
-            <span className="text-sm">记录天数</span>
+            <span className="text-sm">记录总数</span>
           </div>
           <p className="font-display text-2xl text-neutral-800 dark:text-neutral-200">
             {ranking.totalBets}
+          </p>
+        </div>
+        <div className="card p-4">
+          <div className="flex items-center gap-2 text-neutral-500 dark:text-neutral-400 mb-2">
+            <DollarSign size={20} />
+            <span className="text-sm">平均中奖</span>
+          </div>
+          <p className="font-display text-2xl text-blue-600 dark:text-blue-400">
+            ¥{ranking.avgWin.toFixed(0)}
           </p>
         </div>
       </motion.div>
@@ -169,8 +160,8 @@ const ProfilePage = () => {
         transition={{ duration: 0.5, delay: 0.3 }}
         className="card mb-8"
       >
-        <h3 className="font-display text-xl text-gradient-gold mb-4">
-          盈亏走势
+        <h3 className="font-display text-xl text-blue-600 dark:text-blue-400 mb-4">
+          中奖走势
         </h3>
         <ProfitChart data={dailyData} />
       </motion.div>
@@ -180,11 +171,43 @@ const ProfilePage = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.4 }}
       >
-        <h2 className="font-display text-2xl text-gradient-gold mb-4">
-          投注记录
-        </h2>
-        <BetList bets={userBets} showUser={false} />
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-display text-2xl text-blue-600 dark:text-blue-400">
+            中奖记录
+          </h2>
+          <button
+            onClick={() => setShowForm(true)}
+            className="btn-gold flex items-center gap-2 text-sm py-2"
+          >
+            <Plus size={16} />
+            新增记录
+          </button>
+        </div>
+        <BetList bets={userBets} showUser={false} canDelete={true} />
       </motion.div>
+
+      <AnimatePresence>
+        {showForm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center p-4"
+            onClick={() => setShowForm(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="w-full max-w-lg"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <BetForm onClose={() => setShowForm(false)} preSelectedUserId={userId} />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

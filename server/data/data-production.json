@@ -1,6 +1,29 @@
 {
-  "users": [],
-  "bets": [],
+  "users": [
+    {
+      "id": "fwtmfd2nkmqs0xqrj",
+      "nickname": "1",
+      "avatar": "⚽️",
+      "isAdmin": false,
+      "createdAt": "2026-06-24T12:02:58.111Z"
+    }
+  ],
+  "bets": [
+    {
+      "id": "oeq7y2ps8mqs0yngz",
+      "userId": "fwtmfd2nkmqs0xqrj",
+      "date": "2026-06-24",
+      "winAmount": 13,
+      "createdAt": "2026-06-24T12:03:40.499Z"
+    },
+    {
+      "id": "blmgdkq0xmqs0yh75",
+      "userId": "fwtmfd2nkmqs0xqrj",
+      "date": "2026-06-24",
+      "winAmount": 2123,
+      "createdAt": "2026-06-24T12:03:32.369Z"
+    }
+  ],
   "matches": [
     {
       "id": "api_537327",

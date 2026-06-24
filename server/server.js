@@ -9,6 +9,8 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
 const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(__dirname, 'uploads');
+const AVATAR_DIR = path.join(UPLOAD_DIR, 'avatars');
+const BET_DIR = path.join(UPLOAD_DIR, 'bets');
 const DIST_DIR = process.env.DIST_DIR || path.join(__dirname, '..', 'dist');
 const BACKUP_DIR = path.join(DATA_DIR, 'backups');
 const DEFAULT_ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '159357';
@@ -20,6 +22,12 @@ if (!fs.existsSync(DATA_DIR)) {
 }
 if (!fs.existsSync(UPLOAD_DIR)) {
   fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+}
+if (!fs.existsSync(AVATAR_DIR)) {
+  fs.mkdirSync(AVATAR_DIR, { recursive: true });
+}
+if (!fs.existsSync(BET_DIR)) {
+  fs.mkdirSync(BET_DIR, { recursive: true });
 }
 if (!fs.existsSync(BACKUP_DIR)) {
   fs.mkdirSync(BACKUP_DIR, { recursive: true });
@@ -43,18 +51,41 @@ app.use('/uploads', express.static(UPLOAD_DIR));
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, UPLOAD_DIR);
+    cb(null, AVATAR_DIR);
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
     const ext = path.extname(file.originalname);
-    cb(null, 'avatar-' + uniqueSuffix + ext);
+    cb(null, uniqueSuffix + ext);
+  }
+});
+
+const betStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, BET_DIR);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const ext = path.extname(file.originalname);
+    cb(null, uniqueSuffix + ext);
   }
 });
 
 const upload = multer({
   storage,
   limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed'));
+    }
+  }
+});
+
+const uploadBet = multer({
+  storage: betStorage,
+  limits: { fileSize: 10 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     if (file.mimetype.startsWith('image/')) {
       cb(null, true);
@@ -249,7 +280,15 @@ app.post('/api/upload/avatar', upload.single('file'), (req, res) => {
   if (!req.file) {
     return res.status(400).json({ success: false, message: 'No file uploaded' });
   }
-  const url = `/uploads/${req.file.filename}`;
+  const url = `/uploads/avatars/${req.file.filename}`;
+  res.json({ success: true, url });
+});
+
+app.post('/api/upload/bet', uploadBet.single('file'), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ success: false, message: 'No file uploaded' });
+  }
+  const url = `/uploads/bets/${req.file.filename}`;
   res.json({ success: true, url });
 });
 
@@ -259,13 +298,28 @@ app.post('/api/admin/clear-data', (req, res) => {
   const oldData = readData(environment);
   if (oldData.users && oldData.users.length > 0) {
     oldData.users.forEach(user => {
-      if (user.avatar && user.avatar.startsWith('/uploads/')) {
-        const avatarPath = path.join(UPLOAD_DIR, user.avatar.replace('/uploads/', ''));
+      if (user.avatar && user.avatar.startsWith('/uploads/avatars/')) {
+        const avatarPath = path.join(AVATAR_DIR, user.avatar.replace('/uploads/avatars/', ''));
         if (fs.existsSync(avatarPath)) {
           try {
             fs.unlinkSync(avatarPath);
           } catch (e) {
             console.error('Failed to delete avatar:', avatarPath, e);
+          }
+        }
+      }
+    });
+  }
+  // 清除投注图片
+  if (oldData.bets && oldData.bets.length > 0) {
+    oldData.bets.forEach(bet => {
+      if (bet.imageUrl && bet.imageUrl.startsWith('/uploads/bets/')) {
+        const betImagePath = path.join(BET_DIR, bet.imageUrl.replace('/uploads/bets/', ''));
+        if (fs.existsSync(betImagePath)) {
+          try {
+            fs.unlinkSync(betImagePath);
+          } catch (e) {
+            console.error('Failed to delete bet image:', betImagePath, e);
           }
         }
       }

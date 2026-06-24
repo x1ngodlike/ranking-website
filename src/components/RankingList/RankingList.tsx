@@ -30,15 +30,15 @@ const RankingList = ({ rankings, sortType }: RankingListProps) => {
                 用户
               </th>
               <th className="text-right py-3 px-4 text-neutral-500 dark:text-neutral-500 text-sm font-medium">
-                {sortType === 'profit' && '总盈亏'}
-                {sortType === 'avgReturn' && '回报率'}
-                {sortType === 'totalBets' && '投注天数'}
+                {sortType === 'totalWin' && '中奖总额'}
+                {sortType === 'winDays' && '中奖天数'}
+                {sortType === 'totalBets' && '记录总数'}
               </th>
               <th className="text-right py-3 px-4 text-neutral-500 dark:text-neutral-500 text-sm font-medium hidden md:table-cell">
-                回报率
+                平均中奖
               </th>
               <th className="text-right py-3 px-4 text-neutral-500 dark:text-neutral-500 text-sm font-medium hidden sm:table-cell">
-                总投注
+                记录数
               </th>
             </tr>
           </thead>
@@ -67,61 +67,35 @@ const RankingList = ({ rankings, sortType }: RankingListProps) => {
                         {item.nickname}
                       </p>
                       <p className="text-xs text-neutral-500 dark:text-neutral-500">
-                        盈利 {item.winDays} 天 / 亏损 {item.lossDays} 天
+                        中奖 {item.winDays} 天 / 待结算 {item.pendingDays} 天
                       </p>
                     </div>
                   </Link>
                 </td>
                 <td className="py-4 px-4 text-right">
-                  {sortType === 'profit' && (
-                    <span
-                      className={`font-bold text-lg ${
-                        item.totalProfitLoss >= 0
-                          ? 'text-profit-500'
-                          : 'text-loss-500'
-                      }`}
-                    >
-                      {formatCurrency(item.totalProfitLoss)}
+                  {sortType === 'totalWin' && (
+                    <span className="font-bold text-lg text-amber-600 dark:text-gold-400">
+                      ¥{item.totalWinAmount.toFixed(0)}
                     </span>
                   )}
-                  {sortType === 'avgReturn' && (
-                    <span
-                      className={`font-bold text-lg ${
-                        item.avgReturn >= 0 ? 'text-profit-500' : 'text-loss-500'
-                      }`}
-                    >
-                      {item.avgReturn >= 0 ? '+' : ''}{item.avgReturn.toFixed(1)}%
+                  {sortType === 'winDays' && (
+                    <span className="font-bold text-lg text-profit-500">
+                      {item.winDays} 天
                     </span>
                   )}
                   {sortType === 'totalBets' && (
                     <span className="font-bold text-lg text-neutral-800 dark:text-neutral-200">
-                      {item.totalBets} 天
+                      {item.totalBets} 条
                     </span>
                   )}
                 </td>
                 <td className="py-4 px-4 text-right hidden md:table-cell">
-                  <div className="flex items-center gap-2 justify-end">
-                    <div className="w-20 h-2 bg-neutral-100 dark:bg-neutral-700 rounded-full overflow-hidden">
-                      <div
-                        className={`h-full rounded-full ${
-                          item.avgReturn >= 0
-                            ? 'bg-gradient-to-r from-profit-500 to-profit-400'
-                            : 'bg-gradient-to-r from-loss-500 to-loss-400'
-                        }`}
-                        style={{ width: `${Math.min(Math.abs(item.avgReturn), 100)}%` }}
-                      />
-                    </div>
-                    <span
-                      className={`text-sm ${
-                        item.avgReturn >= 0 ? 'text-profit-500' : 'text-loss-500'
-                      }`}
-                    >
-                      {item.avgReturn >= 0 ? '+' : ''}{item.avgReturn.toFixed(0)}%
-                    </span>
-                  </div>
+                  <span className="text-sm text-amber-600 dark:text-gold-400">
+                    ¥{item.avgWin.toFixed(0)}
+                  </span>
                 </td>
                 <td className="py-4 px-4 text-right text-neutral-600 dark:text-neutral-400 text-sm hidden sm:table-cell">
-                  ¥{item.totalAmount.toFixed(0)}
+                  {item.totalBets} 条
                 </td>
               </motion.tr>
             ))}

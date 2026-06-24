@@ -58,6 +58,18 @@ export const api = {
     return data.url;
   },
 
+  uploadBetImage: async (file: File | Blob, filename = 'bet.jpg'): Promise<string> => {
+    const formData = new FormData();
+    formData.append('file', file, filename);
+    const res = await fetch(`${API_BASE}/api/upload/bet`, {
+      method: 'POST',
+      body: formData,
+    });
+    if (!res.ok) throw new Error('Upload failed');
+    const data = await res.json();
+    return data.url;
+  },
+
   clearEnvironmentData: (environment: string) =>
     request<{ success: boolean }>('/api/admin/clear-data', {
       method: 'POST',

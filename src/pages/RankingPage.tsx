@@ -1,16 +1,15 @@
 import { useMemo } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { calculateRankings } from '@/utils/calculations';
-import { TrendingUp, Percent, Hash } from 'lucide-react';
+import { Trophy, Hash } from 'lucide-react';
 import RankingPodium from '@/components/RankingPodium/RankingPodium';
 import RankingList from '@/components/RankingList/RankingList';
 import type { RankingSortType } from '@/types';
 import { motion } from 'framer-motion';
 
-const tabs: { type: RankingSortType; label: string; icon: typeof TrendingUp }[] = [
-  { type: 'profit', label: '总盈亏', icon: TrendingUp },
-  { type: 'avgReturn', label: '回报率', icon: Percent },
-  { type: 'totalBets', label: '投注天数', icon: Hash },
+const tabs: { type: RankingSortType; label: string; icon: typeof Trophy }[] = [
+  { type: 'totalWin', label: '中奖总额', icon: Trophy },
+  { type: 'totalBets', label: '记录总数', icon: Hash },
 ];
 
 const RankingPage = () => {
@@ -26,10 +25,9 @@ const RankingPage = () => {
   );
 
   const finishedMatches = matches.filter((m) => m.status === 'finished').length;
-  const totalAmount = bets.reduce((sum, b) => sum + b.amount, 0);
   const totalWinAmount = bets
-    .filter((b) => b.profitLoss !== undefined && b.profitLoss > 0)
-    .reduce((sum, b) => sum + b.amount + b.profitLoss!, 0);
+    .filter((b) => (b.winAmount ?? 0) > 0)
+    .reduce((sum, b) => sum + (b.winAmount ?? 0), 0);
 
   return (
     <div className="max-w-5xl mx-auto">
@@ -40,13 +38,13 @@ const RankingPage = () => {
         className="text-center mb-12"
       >
         <h1 className="font-display text-5xl md:text-7xl text-gradient-gold mb-3">
-          世界杯投注排行榜
+          世界杯中奖排行榜
         </h1>
         <p className="text-neutral-500 dark:text-neutral-500 text-lg">
           群雄逐鹿，谁是真正的预言家？
         </p>
 
-        <div className="flex items-center justify-center gap-6 md:gap-12 mt-6">
+        <div className="flex items-center justify-center gap-6 md:gap-12 mt-6 flex-wrap">
           <div className="text-center">
             <p className="font-display text-3xl text-primary-500">{rankings.length}</p>
             <p className="text-sm text-neutral-500 dark:text-neutral-500">参赛人数</p>
@@ -59,15 +57,10 @@ const RankingPage = () => {
           <div className="w-px h-10 bg-primary/20" />
           <div className="text-center">
             <p className="font-display text-3xl text-primary-500">{bets.length}</p>
-            <p className="text-sm text-neutral-500 dark:text-neutral-500">投注总数</p>
+            <p className="text-sm text-neutral-500 dark:text-neutral-500">记录总数</p>
           </div>
           <div className="w-px h-10 bg-primary/20" />
-          <div className="text-center hidden md:block">
-            <p className="font-display text-3xl text-primary-500">¥{totalAmount.toFixed(0)}</p>
-            <p className="text-sm text-neutral-500 dark:text-neutral-500">投注总额</p>
-          </div>
-          <div className="w-px h-10 bg-primary/20 hidden md:block" />
-          <div className="text-center hidden md:block">
+          <div className="text-center">
             <p className="font-display text-3xl text-amber-600 dark:text-gold-400">¥{totalWinAmount.toFixed(0)}</p>
             <p className="text-sm text-neutral-500 dark:text-neutral-500">中奖总额</p>
           </div>

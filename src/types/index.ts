@@ -28,9 +28,9 @@ export interface Bet {
   id: string;
   userId: string;
   date: string;
-  amount: number;
-  profitLoss?: number;
+  winAmount?: number;
   note?: string;
+  imageUrl?: string;
   createdAt: string;
 }
 
@@ -38,17 +38,15 @@ export interface RankingItem {
   userId: string;
   nickname: string;
   avatar: string;
-  totalProfitLoss: number;
+  totalWinAmount: number;
   totalBets: number;
-  totalAmount: number;
   winDays: number;
-  lossDays: number;
+  pendingDays: number;
   biggestWin: number;
-  biggestLoss: number;
-  avgReturn: number;
+  avgWin: number;
 }
 
-export type RankingSortType = 'profit' | 'totalBets' | 'avgReturn';
+export type RankingSortType = 'totalWin' | 'winDays' | 'totalBets';
 
 export interface ApiConfig {
   apiKey: string;

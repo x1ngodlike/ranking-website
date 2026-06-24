@@ -30,6 +30,7 @@ interface AppState {
   environment: Environment;
   isAdminLoggedIn: boolean;
   isLoading: boolean;
+  showSettingsModal: boolean;
 
   init: () => Promise<void>;
   setCurrentUser: (userId: string | null) => void;
@@ -68,6 +69,9 @@ interface AppState {
   createBackup: (environment: Environment, label?: string) => Promise<boolean>;
   restoreBackup: (environment: Environment, filename: string) => Promise<boolean>;
   deleteBackup: (environment: Environment, filename: string) => Promise<boolean>;
+
+  openSettings: () => void;
+  closeSettings: () => void;
 }
 
 const saveToServer = async (state: AppState) => {
@@ -118,6 +122,8 @@ const getInitialState = (): Omit<
   | 'createBackup'
   | 'restoreBackup'
   | 'deleteBackup'
+  | 'openSettings'
+  | 'closeSettings'
 > => {
   const apiConfig = loadApiConfig();
   const theme = loadTheme();
@@ -127,7 +133,7 @@ const getInitialState = (): Omit<
     matches: mockMatches,
     bets: mockBets,
     currentUserId: 'user1',
-    sortType: 'profit' as RankingSortType,
+    sortType: 'totalWin' as RankingSortType,
     apiConfig,
     isRefreshing: false,
     lastRefreshTime: null,
@@ -136,6 +142,7 @@ const getInitialState = (): Omit<
     environment: 'production' as Environment,
     isAdminLoggedIn: false,
     isLoading: true,
+    showSettingsModal: false,
   };
 };
 
@@ -302,7 +309,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       matches: mockMatches,
       bets: mockBets,
       currentUserId: 'user1',
-      sortType: 'profit',
+      sortType: 'totalWin',
     });
     saveToServer(get());
   },
@@ -555,4 +562,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       return false;
     }
   },
+
+  openSettings: () => set({ showSettingsModal: true }),
+  closeSettings: () => set({ showSettingsModal: false }),
 }));

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAppStore } from '@/store/useAppStore';
-import { X, Settings, RefreshCw, Key, Globe, Clock } from 'lucide-react';
+import { X, Settings, RefreshCw, Key, Globe, Clock, Lock, Eye, EyeOff } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface ApiSettingsModalProps {
@@ -15,12 +15,18 @@ const ApiSettingsModal = ({ isOpen, onClose }: ApiSettingsModalProps) => {
   const isRefreshing = useAppStore((state) => state.isRefreshing);
   const lastRefreshTime = useAppStore((state) => state.lastRefreshTime);
   const refreshError = useAppStore((state) => state.refreshError);
+  const isAdminLoggedIn = useAppStore((state) => state.isAdminLoggedIn);
+  const adminLogin = useAppStore((state) => state.adminLogin);
 
   const [apiKey, setApiKey] = useState('');
   const [competitionId, setCompetitionId] = useState('2000');
   const [autoRefresh, setAutoRefresh] = useState(false);
   const [refreshInterval, setRefreshInterval] = useState('60');
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [loginError, setLoginError] = useState('');
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -29,8 +35,22 @@ const ApiSettingsModal = ({ isOpen, onClose }: ApiSettingsModalProps) => {
       setAutoRefresh(apiConfig.autoRefresh);
       setRefreshInterval(String(apiConfig.refreshInterval));
       setSyncMessage(null);
+      setPassword('');
+      setLoginError('');
     }
   }, [isOpen, apiConfig.apiKey, apiConfig.autoRefresh, apiConfig.refreshInterval]);
+
+  const handleLogin = async () => {
+    if (!password.trim()) return;
+    setIsLoggingIn(true);
+    setLoginError('');
+    const success = await adminLogin(password);
+    setIsLoggingIn(false);
+    if (!success) {
+      setLoginError('密码错误');
+    }
+    setPassword('');
+  };
 
   const saveCurrentSettings = () => {
     setApiConfig({
@@ -104,17 +124,63 @@ const ApiSettingsModal = ({ isOpen, onClose }: ApiSettingsModalProps) => {
           </div>
 
           <div className="p-5 space-y-5 max-h-[70vh] overflow-y-auto">
+            {!isAdminLoggedIn && (
+              <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30">
+                <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 mb-3">
+                  <Lock size={18} />
+                  <span className="font-medium">管理员专享</span>
+                </div>
+                <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-3">
+                  API 设置仅限管理员修改，请先登录
+                </p>
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      value={password}
+                      onChange={(e) => {
+                        setPassword(e.target.value);
+                        setLoginError('');
+                      }}
+                      onKeyDown={(e) => e.key === 'Enter' && !isLoggingIn && handleLogin()}
+                      placeholder="管理员密码"
+                      disabled={isLoggingIn}
+                      className="w-full px-4 py-2.5 pr-10 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-neutral-800 dark:text-neutral-200 text-sm focus:outline-none focus:border-primary-500/50 transition-colors disabled:opacity-50"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300"
+                    >
+                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                  <button
+                    onClick={handleLogin}
+                    disabled={isLoggingIn || !password.trim()}
+                    className="px-4 py-2.5 rounded-xl bg-primary-500 text-white hover:bg-primary-600 transition-colors whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                  >
+                    {isLoggingIn ? '登录中...' : '登录'}
+                  </button>
+                </div>
+                {loginError && (
+                  <p className="text-sm text-red-500 mt-2">{loginError}</p>
+                )}
+              </div>
+            )}
+
             <div>
               <label className="flex items-center gap-2 text-sm text-neutral-500 dark:text-neutral-400 mb-2">
                 <Key size={16} className="text-primary-400" />
-                API Key
+                API Key {!isAdminLoggedIn && <span className="text-xs text-neutral-400">(仅查看)</span>}
               </label>
               <input
                 type="text"
                 value={apiKey}
                 onChange={(e) => setApiKey(e.target.value)}
                 placeholder="输入你的 football-data.org API Key"
-                className="w-full px-4 py-3 rounded-xl bg-neutral-50 dark:bg-neutral-950 border border-primary/20 text-neutral-800 dark:text-neutral-200 text-sm focus:outline-none focus:border-primary/50 transition-colors"
+                disabled={!isAdminLoggedIn}
+                className="w-full px-4 py-3 rounded-xl bg-neutral-50 dark:bg-neutral-950 border border-primary/20 text-neutral-800 dark:text-neutral-200 text-sm focus:outline-none focus:border-primary/50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
               />
               <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1.5">
                 免费注册获取:{' '}
@@ -132,12 +198,13 @@ const ApiSettingsModal = ({ isOpen, onClose }: ApiSettingsModalProps) => {
             <div>
               <label className="flex items-center gap-2 text-sm text-neutral-500 dark:text-neutral-400 mb-2">
                 <Globe size={16} className="text-primary-400" />
-                赛事选择
+                赛事选择 {!isAdminLoggedIn && <span className="text-xs text-neutral-400">(仅查看)</span>}
               </label>
               <select
                 value={competitionId}
                 onChange={(e) => setCompetitionId(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-neutral-50 dark:bg-neutral-950 border border-primary/20 text-neutral-800 dark:text-neutral-200 text-sm focus:outline-none focus:border-primary/50 transition-colors appearance-none cursor-pointer"
+                disabled={!isAdminLoggedIn}
+                className="w-full px-4 py-3 rounded-xl bg-neutral-50 dark:bg-neutral-950 border border-primary/20 text-neutral-800 dark:text-neutral-200 text-sm focus:outline-none focus:border-primary/50 transition-colors appearance-none cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 <option value="2000">国际足联世界杯 (FIFA World Cup)</option>
                 <option value="2001">欧洲冠军杯 (UEFA Champions League)</option>
@@ -153,11 +220,12 @@ const ApiSettingsModal = ({ isOpen, onClose }: ApiSettingsModalProps) => {
               <div className="flex items-center justify-between mb-3">
                 <label className="flex items-center gap-2 text-sm text-neutral-500 dark:text-neutral-400">
                     <Clock size={16} className="text-primary-400" />
-                    自动刷新
+                    自动刷新 {!isAdminLoggedIn && <span className="text-xs text-neutral-400">(仅查看)</span>}
                   </label>
                   <button
                     onClick={() => setAutoRefresh(!autoRefresh)}
-                    className={`relative w-12 h-6 rounded-full transition-colors ${
+                    disabled={!isAdminLoggedIn}
+                    className={`relative w-12 h-6 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                       autoRefresh ? 'bg-primary-500' : 'bg-neutral-100 dark:bg-neutral-700'
                     }`}
                   >
@@ -178,7 +246,8 @@ const ApiSettingsModal = ({ isOpen, onClose }: ApiSettingsModalProps) => {
                     min="30"
                     value={refreshInterval}
                     onChange={(e) => setRefreshInterval(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg bg-white dark:bg-neutral-800 border border-primary/20 text-neutral-800 dark:text-neutral-200 text-sm focus:outline-none focus:border-primary/50"
+                    disabled={!isAdminLoggedIn}
+                    className="w-full px-3 py-2 rounded-lg bg-white dark:bg-neutral-800 border border-primary/20 text-neutral-800 dark:text-neutral-200 text-sm focus:outline-none focus:border-primary/500 disabled:opacity-60 disabled:cursor-not-allowed"
                   />
                   <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
                     免费版建议间隔 ≥ 60 秒（每分钟10次请求限制）
@@ -209,7 +278,7 @@ const ApiSettingsModal = ({ isOpen, onClose }: ApiSettingsModalProps) => {
           <div className="flex items-center gap-3 p-5 border-t border-neutral-200 dark:border-neutral-700">
             <button
               onClick={handleSync}
-              disabled={!apiKey.trim() || isRefreshing}
+              disabled={!apiKey.trim() || isRefreshing || !isAdminLoggedIn}
               className="flex-1 btn-outline flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <RefreshCw
@@ -220,7 +289,8 @@ const ApiSettingsModal = ({ isOpen, onClose }: ApiSettingsModalProps) => {
             </button>
             <button
               onClick={handleSave}
-              className="flex-1 btn-primary flex items-center justify-center gap-2"
+              disabled={!isAdminLoggedIn}
+              className="flex-1 btn-primary flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               保存设置
             </button>

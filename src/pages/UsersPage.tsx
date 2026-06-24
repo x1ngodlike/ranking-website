@@ -92,10 +92,9 @@ const UsersPage = () => {
 
   const getUserStats = (userId: string) => {
     const userBets = bets.filter((b) => b.userId === userId);
-    const winDays = userBets.filter((b) => b.profitLoss > 0).length;
-    const profit = userBets.reduce((sum, b) => sum + b.profitLoss, 0);
-    const totalAmount = userBets.reduce((sum, b) => sum + b.amount, 0);
-    return { totalBets: userBets.length, winDays, totalAmount, profit };
+    const winDays = userBets.filter((b) => (b.winAmount ?? 0) > 0).length;
+    const totalWinAmount = userBets.reduce((sum, b) => sum + (b.winAmount ?? 0), 0);
+    return { totalBets: userBets.length, winDays, totalWinAmount };
   };
 
   return (
@@ -183,48 +182,57 @@ const UsersPage = () => {
       <AnimatePresence>
         {showAddForm && (
           <motion.div
-            initial={{ opacity: 0, height: 0, marginBottom: 0 }}
-            animate={{ opacity: 1, height: 'auto', marginBottom: 24 }}
-            exit={{ opacity: 0, height: 0, marginBottom: 0 }}
-            transition={{ duration: 0.3 }}
-            className="overflow-hidden"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center p-4"
+            onClick={() => setShowAddForm(false)}
           >
-            <div className="card">
-              <h3 className="font-display text-xl text-neutral-800 dark:text-neutral-200 mb-4">
-                添加新成员
-              </h3>
-              <form onSubmit={handleAddUser}>
-                <div className="mb-4">
-                  <label className="block text-sm text-neutral-600 dark:text-neutral-400 mb-2">
-                    昵称
-                  </label>
-                  <input
-                    type="text"
-                    value={nickname}
-                    onChange={(e) => setNickname(e.target.value)}
-                    placeholder="输入昵称"
-                    className="w-full px-4 py-3 rounded-xl bg-white dark:bg-neutral-800 border border-primary/20 text-neutral-800 dark:text-neutral-200 focus:outline-none focus:border-primary/50 transition-colors"
-                    autoFocus
-                  />
-                </div>
-                <div className="mb-6">
-                  <AvatarPicker
-                    value={avatar}
-                    onChange={setAvatar}
-                    customImage={customImage}
-                    onCustomImageChange={setCustomImage}
-                  />
-                </div>
-                <button
-                  type="submit"
-                  disabled={!nickname.trim()}
-                  className="btn-primary w-full flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <Plus size={20} />
-                  添加成员
-                </button>
-              </form>
-            </div>
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="w-full max-w-md"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="card">
+                <h3 className="font-display text-xl text-neutral-800 dark:text-neutral-200 mb-4">
+                  添加新成员
+                </h3>
+                <form onSubmit={handleAddUser}>
+                  <div className="mb-4">
+                    <label className="block text-sm text-neutral-600 dark:text-neutral-400 mb-2">
+                      昵称
+                    </label>
+                    <input
+                      type="text"
+                      value={nickname}
+                      onChange={(e) => setNickname(e.target.value)}
+                      placeholder="输入昵称"
+                      className="w-full px-4 py-3 rounded-xl bg-white dark:bg-neutral-800 border border-primary/20 text-neutral-800 dark:text-neutral-200 focus:outline-none focus:border-primary/50 transition-colors"
+                      autoFocus
+                    />
+                  </div>
+                  <div className="mb-6">
+                    <AvatarPicker
+                      value={avatar}
+                      onChange={setAvatar}
+                      customImage={customImage}
+                      onCustomImageChange={setCustomImage}
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={!nickname.trim()}
+                    className="btn-primary w-full flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Plus size={20} />
+                    添加成员
+                  </button>
+                </form>
+              </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -293,24 +301,19 @@ const UsersPage = () => {
                     <p className="font-display text-lg text-neutral-800 dark:text-neutral-200">
                       {stats.totalBets}
                     </p>
-                    <p className="text-xs text-neutral-500 dark:text-neutral-400">天数</p>
+                    <p className="text-xs text-neutral-500 dark:text-neutral-400">记录数</p>
                   </div>
                   <div className="text-center">
                     <p className="font-display text-lg text-profit-500">
                       {stats.winDays}
                     </p>
-                    <p className="text-xs text-neutral-500 dark:text-neutral-400">盈利</p>
+                    <p className="text-xs text-neutral-500 dark:text-neutral-400">中奖天数</p>
                   </div>
                   <div className="text-center">
-                    <p
-                      className={`font-display text-lg ${
-                        stats.profit >= 0 ? 'text-profit-500' : 'text-loss-500'
-                      }`}
-                    >
-                      {stats.profit >= 0 ? '+' : ''}
-                      {stats.profit.toFixed(0)}
+                    <p className="font-display text-lg text-amber-600 dark:text-gold-400">
+                      ¥{stats.totalWinAmount.toFixed(0)}
                     </p>
-                    <p className="text-xs text-neutral-500 dark:text-neutral-400">盈亏</p>
+                    <p className="text-xs text-neutral-500 dark:text-neutral-400">中奖总额</p>
                   </div>
                 </div>
               </div>

@@ -51,6 +51,7 @@ const MatchesPage = () => {
   const refreshLiveMatches = useAppStore((state) => state.refreshLiveMatches);
   const syncMatchesFromApi = useAppStore((state) => state.syncMatchesFromApi);
   const setRefreshError = useAppStore((state) => state.setRefreshError);
+  const isAdminLoggedIn = useAppStore((state) => state.isAdminLoggedIn);
 
   const currentUser = useMemo(
     () => users.find((u) => u.id === currentUserId) || null,
@@ -58,6 +59,7 @@ const MatchesPage = () => {
   );
 
   const isAdmin = currentUser?.isAdmin || false;
+  const canManageApi = isAdmin || isAdminLoggedIn;
 
   const matchDates = useMemo(() => {
     const dateSet = new Set<string>();
@@ -385,20 +387,24 @@ const MatchesPage = () => {
             />
             刷新比分
           </button>
-          <button
-            onClick={handleFullSync}
-            disabled={isRefreshing}
-            className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 bg-neutral-50 dark:bg-neutral-800/50 text-neutral-600 dark:text-neutral-400 hover:text-primary-500 hover:bg-neutral-100 dark:hover:bg-neutral-700/50 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            全量同步
-          </button>
-          <button
-            onClick={() => setShowApiSettings(true)}
-            className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 bg-neutral-50 dark:bg-neutral-800/50 text-neutral-600 dark:text-neutral-400 hover:text-primary-500 hover:bg-neutral-100 dark:hover:bg-neutral-700/50"
-          >
-            <Settings size={16} />
-            <span className="hidden sm:inline">API设置</span>
-          </button>
+          {canManageApi && (
+            <button
+              onClick={handleFullSync}
+              disabled={isRefreshing}
+              className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 bg-neutral-50 dark:bg-neutral-800/50 text-neutral-600 dark:text-neutral-400 hover:text-primary-500 hover:bg-neutral-100 dark:hover:bg-neutral-700/50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              全量同步
+            </button>
+          )}
+          {canManageApi && (
+            <button
+              onClick={() => setShowApiSettings(true)}
+              className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 bg-neutral-50 dark:bg-neutral-800/50 text-neutral-600 dark:text-neutral-400 hover:text-primary-500 hover:bg-neutral-100 dark:hover:bg-neutral-700/50"
+            >
+              <Settings size={16} />
+              <span className="hidden sm:inline">API设置</span>
+            </button>
+          )}
         </div>
       </motion.div>
 

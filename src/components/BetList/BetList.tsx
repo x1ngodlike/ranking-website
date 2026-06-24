@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { formatCurrency, formatDateShort } from '@/utils/helpers';
-import { Trash2, Calendar, DollarSign, Edit2, Check, X, AlertTriangle } from 'lucide-react';
+import { Trash2, Calendar, Edit2, Check, X, AlertTriangle, Image as ImageIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Bet, User } from '@/types';
 import Avatar from '@/components/Avatar';
+import ImageViewer from '@/components/ImageViewer/ImageViewer';
 
 interface BetListProps {
   bets: (Bet & { user?: User })[];
@@ -16,10 +17,15 @@ const BetList = ({ bets, showUser = false, canDelete = false }: BetListProps) =>
   const users = useAppStore((state) => state.users);
   const removeBet = useAppStore((state) => state.removeBet);
   const addBet = useAppStore((state) => state.addBet);
+  const isAdminLoggedIn = useAppStore((state) => state.isAdminLoggedIn);
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editWinAmount, setEditWinAmount] = useState('');
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [viewerImage, setViewerImage] = useState<string | null>(null);
+
+  // 只有管理员登录后才能删除/编辑
+  const canManage = canDelete && isAdminLoggedIn;
 
   const getUser = (userId: string) => {
     return users.find((u) => u.id === userId);
@@ -27,15 +33,14 @@ const BetList = ({ bets, showUser = false, canDelete = false }: BetListProps) =>
 
   const handleStartEdit = (bet: Bet) => {
     setEditingId(bet.id);
-    const winAmount = bet.profitLoss !== undefined ? bet.amount + bet.profitLoss : 0;
-    setEditWinAmount(winAmount.toString());
+    setEditWinAmount(bet.winAmount?.toString() || '0');
   };
 
   const handleSaveEdit = (bet: Bet) => {
     const winNum = editWinAmount ? parseFloat(editWinAmount) : 0;
     const updatedBet: Bet = {
       ...bet,
-      profitLoss: winNum - bet.amount,
+      winAmount: winNum,
     };
     removeBet(bet.id);
     addBet(updatedBet);
@@ -67,9 +72,9 @@ const BetList = ({ bets, showUser = false, canDelete = false }: BetListProps) =>
     <div className="space-y-3">
       {bets.map((bet, index) => {
         const user = bet.user || getUser(bet.userId);
-        const isWin = bet.profitLoss !== undefined && bet.profitLoss > 0;
-        const isLoss = bet.profitLoss !== undefined && bet.profitLoss < 0;
-        const isPending = bet.profitLoss === undefined;
+        const isWin = (bet.winAmount ?? 0) > 0;
+        const isLoss = bet.winAmount !== undefined && bet.winAmount === 0;
+        const isPending = bet.winAmount === undefined;
 
         return (
           <motion.div
@@ -79,7 +84,7 @@ const BetList = ({ bets, showUser = false, canDelete = false }: BetListProps) =>
             transition={{ duration: 0.3, delay: index * 0.03 }}
             className="card p-4 hover:shadow-lg transition-all duration-300"
           >
-            <div className="flex items-center gap-4">
+            <div className="flex items-start gap-4">
               {showUser && user && (
                 <Avatar src={user.avatar} alt={user.nickname} size="lg" />
               )}
@@ -98,17 +103,24 @@ const BetList = ({ bets, showUser = false, canDelete = false }: BetListProps) =>
                 </div>
 
                 {bet.note && (
-                  <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-2 truncate">
+                  <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-2">
                     {bet.note}
                   </p>
                 )}
 
-                <div className="flex items-center gap-4 text-sm">
-                  <div className="flex items-center gap-1.5 text-neutral-600 dark:text-neutral-400">
-                    <DollarSign size={14} />
-                    <span>投注 ¥{bet.amount.toFixed(0)}</span>
+                {bet.imageUrl && (
+                  <div
+                    className="mt-2 inline-block cursor-pointer group"
+                    onClick={() => setViewerImage(bet.imageUrl!)}
+                  >
+                    <img
+                      src={bet.imageUrl}
+                      alt="投注图片"
+                      className="w-20 h-20 object-cover rounded-lg border border-neutral-200 dark:border-neutral-700 group-hover:opacity-80 transition-opacity"
+                      loading="lazy"
+                    />
                   </div>
-                </div>
+                )}
               </div>
 
               <div className="text-right flex-shrink-0 min-w-[80px]">
@@ -148,26 +160,26 @@ const BetList = ({ bets, showUser = false, canDelete = false }: BetListProps) =>
                           : 'text-neutral-500 dark:text-neutral-400'
                       }`}
                     >
-                      {isPending ? '待结算' : formatCurrency(bet.profitLoss!)}
+                      {isPending ? '待结算' : `¥${(bet.winAmount ?? 0).toFixed(0)}`}
                     </div>
                     <div className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
-                      {isPending ? '可补填' : isWin ? '盈利' : isLoss ? '亏损' : '持平'}
+                      {isPending ? '可补填' : isWin ? '中奖' : isLoss ? '未中奖' : '持平'}
                     </div>
                   </>
                 )}
               </div>
 
               <div className="flex items-center gap-1 flex-shrink-0">
-                {isPending && canDelete && (
+                {isPending && canManage && (
                   <button
                     onClick={() => handleStartEdit(bet)}
                     className="p-2 rounded-lg hover:bg-amber-50 dark:hover:bg-gold-900/20 text-neutral-400 hover:text-amber-600 dark:hover:text-gold-400 transition-colors"
-                    title="补填盈亏"
+                    title="补填中奖"
                   >
                     <Edit2 size={18} />
                   </button>
                 )}
-                {canDelete && (
+                {canManage && (
                   <button
                     onClick={() => setDeleteConfirmId(bet.id)}
                     className="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-neutral-400 hover:text-red-500 transition-colors"
@@ -231,6 +243,12 @@ const BetList = ({ bets, showUser = false, canDelete = false }: BetListProps) =>
         </motion.div>
       )}
     </AnimatePresence>
+
+    <ImageViewer
+      isOpen={!!viewerImage}
+      imageUrl={viewerImage || ''}
+      onClose={() => setViewerImage(null)}
+    />
     </>
   );
 };

@@ -1,9 +1,7 @@
-import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Trophy, Ticket, Calendar, Users, Settings } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import ThemeToggle from '@/components/ThemeToggle/ThemeToggle';
-import SettingsModal from '@/components/SettingsModal/SettingsModal';
 
 const navItems = [
   { path: '/', label: '排行榜', icon: Trophy },
@@ -16,10 +14,10 @@ const Header = () => {
   const location = useLocation();
   const environment = useAppStore((state) => state.environment);
   const isAdminLoggedIn = useAppStore((state) => state.isAdminLoggedIn);
-  const [showSettings, setShowSettings] = useState(false);
+  const openSettings = useAppStore((state) => state.openSettings);
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 dark:bg-neutral-900/95 backdrop-blur-md border-b border-neutral-200 dark:border-neutral-700">
+    <header className="fixed top-0 left-0 right-0 z-40 bg-white/95 dark:bg-neutral-900/95 backdrop-blur-md border-b border-neutral-200 dark:border-neutral-700">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <Link to="/" className="flex items-center gap-3">
@@ -68,13 +66,12 @@ const Header = () => {
             )}
             <ThemeToggle />
             <button
-              onClick={() => setShowSettings(true)}
+              onClick={openSettings}
               className="p-2 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:text-primary-500 transition-colors"
               title="设置"
             >
               <Settings size={20} />
             </button>
-            <SettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} />
           </div>
         </div>
       </div>

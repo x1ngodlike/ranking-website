@@ -73,11 +73,9 @@ const RankingPodium = ({ rankings }: RankingPodiumProps) => {
               </p>
 
               <p
-                className={`text-xl md:text-2xl font-bold ${
-                  item.totalProfitLoss >= 0 ? 'text-profit-500' : 'text-loss-500'
-                }`}
+                className={`text-xl md:text-2xl font-bold text-amber-600 dark:text-gold-400`}
               >
-                {formatCurrency(item.totalProfitLoss)}
+                ¥{item.totalWinAmount.toFixed(0)}
               </p>
             </Link>
 

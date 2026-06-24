@@ -26,7 +26,7 @@ ChartJS.register(
 );
 
 interface ProfitChartProps {
-  data: Array<{ date: string; profitLoss: number; cumulative: number }>;
+  data: Array<{ date: string; winAmount: number; cumulative: number }>;
 }
 
 export const ProfitChart = ({ data }: ProfitChartProps) => {
@@ -34,7 +34,7 @@ export const ProfitChart = ({ data }: ProfitChartProps) => {
     labels: data.map((d) => d.date),
     datasets: [
       {
-        label: '累计盈亏',
+        label: '累计中奖',
         data: data.map((d) => d.cumulative),
         borderColor: '#3F51B5',
         backgroundColor: (context: any) => {
