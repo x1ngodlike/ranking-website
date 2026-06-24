@@ -14,7 +14,7 @@ const isDev = import.meta.env.DEV;
 const defaultConfig: ApiConfig = {
   provider: 'football-data-org',
   apiKey: '',
-  baseUrl: isDev ? '/football-api/v4' : 'https://api.football-data.org/v4',
+  baseUrl: isDev ? '/football-api/v4' : '/api/proxy/football',
   autoRefresh: false,
   refreshInterval: 60,
   competition: '2000',
@@ -25,7 +25,8 @@ export const loadApiConfig = (): ApiConfig => {
     const saved = localStorage.getItem(CONFIG_KEY);
     if (saved) {
       const parsed = JSON.parse(saved);
-      const baseUrl = isDev ? '/football-api/v4' : (parsed.baseUrl || defaultConfig.baseUrl);
+      // 生产环境使用代理URL，开发环境使用配置的URL
+      const baseUrl = isDev ? (parsed.baseUrl || defaultConfig.baseUrl) : '/api/proxy/football';
       return { ...defaultConfig, ...parsed, baseUrl };
     }
   } catch (e) {

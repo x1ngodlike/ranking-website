@@ -353,6 +353,51 @@ setTimeout(runAutoBackup, 5 * 60 * 1000);
 // 之后按设定的间隔执行
 setInterval(runAutoBackup, AUTO_BACKUP_INTERVAL_MS);
 
+// 代理 football-data.org API 请求
+app.get('/api/proxy/football/:path(*)', async (req, res) => {
+  const apiKey = req.query.apiKey || '';
+  const targetPath = req.params.path;
+  const targetUrl = `https://api.football-data.org/v4/${targetPath}`;
+  
+  try {
+    const response = await fetch(targetUrl, {
+      headers: {
+        'X-Auth-Token': apiKey,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    const data = await response.json();
+    res.status(response.status).json(data);
+  } catch (error) {
+    console.error('Football API proxy error:', error.message);
+    res.status(500).json({ message: '代理请求失败: ' + error.message });
+  }
+});
+
+app.post('/api/proxy/football/:path(*)', async (req, res) => {
+  const apiKey = req.query.apiKey || '';
+  const targetPath = req.params.path;
+  const targetUrl = `https://api.football-data.org/v4/${targetPath}`;
+  
+  try {
+    const response = await fetch(targetUrl, {
+      method: 'POST',
+      headers: {
+        'X-Auth-Token': apiKey,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(req.body)
+    });
+    
+    const data = await response.json();
+    res.status(response.status).json(data);
+  } catch (error) {
+    console.error('Football API proxy error:', error.message);
+    res.status(500).json({ message: '代理请求失败: ' + error.message });
+  }
+});
+
 app.use(express.static(DIST_DIR));
 
 app.get('*', (req, res) => {
