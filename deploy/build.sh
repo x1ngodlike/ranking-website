@@ -11,8 +11,8 @@ CONTAINER_NAME="world-cup-betting"
 IMAGE_NAME="world-cup-betting"
 PORT=3001
 ADMIN_PASSWORD=${ADMIN_PASSWORD:-"159357"}
-DATA_DIR="${SCRIPT_DIR}/data"
-UPLOADS_DIR="${SCRIPT_DIR}/uploads"
+DATA_DIR="${PROJECT_DIR}/data"
+UPLOADS_DIR="${PROJECT_DIR}/uploads"
 AUTO_BACKUP_INTERVAL=${AUTO_BACKUP_INTERVAL:-"3600000"}
 MAX_BACKUPS=${MAX_BACKUPS:-"30"}
 
@@ -25,6 +25,7 @@ NC='\033[0m' # No Color
 
 # 获取脚本所在目录（无论从哪里执行）
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_DIR="$(dirname "${SCRIPT_DIR}")"
 
 # 日志函数
 log_info() {
@@ -114,7 +115,7 @@ build_image() {
     log_info "开始构建 Docker 镜像..."
     log_info "这可能需要几分钟时间，请耐心等待..."
     
-    cd "${SCRIPT_DIR}"
+    cd "${PROJECT_DIR}"
     
     # 使用缓存或不适用缓存构建
     if [ "$1" == "--no-cache" ]; then
@@ -141,7 +142,7 @@ run_container() {
         exit 1
     fi
     
-    cd "${SCRIPT_DIR}"
+    cd "${PROJECT_DIR}"
     
     # 使用 docker run 启动（兼容性更好）
     docker run -d \
