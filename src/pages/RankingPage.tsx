@@ -61,7 +61,7 @@ const RankingPage = () => {
           </div>
           <div className="w-px h-7 sm:h-9 md:h-10 bg-primary/20" />
           <div className="text-center">
-            <p className="font-display text-xl sm:text-2xl md:text-3xl text-amber-600 dark:text-gold-400">¥{totalWinAmount.toFixed(0)}</p>
+            <p className="font-display text-xl sm:text-2xl md:text-3xl text-amber-600 dark:text-gold-400">¥{totalWinAmount.toFixed(2)}</p>
             <p className="text-xs sm:text-sm md:text-sm text-neutral-500 dark:text-neutral-500">中奖总额</p>
           </div>
         </div>

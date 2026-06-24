@@ -94,7 +94,7 @@ export const ProfitChart = ({ data }: ProfitChartProps) => {
         ticks: {
           color: '#9aabd4',
           font: { size: 11 },
-          callback: (value) => `¥${value}`,
+          callback: (value) => `¥${Number(value).toFixed(2)}`,
         },
       },
     },

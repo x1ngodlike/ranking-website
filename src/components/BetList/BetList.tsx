@@ -98,7 +98,7 @@ const BetList = ({ bets, showUser = false, canDelete = false }: BetListProps) =>
 
               <div className="text-right flex-shrink-0 min-w-[80px]">
                 <div className="font-display text-xl text-amber-600 dark:text-gold-400">
-                  ¥{(bet.winAmount ?? 0).toFixed(0)}
+                  ¥{(bet.winAmount ?? 0).toFixed(2)}
                 </div>
               </div>
 

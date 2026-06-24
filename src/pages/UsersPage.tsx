@@ -216,7 +216,7 @@ const UsersPage = () => {
                   </div>
                   <div className="text-center">
                     <p className="font-display text-lg text-amber-600 dark:text-gold-400">
-                      ¥{stats.totalWinAmount.toFixed(0)}
+                      ¥{stats.totalWinAmount.toFixed(2)}
                     </p>
                     <p className="text-xs text-neutral-500 dark:text-neutral-400">中奖总额</p>
                   </div>

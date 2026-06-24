@@ -75,7 +75,7 @@ const RankingPodium = ({ rankings }: RankingPodiumProps) => {
               <p
                 className={`text-xl md:text-2xl font-bold text-amber-600 dark:text-gold-400`}
               >
-                ¥{item.totalWinAmount.toFixed(0)}
+                ¥{item.totalWinAmount.toFixed(2)}
               </p>
             </Link>
 

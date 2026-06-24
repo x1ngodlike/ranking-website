@@ -90,7 +90,7 @@ const BetsPage = () => {
             <span>中奖总额</span>
           </div>
           <p className="font-display text-3xl text-amber-600 dark:text-gold-400">
-            ¥{stats.totalWinAmount.toFixed(0)}
+            ¥{stats.totalWinAmount.toFixed(2)}
           </p>
         </div>
       </motion.div>

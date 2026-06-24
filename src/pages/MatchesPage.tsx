@@ -18,20 +18,26 @@ import { motion, AnimatePresence } from 'framer-motion';
 type TabType = 'upcoming' | 'finished' | 'all';
 
 const formatDateKey = (date: Date): string => {
-  return date.toISOString().split('T')[0];
+  const utcDate = new Date(date.toISOString());
+  const beijingOffset = 8 * 60; // Beijing is UTC+8
+  const beijingTime = new Date(utcDate.getTime() + beijingOffset * 60 * 1000);
+  const year = beijingTime.getUTCFullYear();
+  const month = String(beijingTime.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(beijingTime.getUTCDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 };
 
 const getWeekdayName = (date: Date): string => {
   const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
-  return weekdays[date.getDay()];
+  // Get day of week in Beijing time
+  const utcDate = new Date(date.toISOString());
+  const beijingOffset = 8 * 60;
+  const beijingTime = new Date(utcDate.getTime() + beijingOffset * 60 * 1000);
+  return weekdays[beijingTime.getUTCDay()];
 };
 
 const isSameDay = (date1: Date, date2: Date): boolean => {
-  return (
-    date1.getFullYear() === date2.getFullYear() &&
-    date1.getMonth() === date2.getMonth() &&
-    date1.getDate() === date2.getDate()
-  );
+  return formatDateKey(date1) === formatDateKey(date2);
 };
 
 const MatchesPage = () => {

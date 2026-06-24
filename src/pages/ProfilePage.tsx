@@ -90,13 +90,13 @@ const ProfilePage = () => {
               <div>
                 <p className="text-sm text-neutral-500 dark:text-neutral-500">中奖总额</p>
                 <p className="font-display text-3xl text-amber-600 dark:text-gold-400">
-                  ¥{ranking.totalWinAmount.toFixed(0)}
+                  ¥{ranking.totalWinAmount.toFixed(2)}
                 </p>
               </div>
               <div>
                 <p className="text-sm text-neutral-500 dark:text-neutral-500">平均中奖</p>
                 <p className="font-display text-3xl text-blue-600 dark:text-blue-400">
-                  ¥{ranking.avgWin.toFixed(0)}
+                  ¥{ranking.avgWin.toFixed(2)}
                 </p>
               </div>
               <div>
@@ -122,7 +122,7 @@ const ProfilePage = () => {
             <span className="text-sm">最大中奖</span>
           </div>
           <p className="font-display text-2xl text-amber-600 dark:text-gold-400">
-            ¥{ranking.biggestWin.toFixed(0)}
+            ¥{ranking.biggestWin.toFixed(2)}
           </p>
         </div>
         <div className="card p-4">
@@ -149,7 +149,7 @@ const ProfilePage = () => {
             <span className="text-sm">平均中奖</span>
           </div>
           <p className="font-display text-2xl text-blue-600 dark:text-blue-400">
-            ¥{ranking.avgWin.toFixed(0)}
+            ¥{ranking.avgWin.toFixed(2)}
           </p>
         </div>
       </motion.div>

@@ -10,6 +10,7 @@ export const formatCurrency = (amount: number): string => {
 export const formatDate = (dateString: string): string => {
   const date = new Date(dateString);
   return date.toLocaleDateString('zh-CN', {
+    timeZone: 'Asia/Shanghai',
     month: 'short',
     day: 'numeric',
     hour: '2-digit',
@@ -20,6 +21,7 @@ export const formatDate = (dateString: string): string => {
 export const formatDateShort = (dateString: string): string => {
   const date = new Date(dateString);
   return date.toLocaleDateString('zh-CN', {
+    timeZone: 'Asia/Shanghai',
     month: 'short',
     day: 'numeric',
   });

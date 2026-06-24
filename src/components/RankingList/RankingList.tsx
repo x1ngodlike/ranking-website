@@ -75,7 +75,7 @@ const RankingList = ({ rankings, sortType }: RankingListProps) => {
                 <td className="py-4 px-4 text-right">
                   {sortType === 'totalWin' && (
                     <span className="font-bold text-lg text-amber-600 dark:text-gold-400">
-                      ¥{item.totalWinAmount.toFixed(0)}
+                      ¥{item.totalWinAmount.toFixed(2)}
                     </span>
                   )}
                   {sortType === 'winDays' && (
@@ -91,7 +91,7 @@ const RankingList = ({ rankings, sortType }: RankingListProps) => {
                 </td>
                 <td className="py-4 px-4 text-right hidden md:table-cell">
                   <span className="text-sm text-amber-600 dark:text-gold-400">
-                    ¥{item.avgWin.toFixed(0)}
+                    ¥{item.avgWin.toFixed(2)}
                   </span>
                 </td>
                 <td className="py-4 px-4 text-right text-neutral-600 dark:text-neutral-400 text-sm hidden sm:table-cell">
