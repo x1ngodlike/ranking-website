@@ -20,7 +20,6 @@ const ApiSettingsModal = ({ isOpen, onClose }: ApiSettingsModalProps) => {
 
   const [apiKey, setApiKey] = useState('');
   const [competitionId, setCompetitionId] = useState('2000');
-  const [autoRefresh, setAutoRefresh] = useState(false);
   const [refreshInterval, setRefreshInterval] = useState('60');
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
   const [password, setPassword] = useState('');
@@ -28,17 +27,18 @@ const ApiSettingsModal = ({ isOpen, onClose }: ApiSettingsModalProps) => {
   const [loginError, setLoginError] = useState('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
+  const saveAutoRefreshSettings = useAppStore((state) => state.saveAutoRefreshSettings);
+
   useEffect(() => {
     if (isOpen) {
       setApiKey(apiConfig.apiKey);
       setCompetitionId('2000');
-      setAutoRefresh(apiConfig.autoRefresh);
       setRefreshInterval(String(apiConfig.refreshInterval));
       setSyncMessage(null);
       setPassword('');
       setLoginError('');
     }
-  }, [isOpen, apiConfig.apiKey, apiConfig.autoRefresh, apiConfig.refreshInterval]);
+  }, [isOpen, apiConfig.apiKey, apiConfig.refreshInterval]);
 
   const handleLogin = async () => {
     if (!password.trim()) return;
@@ -55,13 +55,19 @@ const ApiSettingsModal = ({ isOpen, onClose }: ApiSettingsModalProps) => {
   const saveCurrentSettings = () => {
     setApiConfig({
       apiKey: apiKey.trim(),
-      autoRefresh,
+      autoRefresh: true,
       refreshInterval: parseInt(refreshInterval) || 60,
     });
   };
 
-  const handleSave = () => {
-    saveCurrentSettings();
+  const handleSave = async () => {
+    // 保存 API Key 等设置
+    setApiConfig({
+      apiKey: apiKey.trim(),
+      autoRefresh: true,
+    });
+    // 保存自动刷新间隔到后端
+    await saveAutoRefreshSettings(parseInt(refreshInterval) || 60);
     setSyncMessage('设置已保存');
     setTimeout(() => setSyncMessage(null), 2000);
   };
@@ -220,40 +226,26 @@ const ApiSettingsModal = ({ isOpen, onClose }: ApiSettingsModalProps) => {
               <div className="flex items-center justify-between mb-3">
                 <label className="flex items-center gap-2 text-sm text-neutral-500 dark:text-neutral-400">
                     <Clock size={16} className="text-primary-400" />
-                    自动刷新 {!isAdminLoggedIn && <span className="text-xs text-neutral-400">(仅查看)</span>}
+                    自动刷新间隔 {!isAdminLoggedIn && <span className="text-xs text-neutral-400">(仅查看)</span>}
                   </label>
-                  <button
-                    onClick={() => setAutoRefresh(!autoRefresh)}
-                    disabled={!isAdminLoggedIn}
-                    className={`relative w-12 h-6 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-                      autoRefresh ? 'bg-primary-500' : 'bg-neutral-100 dark:bg-neutral-700'
-                    }`}
-                  >
-                  <span
-                    className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${
-                      autoRefresh ? 'translate-x-7' : 'translate-x-1'
-                    }`}
-                  />
-                </button>
               </div>
-              {autoRefresh && (
-                <div>
-                  <label className="text-xs text-neutral-500 dark:text-neutral-500 mb-1 block">
-                    刷新间隔（秒）
-                  </label>
+              <div>
+                <div className="flex items-center gap-2">
                   <input
                     type="number"
-                    min="30"
+                    min="10"
+                    max="3600"
                     value={refreshInterval}
                     onChange={(e) => setRefreshInterval(e.target.value)}
                     disabled={!isAdminLoggedIn}
-                    className="w-full px-3 py-2 rounded-lg bg-white dark:bg-neutral-800 border border-primary/20 text-neutral-800 dark:text-neutral-200 text-sm focus:outline-none focus:border-primary/500 disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="flex-1 px-3 py-2 rounded-lg bg-white dark:bg-neutral-800 border border-primary/20 text-neutral-800 dark:text-neutral-200 text-sm focus:outline-none focus:border-primary/500 disabled:opacity-60 disabled:cursor-not-allowed"
                   />
-                  <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
-                    免费版建议间隔 ≥ 60 秒（每分钟10次请求限制）
-                  </p>
+                  <span className="text-sm text-neutral-500 dark:text-neutral-400">秒</span>
                 </div>
-              )}
+                <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+                  免费版建议 ≥ 60 秒（每分钟10次请求限制），范围 10-3600 秒
+                </p>
+              </div>
             </div>
 
             {lastRefreshTime && (

@@ -75,6 +75,21 @@ export const api = {
       body: JSON.stringify(data),
     }, false),
 
+  getAutoRefreshSettings: (environment: string) =>
+    request<{ success: boolean; autoRefresh: boolean; refreshInterval: number }>(
+      `/api/settings/auto-refresh?environment=${encodeURIComponent(environment)}`
+    ),
+
+  saveAutoRefreshSettings: (environment: string, refreshInterval: number) =>
+    request<{ success: boolean; refreshInterval: number }>(
+      `/api/settings/auto-refresh?environment=${encodeURIComponent(environment)}`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ refreshInterval }),
+      },
+      true
+    ),
+
   adminLogin: async (password: string) => {
     const res = await request<{ success: boolean; token?: string; message?: string }>('/api/admin/login', {
       method: 'POST',

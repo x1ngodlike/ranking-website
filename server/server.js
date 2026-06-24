@@ -275,6 +275,26 @@ app.post('/api/data', (req, res) => {
   res.json({ success: true });
 });
 
+// 自动刷新设置 API
+app.get('/api/settings/auto-refresh', (req, res) => {
+  const environment = req.query.environment || 'production';
+  const data = readData(environment);
+  res.json({
+    success: true,
+    autoRefresh: true,
+    refreshInterval: data.refreshInterval || 60,
+  });
+});
+
+app.post('/api/settings/auto-refresh', requireAuth, (req, res) => {
+  const environment = req.query.environment || 'production';
+  const { refreshInterval = 60 } = req.body;
+  const data = readData(environment);
+  data.refreshInterval = Math.max(10, Math.min(3600, parseInt(refreshInterval) || 60));
+  writeData(environment, data);
+  res.json({ success: true, refreshInterval: data.refreshInterval });
+});
+
 app.post('/api/admin/login', (req, res) => {
   const { password } = req.body;
   const auth = readAuth();

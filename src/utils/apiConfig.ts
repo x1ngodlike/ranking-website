@@ -15,7 +15,7 @@ const defaultConfig: ApiConfig = {
   provider: 'football-data-org',
   apiKey: '',
   baseUrl: isDev ? '/football-api/v4' : '/api/proxy/football',
-  autoRefresh: false,
+  autoRefresh: true,
   refreshInterval: 60,
   competition: '2000',
 };

@@ -136,19 +136,6 @@ const MatchesPage = () => {
       );
   }, [matches, selectedDate, activeTab]);
 
-  const handleRefresh = useCallback(async () => {
-    if (isRefreshing) return;
-    if (!apiConfig.apiKey) {
-      setShowApiSettings(true);
-      return;
-    }
-    try {
-      setRefreshError(null);
-      await refreshLiveMatches();
-    } catch {
-    }
-  }, [isRefreshing, apiConfig.apiKey, refreshLiveMatches, setRefreshError]);
-
   const handleFullSync = useCallback(async () => {
     if (isRefreshing) return;
     if (!apiConfig.apiKey) {
@@ -163,14 +150,15 @@ const MatchesPage = () => {
   }, [isRefreshing, apiConfig.apiKey, syncMatchesFromApi, setRefreshError]);
 
   useEffect(() => {
-    if (!apiConfig.autoRefresh || !apiConfig.apiKey) return;
+    // 自动刷新始终开启，只要配置了 API Key
+    if (!apiConfig.apiKey) return;
 
     const interval = setInterval(() => {
       refreshLiveMatches().catch(() => {});
     }, apiConfig.refreshInterval * 1000);
 
     return () => clearInterval(interval);
-  }, [apiConfig.autoRefresh, apiConfig.apiKey, apiConfig.refreshInterval, refreshLiveMatches]);
+  }, [apiConfig.apiKey, apiConfig.refreshInterval, refreshLiveMatches]);
 
   const tabs = [
     { key: 'all', label: '全部', icon: CalendarDays },
@@ -382,23 +370,16 @@ const MatchesPage = () => {
         <div className="w-px h-6 bg-primary/20" />
 
         <div className="flex items-center gap-2">
-          <button
-            onClick={handleRefresh}
-            disabled={isRefreshing}
-            className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 bg-neutral-50 dark:bg-neutral-800/50 text-neutral-600 dark:text-neutral-400 hover:text-primary-500 hover:bg-neutral-100 dark:hover:bg-neutral-700/50 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <RefreshCw
-              size={16}
-              className={isRefreshing ? 'animate-spin' : ''}
-            />
-            刷新比分
-          </button>
           {canManageApi && (
             <button
               onClick={handleFullSync}
               disabled={isRefreshing}
               className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 bg-neutral-50 dark:bg-neutral-800/50 text-neutral-600 dark:text-neutral-400 hover:text-primary-500 hover:bg-neutral-100 dark:hover:bg-neutral-700/50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
+              <RefreshCw
+                size={16}
+                className={isRefreshing ? 'animate-spin' : ''}
+              />
               全量同步
             </button>
           )}
@@ -415,7 +396,7 @@ const MatchesPage = () => {
       </motion.div>
 
       <AnimatePresence>
-        {apiConfig.autoRefresh && apiConfig.apiKey && (
+        {apiConfig.apiKey && (
           <motion.div
             initial={{ opacity: 0, y: -10, height: 0 }}
             animate={{ opacity: 1, y: 0, height: 'auto' }}
