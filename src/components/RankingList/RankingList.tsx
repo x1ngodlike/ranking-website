@@ -63,7 +63,7 @@ const RankingList = ({ rankings, sortType }: RankingListProps) => {
                   >
                     <Avatar src={item.avatar} alt={item.nickname} size="md" />
                     <div>
-                      <p className="font-medium text-neutral-800 dark:text-neutral-200 group-hover:text-gold-400 transition-colors">
+                      <p className="font-medium text-neutral-800 dark:text-neutral-200 group-hover:text-primary-500 transition-colors">
                         {item.nickname}
                       </p>
                       <p className="text-xs text-neutral-500 dark:text-neutral-500">

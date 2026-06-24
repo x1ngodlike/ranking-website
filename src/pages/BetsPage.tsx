@@ -112,11 +112,11 @@ const BetsPage = () => {
           <p className="font-display text-3xl text-loss-500">{stats.lossDays}</p>
         </div>
         <div className="card p-4">
-          <div className="flex items-center gap-2 text-gold-500 text-sm mb-2">
+          <div className="flex items-center gap-2 text-amber-600 dark:text-gold-400 text-sm mb-2">
             <span className="font-medium">?</span>
             <span>待结算</span>
           </div>
-          <p className="font-display text-3xl text-gold-500">{stats.pendingDays}</p>
+          <p className="font-display text-3xl text-amber-600 dark:text-gold-400">{stats.pendingDays}</p>
         </div>
       </motion.div>
 

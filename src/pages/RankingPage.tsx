@@ -27,6 +27,9 @@ const RankingPage = () => {
 
   const finishedMatches = matches.filter((m) => m.status === 'finished').length;
   const totalAmount = bets.reduce((sum, b) => sum + b.amount, 0);
+  const totalWinAmount = bets
+    .filter((b) => b.profitLoss !== undefined && b.profitLoss > 0)
+    .reduce((sum, b) => sum + b.amount + b.profitLoss!, 0);
 
   return (
     <div className="max-w-5xl mx-auto">
@@ -62,6 +65,11 @@ const RankingPage = () => {
           <div className="text-center hidden md:block">
             <p className="font-display text-3xl text-primary-500">¥{totalAmount.toFixed(0)}</p>
             <p className="text-sm text-neutral-500 dark:text-neutral-500">投注总额</p>
+          </div>
+          <div className="w-px h-10 bg-primary/20 hidden md:block" />
+          <div className="text-center hidden md:block">
+            <p className="font-display text-3xl text-amber-600 dark:text-gold-400">¥{totalWinAmount.toFixed(0)}</p>
+            <p className="text-sm text-neutral-500 dark:text-neutral-500">中奖总额</p>
           </div>
         </div>
       </motion.div>

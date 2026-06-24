@@ -23,7 +23,7 @@ const MatchCard = ({ match, isAdmin = false }: MatchCardProps) => {
   };
 
   const getStatusIcon = () => {
-    if (match.status === 'finished') return <Trophy size={16} className="text-gold-500" />;
+    if (match.status === 'finished') return <Trophy size={16} className="text-amber-600 dark:text-gold-400" />;
     if (match.status === 'live') return <PlayCircle size={16} className="text-profit-500 animate-pulse" />;
     return <Clock size={16} className="text-neutral-400" />;
   };

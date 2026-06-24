@@ -105,13 +105,21 @@ export const calculateRankings = (
 ): RankingItem[] => {
   const rankings: RankingItem[] = users.map((user) => {
     const userBets = bets.filter((b) => b.userId === user.id);
-    const totalProfitLoss = userBets.reduce((sum, b) => sum + b.profitLoss, 0);
+    const settledBets = userBets.filter((b) => b.profitLoss !== undefined);
+    const pendingBets = userBets.filter((b) => b.profitLoss === undefined);
+    
+    const totalProfitLoss = settledBets.reduce((sum, b) => sum + b.profitLoss!, 0);
     const totalAmount = userBets.reduce((sum, b) => sum + b.amount, 0);
-    const winDays = userBets.filter((b) => b.profitLoss > 0).length;
-    const lossDays = userBets.filter((b) => b.profitLoss < 0).length;
+    const winDays = settledBets.filter((b) => b.profitLoss! > 0).length;
+    const lossDays = settledBets.filter((b) => b.profitLoss! < 0).length;
+    const pendingAmount = pendingBets.reduce((sum, b) => sum + b.amount, 0);
+    
+    const totalWinAmount = settledBets
+      .filter((b) => b.profitLoss! > 0)
+      .reduce((sum, b) => sum + b.amount + b.profitLoss!, 0);
 
-    const biggestWin = Math.max(0, ...userBets.map((b) => b.profitLoss));
-    const biggestLoss = Math.min(0, ...userBets.map((b) => b.profitLoss));
+    const biggestWin = Math.max(0, ...settledBets.map((b) => b.profitLoss!));
+    const biggestLoss = Math.min(0, ...settledBets.map((b) => b.profitLoss!));
 
     const avgReturn = totalAmount > 0 ? (totalProfitLoss / totalAmount) * 100 : 0;
 
@@ -122,6 +130,8 @@ export const calculateRankings = (
       totalProfitLoss,
       totalBets: userBets.length,
       totalAmount,
+      totalWinAmount,
+      pendingAmount,
       winDays,
       lossDays,
       biggestWin,
@@ -146,17 +156,20 @@ export const calculateRankings = (
 export const getDailyProfitLoss = (
   userId: string,
   bets: Bet[]
-): Array<{ date: string; profitLoss: number; amount: number; cumulative: number }> => {
+): Array<{ date: string; profitLoss: number; amount: number; cumulative: number; winAmount: number }> => {
   const userBets = bets.filter((b) => b.userId === userId);
 
-  const dailyMap = new Map<string, { profitLoss: number; amount: number }>();
+  const dailyMap = new Map<string, { profitLoss: number; amount: number; winAmount: number }>();
 
   userBets.forEach((bet) => {
     const date = bet.date;
-    const current = dailyMap.get(date) || { profitLoss: 0, amount: 0 };
+    const current = dailyMap.get(date) || { profitLoss: 0, amount: 0, winAmount: 0 };
+    const profit = bet.profitLoss ?? 0;
+    const winAmount = bet.profitLoss !== undefined && bet.profitLoss > 0 ? bet.amount + bet.profitLoss : 0;
     dailyMap.set(date, {
-      profitLoss: current.profitLoss + bet.profitLoss,
+      profitLoss: current.profitLoss + profit,
       amount: current.amount + bet.amount,
+      winAmount: current.winAmount + winAmount,
     });
   });
 
@@ -166,13 +179,14 @@ export const getDailyProfitLoss = (
 
   let cumulative = 0;
   return sortedDates.map((date) => {
-    const dayData = dailyMap.get(date) || { profitLoss: 0, amount: 0 };
+    const dayData = dailyMap.get(date) || { profitLoss: 0, amount: 0, winAmount: 0 };
     cumulative += dayData.profitLoss;
     return {
       date,
       profitLoss: dayData.profitLoss,
       amount: dayData.amount,
       cumulative,
+      winAmount: dayData.winAmount,
     };
   });
 };

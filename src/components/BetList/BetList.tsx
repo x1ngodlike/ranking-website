@@ -140,7 +140,7 @@ const BetList = ({ bets, showUser = false, canDelete = false }: BetListProps) =>
                     <div
                       className={`font-display text-xl ${
                         isPending
-                          ? 'text-gold-500'
+                          ? 'text-amber-600 dark:text-gold-400'
                           : isWin
                           ? 'text-profit-500'
                           : isLoss
@@ -161,7 +161,7 @@ const BetList = ({ bets, showUser = false, canDelete = false }: BetListProps) =>
                 {isPending && canDelete && (
                   <button
                     onClick={() => handleStartEdit(bet)}
-                    className="p-2 rounded-lg hover:bg-gold-50 dark:hover:bg-gold-900/20 text-neutral-400 hover:text-gold-500 transition-colors"
+                    className="p-2 rounded-lg hover:bg-amber-50 dark:hover:bg-gold-900/20 text-neutral-400 hover:text-amber-600 dark:hover:text-gold-400 transition-colors"
                     title="补填盈亏"
                   >
                     <Edit2 size={18} />

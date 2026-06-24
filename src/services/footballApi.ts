@@ -413,7 +413,11 @@ export const fetchMatchesFromApi = async (
   } catch (error) {
     if (error instanceof Error) {
       if (error.message === 'Failed to fetch' || error.message.includes('NetworkError')) {
-        throw new Error('网络连接失败，请检查网络连接。如果是开发环境，请确保已启动开发服务器');
+        if (import.meta.env.DEV) {
+          throw new Error('网络连接失败，请检查网络连接。如果是开发环境，请确保已启动开发服务器');
+        } else {
+          throw new Error('网络连接失败，请检查服务器网络连接');
+        }
       }
       throw error;
     }

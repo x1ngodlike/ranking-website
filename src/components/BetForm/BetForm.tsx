@@ -72,7 +72,7 @@ const BetForm = ({ onClose }: BetFormProps) => {
             <option value="">选择用户</option>
             {users.map((u) => (
               <option key={u.id} value={u.id}>
-                {u.avatar} {u.nickname}
+                {u.nickname}
               </option>
             ))}
           </select>
@@ -145,7 +145,7 @@ const BetForm = ({ onClose }: BetFormProps) => {
             </div>
             <div className="flex justify-between text-sm mb-2">
               <span className="text-neutral-500 dark:text-neutral-400">中奖金额</span>
-              <span className="text-gold-500">¥{parseFloat(winAmount).toFixed(2)}</span>
+              <span className="text-amber-600 dark:text-gold-400">¥{parseFloat(winAmount).toFixed(2)}</span>
             </div>
             <div className="flex justify-between text-sm pt-2 border-t border-neutral-200 dark:border-neutral-700">
               <span className="text-neutral-500 dark:text-neutral-400">实际盈亏</span>

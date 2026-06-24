@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { User } from '@/types';
@@ -19,8 +19,8 @@ const EditUserModal = ({ isOpen, user, onClose, onSave }: EditUserModalProps) =>
   const [isUploading, setIsUploading] = useState(false);
   const [showPickerDropdown, setShowPickerDropdown] = useState(false);
 
-  const handleOpen = () => {
-    if (user) {
+  useEffect(() => {
+    if (isOpen && user) {
       setNickname(user.nickname);
       if (avatarOptions.includes(user.avatar)) {
         setAvatar(user.avatar);
@@ -31,11 +31,7 @@ const EditUserModal = ({ isOpen, user, onClose, onSave }: EditUserModalProps) =>
       }
       setShowPickerDropdown(false);
     }
-  };
-
-  if (isOpen && user) {
-    handleOpen();
-  }
+  }, [isOpen, user]);
 
   const handleSave = async () => {
     if (!user || !nickname.trim()) return;
