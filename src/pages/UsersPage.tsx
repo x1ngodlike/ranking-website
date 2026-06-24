@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { Link } from 'react-router-dom';
-import { Plus, Trash2, UserPlus, Download, Upload, RotateCcw, Edit2 } from 'lucide-react';
+import { Plus, Trash2, UserPlus, Edit2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { User } from '@/types';
 import EditUserModal from '@/components/EditUserModal/EditUserModal';
@@ -13,7 +13,6 @@ const UsersPage = () => {
   const [nickname, setNickname] = useState('');
   const [avatar, setAvatar] = useState('⚽️');
   const [customImage, setCustomImage] = useState<string | null>(null);
-  const [showSettings, setShowSettings] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
 
   const users = useAppStore((state) => state.users);
@@ -23,9 +22,6 @@ const UsersPage = () => {
   const removeUser = useAppStore((state) => state.removeUser);
   const currentUserId = useAppStore((state) => state.currentUserId);
   const isAdminLoggedIn = useAppStore((state) => state.isAdminLoggedIn);
-  const exportData = useAppStore((state) => state.exportData);
-  const importData = useAppStore((state) => state.importData);
-  const resetData = useAppStore((state) => state.resetData);
 
   const currentUser = useMemo(
     () => users.find((u) => u.id === currentUserId) || null,
@@ -49,45 +45,6 @@ const UsersPage = () => {
     setAvatar('⚽️');
     setCustomImage(null);
     setShowAddForm(false);
-  };
-
-  const handleExport = () => {
-    const data = exportData();
-    const blob = new Blob([data], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `world-cup-betting-${new Date().toISOString().slice(0, 10)}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const handleImport = () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'application/json';
-    input.onchange = (e: any) => {
-      const file = e.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = (e: any) => {
-          const success = importData(e.target.result);
-          if (success) {
-            alert('数据导入成功！');
-          } else {
-            alert('数据格式错误，导入失败');
-          }
-        };
-        reader.readAsText(file);
-      }
-    };
-    input.click();
-  };
-
-  const handleReset = () => {
-    if (confirm('确定要重置所有数据吗？此操作不可恢复！')) {
-      resetData();
-    }
   };
 
   const getUserStats = (userId: string) => {
@@ -114,13 +71,6 @@ const UsersPage = () => {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => setShowSettings(!showSettings)}
-            className="btn-outline flex items-center gap-2"
-          >
-            <RotateCcw size={18} />
-            数据管理
-          </button>
           {(isAdmin || isAdminLoggedIn) && (
             <button
               onClick={() => setShowAddForm(!showAddForm)}
@@ -132,52 +82,6 @@ const UsersPage = () => {
           )}
         </div>
       </motion.div>
-
-      <AnimatePresence>
-        {showSettings && (
-          <motion.div
-            initial={{ opacity: 0, height: 0, marginBottom: 0 }}
-            animate={{ opacity: 1, height: 'auto', marginBottom: 24 }}
-            exit={{ opacity: 0, height: 0, marginBottom: 0 }}
-            transition={{ duration: 0.3 }}
-            className="overflow-hidden"
-          >
-            <div className="card">
-              <h3 className="font-display text-xl text-gradient-gold mb-4">
-                数据管理
-              </h3>
-              <p className="text-sm text-neutral-500 dark:text-neutral-500 mb-4">
-                备份或恢复所有投注数据，防止数据丢失。
-              </p>
-              <div className="flex flex-wrap gap-3">
-                <button
-                  onClick={handleExport}
-                  className="btn-outline flex items-center gap-2"
-                >
-                  <Download size={18} />
-                  导出数据
-                </button>
-                <button
-                  onClick={handleImport}
-                  className="btn-outline flex items-center gap-2"
-                >
-                  <Upload size={18} />
-                  导入数据
-                </button>
-                <button
-                  onClick={handleReset}
-                  className="px-6 py-2.5 rounded-full font-medium transition-all duration-300 border border-loss-500/50 text-loss-400 hover:bg-loss-500/10"
-                >
-                  <span className="flex items-center gap-2">
-                    <RotateCcw size={18} />
-                    重置数据
-                  </span>
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       <AnimatePresence>
         {showAddForm && (

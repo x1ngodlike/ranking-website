@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { useAppStore } from '@/store/useAppStore';
-import { formatCurrency, formatDateShort } from '@/utils/helpers';
-import { Trash2, Calendar, Edit2, Check, X, AlertTriangle, Image as ImageIcon } from 'lucide-react';
+import { formatDateShort } from '@/utils/helpers';
+import { Trash2, Calendar, Edit2, AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Bet, User } from '@/types';
 import Avatar from '@/components/Avatar';
 import ImageViewer from '@/components/ImageViewer/ImageViewer';
+import BetForm from '@/components/BetForm/BetForm';
 
 interface BetListProps {
   bets: (Bet & { user?: User })[];
@@ -16,11 +17,9 @@ interface BetListProps {
 const BetList = ({ bets, showUser = false, canDelete = false }: BetListProps) => {
   const users = useAppStore((state) => state.users);
   const removeBet = useAppStore((state) => state.removeBet);
-  const addBet = useAppStore((state) => state.addBet);
   const isAdminLoggedIn = useAppStore((state) => state.isAdminLoggedIn);
 
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editWinAmount, setEditWinAmount] = useState('');
+  const [editingBet, setEditingBet] = useState<Bet | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [viewerImage, setViewerImage] = useState<string | null>(null);
 
@@ -28,28 +27,6 @@ const BetList = ({ bets, showUser = false, canDelete = false }: BetListProps) =>
 
   const getUser = (userId: string) => {
     return users.find((u) => u.id === userId);
-  };
-
-  const handleStartEdit = (bet: Bet) => {
-    setEditingId(bet.id);
-    setEditWinAmount(bet.winAmount?.toString() || '0');
-  };
-
-  const handleSaveEdit = (bet: Bet) => {
-    const winNum = editWinAmount ? parseFloat(editWinAmount) : 0;
-    const updatedBet: Bet = {
-      ...bet,
-      winAmount: winNum,
-    };
-    removeBet(bet.id);
-    addBet(updatedBet);
-    setEditingId(null);
-    setEditWinAmount('');
-  };
-
-  const handleCancelEdit = () => {
-    setEditingId(null);
-    setEditWinAmount('');
   };
 
   const handleDelete = (id: string) => {
@@ -120,40 +97,15 @@ const BetList = ({ bets, showUser = false, canDelete = false }: BetListProps) =>
               </div>
 
               <div className="text-right flex-shrink-0 min-w-[80px]">
-                {editingId === bet.id ? (
-                  <div className="flex items-center gap-1">
-                    <input
-                      type="number"
-                      value={editWinAmount}
-                      onChange={(e) => setEditWinAmount(e.target.value)}
-                      placeholder="中奖金额"
-                      min="0"
-                      className="w-20 px-2 py-1 text-sm rounded border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200"
-                    />
-                    <button
-                      onClick={() => handleSaveEdit(bet)}
-                      className="p-1 text-profit-500 hover:bg-profit-50 dark:hover:bg-profit-900/20 rounded"
-                    >
-                      <Check size={16} />
-                    </button>
-                    <button
-                      onClick={handleCancelEdit}
-                      className="p-1 text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded"
-                    >
-                      <X size={16} />
-                    </button>
-                  </div>
-                ) : (
-                  <div className="font-display text-xl text-amber-600 dark:text-gold-400">
-                    ¥{(bet.winAmount ?? 0).toFixed(0)}
-                  </div>
-                )}
+                <div className="font-display text-xl text-amber-600 dark:text-gold-400">
+                  ¥{(bet.winAmount ?? 0).toFixed(0)}
+                </div>
               </div>
 
               <div className="flex items-center gap-1 flex-shrink-0">
                 {canManage && (
                   <button
-                    onClick={() => handleStartEdit(bet)}
+                    onClick={() => setEditingBet(bet)}
                     className="p-2 rounded-lg hover:bg-primary-50 dark:hover:bg-primary-900/20 text-neutral-400 hover:text-primary-500 transition-colors"
                     title="编辑"
                   >
@@ -175,6 +127,29 @@ const BetList = ({ bets, showUser = false, canDelete = false }: BetListProps) =>
         );
       })}
     </div>
+
+    <AnimatePresence>
+      {editingBet && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center p-4"
+          onClick={() => setEditingBet(null)}
+        >
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.9, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="w-full max-w-md"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <BetForm bet={editingBet} onClose={() => setEditingBet(null)} />
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
 
     <AnimatePresence>
       {deleteConfirmId && (

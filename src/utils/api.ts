@@ -73,7 +73,7 @@ export const api = {
     request<{ success: boolean }>('/api/data', {
       method: 'POST',
       body: JSON.stringify(data),
-    }, true),
+    }, false),
 
   adminLogin: async (password: string) => {
     const res = await request<{ success: boolean; token?: string; message?: string }>('/api/admin/login', {
@@ -100,14 +100,14 @@ export const api = {
   uploadAvatar: async (file: File | Blob, filename = 'avatar.png'): Promise<string> => {
     const formData = new FormData();
     formData.append('file', file, filename);
-    const data = await uploadRequest('/api/upload/avatar', formData, true);
+    const data = await uploadRequest('/api/upload/avatar', formData, false);
     return data.url;
   },
 
   uploadBetImage: async (file: File | Blob, filename = 'bet.jpg'): Promise<string> => {
     const formData = new FormData();
     formData.append('file', file, filename);
-    const data = await uploadRequest('/api/upload/bet', formData, true);
+    const data = await uploadRequest('/api/upload/bet', formData, false);
     return data.url;
   },
 

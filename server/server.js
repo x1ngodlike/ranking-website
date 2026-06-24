@@ -267,7 +267,7 @@ app.get('/api/data', (req, res) => {
   res.json({ ...data, environment });
 });
 
-app.post('/api/data', requireAuth, (req, res) => {
+app.post('/api/data', (req, res) => {
   const { environment = 'production', ...data } = req.body;
   writeData(environment, data);
   res.json({ success: true });
@@ -304,7 +304,7 @@ app.post('/api/admin/password', requireAuth, (req, res) => {
   res.json({ success: true });
 });
 
-app.post('/api/upload/avatar', requireAuth, upload.single('file'), (req, res) => {
+app.post('/api/upload/avatar', upload.single('file'), (req, res) => {
   if (!req.file) {
     return res.status(400).json({ success: false, message: 'No file uploaded' });
   }
@@ -312,7 +312,7 @@ app.post('/api/upload/avatar', requireAuth, upload.single('file'), (req, res) =>
   res.json({ success: true, url });
 });
 
-app.post('/api/upload/bet', requireAuth, uploadBet.single('file'), (req, res) => {
+app.post('/api/upload/bet', uploadBet.single('file'), (req, res) => {
   if (!req.file) {
     return res.status(400).json({ success: false, message: 'No file uploaded' });
   }

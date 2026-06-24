@@ -4,30 +4,35 @@ import { generateId } from '@/utils/helpers';
 import { X, Calendar, Image as ImageIcon, Plus } from 'lucide-react';
 import Avatar from '@/components/Avatar';
 import ImageUploader from '@/components/ImageUploader/ImageUploader';
-import type { User } from '@/types';
+import type { Bet, User } from '@/types';
 
 interface BetFormProps {
   onClose?: () => void;
   preSelectedUserId?: string;
+  bet?: Bet;
 }
 
-const BetForm = ({ onClose, preSelectedUserId }: BetFormProps) => {
+const BetForm = ({ onClose, preSelectedUserId, bet }: BetFormProps) => {
   const users = useAppStore((state) => state.users);
   const addBet = useAppStore((state) => state.addBet);
+  const updateBet = useAppStore((state) => state.updateBet);
 
-  const [selectedUserId, setSelectedUserId] = useState<string>('');
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-  const [winAmount, setWinAmount] = useState('');
-  const [note, setNote] = useState('');
-  const [imageUrl, setImageUrl] = useState<string | undefined>(undefined);
+  const isEditMode = !!bet;
+
+  const [selectedUserId, setSelectedUserId] = useState<string>(bet?.userId || '');
+  const [date, setDate] = useState(bet?.date || new Date().toISOString().split('T')[0]);
+  const [winAmount, setWinAmount] = useState(bet?.winAmount?.toString() || '');
+  const [note, setNote] = useState(bet?.note || '');
+  const [imageUrl, setImageUrl] = useState<string | undefined>(bet?.imageUrl);
 
   useEffect(() => {
+    if (isEditMode && bet) return;
     if (preSelectedUserId) {
       setSelectedUserId(preSelectedUserId);
     } else if (users.length > 0 && !selectedUserId) {
       setSelectedUserId(users[0].id);
     }
-  }, [preSelectedUserId, users, selectedUserId]);
+  }, [preSelectedUserId, users, selectedUserId, isEditMode, bet]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,17 +40,27 @@ const BetForm = ({ onClose, preSelectedUserId }: BetFormProps) => {
 
     const winNum = parseFloat(winAmount);
 
-    const bet = {
-      id: generateId(),
-      userId: selectedUserId,
-      date,
-      winAmount: winNum,
-      note: note || undefined,
-      imageUrl: imageUrl || undefined,
-      createdAt: new Date().toISOString(),
-    };
+    if (isEditMode && bet) {
+      updateBet(bet.id, {
+        userId: selectedUserId,
+        date,
+        winAmount: winNum,
+        note: note || undefined,
+        imageUrl: imageUrl || undefined,
+      });
+    } else {
+      const newBet = {
+        id: generateId(),
+        userId: selectedUserId,
+        date,
+        winAmount: winNum,
+        note: note || undefined,
+        imageUrl: imageUrl || undefined,
+        createdAt: new Date().toISOString(),
+      };
+      addBet(newBet);
+    }
 
-    addBet(bet);
     setWinAmount('');
     setNote('');
     setImageUrl(undefined);
@@ -58,7 +73,7 @@ const BetForm = ({ onClose, preSelectedUserId }: BetFormProps) => {
     <div className="card p-6 max-h-[90vh] overflow-y-auto">
       <div className="flex items-center justify-between mb-6">
         <h3 className="font-display text-xl text-neutral-800 dark:text-neutral-200">
-          记录中奖
+          {isEditMode ? '编辑记录' : '记录中奖'}
         </h3>
         {onClose && (
           <button
@@ -168,7 +183,7 @@ const BetForm = ({ onClose, preSelectedUserId }: BetFormProps) => {
           disabled={!selectedUserId || !winAmount}
           className="w-full btn-gold py-3 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          确认记录
+          {isEditMode ? '保存修改' : '确认记录'}
         </button>
       </form>
     </div>

@@ -43,6 +43,7 @@ interface AppState {
 
   addBet: (bet: Bet) => void;
   removeBet: (betId: string) => void;
+  updateBet: (betId: string, updates: Partial<Bet>) => void;
 
   updateMatchScore: (matchId: string, homeScore: number, awayScore: number) => void;
 
@@ -102,6 +103,7 @@ const getInitialState = (): Omit<
   | 'removeUser'
   | 'addBet'
   | 'removeBet'
+  | 'updateBet'
   | 'updateMatchScore'
   | 'getRankings'
   | 'getCurrentUser'
@@ -248,6 +250,15 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   removeBet: (betId) => {
     set((state) => ({ bets: state.bets.filter((b) => b.id !== betId) }));
+    saveToServer(get());
+  },
+
+  updateBet: (betId, updates) => {
+    set((state) => ({
+      bets: state.bets.map((b) =>
+        b.id === betId ? { ...b, ...updates } : b
+      ),
+    }));
     saveToServer(get());
   },
 
