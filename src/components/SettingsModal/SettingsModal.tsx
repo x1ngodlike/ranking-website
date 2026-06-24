@@ -232,7 +232,7 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                           备份与还原
                         </span>
                         <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-1">
-                          自动备份每小时执行一次，最多保留30份
+                          自动备份每15分钟执行一次，最多保留50份
                         </p>
                       </div>
                       <button

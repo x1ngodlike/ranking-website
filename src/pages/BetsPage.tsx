@@ -116,7 +116,7 @@ const BetsPage = () => {
                     <option value="all">全部用户</option>
                     {users.map((u) => (
                       <option key={u.id} value={u.id}>
-                        {u.avatar} {u.nickname}
+                        {u.nickname}
                       </option>
                     ))}
                   </select>

@@ -5,7 +5,7 @@ import ThemeToggle from '@/components/ThemeToggle/ThemeToggle';
 
 const navItems = [
   { path: '/', label: '排行榜', icon: Trophy },
-  { path: '/bets', label: '投注记录', icon: Ticket },
+  { path: '/bets', label: '中奖记录', icon: Ticket },
   { path: '/matches', label: '比赛赛程', icon: Calendar },
   { path: '/users', label: '成员管理', icon: Users },
 ];

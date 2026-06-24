@@ -139,7 +139,7 @@ const BackupModal = ({ isOpen, onClose }: BackupModalProps) => {
                     备份与还原
                   </h2>
                   <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
-                    {environment === 'production' ? '正式环境' : '测试环境'} · 自动备份每小时执行一次，最多保留30份
+                    {environment === 'production' ? '正式环境' : '测试环境'} · 自动备份每15分钟执行一次，最多保留50份
                   </p>
                 </div>
               </div>
