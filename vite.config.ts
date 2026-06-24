@@ -37,6 +37,7 @@ export default defineConfig({
       },
     }),
     traeBadgePlugin({
+      enabled: false,
       variant: 'dark',
       position: 'bottom-right',
       prodOnly: true,

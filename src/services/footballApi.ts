@@ -382,7 +382,7 @@ export const fetchMatchesFromApi = async (
     throw new Error('请先配置 API Key');
   }
 
-  const url = `${config.baseUrl}/competitions/${competitionId}/matches`;
+  const url = `${config.baseUrl}/competitions/${competitionId}/matches?apiKey=${config.apiKey}`;
 
   try {
     const response = await fetch(url, {
@@ -432,7 +432,7 @@ export const fetchLiveMatches = async (): Promise<Match[]> => {
     throw new Error('请先配置 API Key');
   }
 
-  const url = `${config.baseUrl}/matches?status=LIVE,IN_PLAY`;
+  const url = `${config.baseUrl}/matches?status=LIVE,IN_PLAY&apiKey=${config.apiKey}`;
 
   try {
     const response = await fetch(url, {
@@ -475,7 +475,7 @@ export const getCompetitions = async (): Promise<Array<{ id: string; name: strin
     throw new Error('请先配置 API Key');
   }
 
-  const url = `${config.baseUrl}/competitions?plan=TIER_ONE`;
+  const url = `${config.baseUrl}/competitions?plan=TIER_ONE&apiKey=${config.apiKey}`;
 
   try {
     const response = await fetch(url, {
