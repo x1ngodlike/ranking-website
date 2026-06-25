@@ -8,6 +8,7 @@ const fs = require('fs');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
 const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(__dirname, 'uploads');
 const AVATAR_DIR = path.join(UPLOAD_DIR, 'avatars');
@@ -565,9 +566,15 @@ function runAutoBackup() {
 }
 
 // 启动时延迟5分钟执行首次自动备份，避免启动时立即备份空数据
-setTimeout(runAutoBackup, 5 * 60 * 1000);
-// 之后按设定的间隔执行
-setInterval(runAutoBackup, AUTO_BACKUP_INTERVAL_MS);
+// 只在生产环境开启自动备份
+if (IS_PRODUCTION) {
+  setTimeout(runAutoBackup, 5 * 60 * 1000);
+  // 之后按设定的间隔执行
+  setInterval(runAutoBackup, AUTO_BACKUP_INTERVAL_MS);
+  console.log(`Auto backup interval: ${AUTO_BACKUP_INTERVAL_MS / 1000}s, max backups: ${MAX_BACKUPS}`);
+} else {
+  console.log('Auto backup disabled (development mode)');
+}
 
 // 代理 football-data.org API 请求
 app.get('/api/proxy/football/:path(*)', async (req, res) => {
@@ -630,5 +637,4 @@ app.listen(PORT, () => {
   console.log(`Data directory: ${DATA_DIR}`);
   console.log(`Upload directory: ${UPLOAD_DIR}`);
   console.log(`Backup directory: ${BACKUP_DIR}`);
-  console.log(`Auto backup interval: ${AUTO_BACKUP_INTERVAL_MS / 1000}s, max backups: ${MAX_BACKUPS}`);
 });
