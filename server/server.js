@@ -53,7 +53,20 @@ if (!fs.existsSync(BACKUP_DIR)) {
   fs.mkdirSync(BACKUP_DIR, { recursive: true });
 }
 
-// 迁移旧的扁平数据文件到环境子目录
+const AUTH_FILE = path.join(DATA_DIR, 'auth.json');
+const getEnvDir = (env) => path.join(DATA_DIR, env);
+const getDataFile = (env) => path.join(getEnvDir(env), 'data.json');
+const getMatchesFile = (env) => path.join(getEnvDir(env), 'matches.json');
+const getBackupDir = (env) => path.join(BACKUP_DIR, env);
+
+function ensureEnvDir(env) {
+  const dir = getEnvDir(env);
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+  return dir;
+}
+
 function migrateDataFiles() {
   const envs = ['production', 'test'];
   envs.forEach((env) => {
@@ -82,12 +95,6 @@ function migrateDataFiles() {
   });
 }
 migrateDataFiles();
-
-const AUTH_FILE = path.join(DATA_DIR, 'auth.json');
-const getEnvDir = (env) => path.join(DATA_DIR, env);
-const getDataFile = (env) => path.join(getEnvDir(env), 'data.json');
-const getMatchesFile = (env) => path.join(getEnvDir(env), 'matches.json');
-const getBackupDir = (env) => path.join(BACKUP_DIR, env);
 
 function ensureBackupDir(env) {
   const dir = getBackupDir(env);
@@ -146,14 +153,6 @@ const uploadBet = multer({
     }
   }
 });
-
-function ensureEnvDir(env) {
-  const dir = getEnvDir(env);
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
-  return dir;
-}
 
 function readData(env = 'production') {
   const file = getDataFile(env);
