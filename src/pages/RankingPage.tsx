@@ -1,12 +1,11 @@
 import { useMemo, useRef, useState, useEffect } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { calculateRankings } from '@/utils/calculations';
-import { Trophy, Hash, RefreshCw, Share2, Download } from 'lucide-react';
+import { Trophy, Hash, RefreshCw } from 'lucide-react';
 import RankingPodium from '@/components/RankingPodium/RankingPodium';
 import RankingList from '@/components/RankingList/RankingList';
 import type { RankingSortType } from '@/types';
 import { motion } from 'framer-motion';
-import html2canvas from 'html2canvas';
 
 const tabs: { type: RankingSortType; label: string; icon: typeof Trophy }[] = [
   { type: 'totalWin', label: '中奖总额', icon: Trophy },
@@ -27,45 +26,8 @@ const RankingPage = () => {
   const pullStartY = useRef<number>(0);
   const [pullDistance, setPullDistance] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [isSharing, setIsSharing] = useState(false);
   const canPull = useRef(false);
   const containerRef = useRef<HTMLDivElement>(null);
-  const contentRef = useRef<HTMLDivElement>(null);
-
-  const handleShare = async () => {
-    if (!contentRef.current || isSharing) return;
-
-    setIsSharing(true);
-    try {
-      // 等待下一帧确保内容已渲染
-      await new Promise(resolve => requestAnimationFrame(resolve));
-
-      const canvas = await html2canvas(contentRef.current, {
-        backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--bg-primary').trim() || '#ffffff',
-        scale: 2, // 提高清晰度
-        useCORS: true,
-        allowTaint: true,
-        logging: false,
-      });
-
-      // 转换为 blob
-      const blob = await new Promise<Blob>((resolve) => {
-        canvas.toBlob((b) => resolve(b!), 'image/png', 1.0);
-      });
-
-      // 下载图片
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `世界杯中奖排行榜_${new Date().toLocaleDateString('zh-CN').replace(/\//g, '-')}.png`;
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch (e) {
-      console.error('分享失败:', e);
-    } finally {
-      setIsSharing(false);
-    }
-  };
 
   const rankings = useMemo(
     () => calculateRankings(users, bets, sortType),
@@ -140,7 +102,7 @@ const RankingPage = () => {
   }, [isRefreshing, pullDistance, refreshData]);
 
   return (
-    <div className="max-w-5xl mx-auto" ref={contentRef}>
+    <div className="max-w-5xl mx-auto">
       <div
         className="flex items-center justify-center overflow-hidden"
         style={{
@@ -171,22 +133,8 @@ const RankingPage = () => {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="text-center mb-8 md:mb-12 relative"
+        className="text-center mb-8 md:mb-12"
       >
-        <div className="absolute top-0 right-0">
-          <button
-            onClick={handleShare}
-            disabled={isSharing}
-            className="flex items-center gap-2 px-4 py-2 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700 hover:text-primary-500 transition-colors text-sm"
-          >
-            {isSharing ? (
-              <RefreshCw size={16} className="animate-spin" />
-            ) : (
-              <Share2 size={16} />
-            )}
-            <span>{isSharing ? '生成中...' : '分享图片'}</span>
-          </button>
-        </div>
         <h1 className="font-display text-4xl sm:text-5xl md:text-6xl text-gradient-gold mb-2 md:mb-3">
           世界杯中奖排行榜
         </h1>
