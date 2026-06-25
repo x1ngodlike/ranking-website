@@ -18,10 +18,10 @@ export interface ServerData {
   users: any[];
   bets: any[];
   matches: any[];
-  apiKey: string;
-  competition: string;
-  theme: string;
+  apiKey?: string;
+  competition?: string;
   currentUserId: string | null;
+  refreshInterval?: number;
 }
 
 async function request<T>(url: string, options: RequestInit = {}, requireAuth = false): Promise<T> {

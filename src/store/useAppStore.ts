@@ -91,7 +91,6 @@ const saveToServer = async (state: AppState) => {
       matches: state.matches,
       apiKey: state.apiConfig.apiKey,
       competition: state.apiConfig.competition,
-      theme: state.theme,
       currentUserId: state.currentUserId,
     });
   } catch (e) {
@@ -181,10 +180,6 @@ export const useAppStore = create<AppState>((set, get) => ({
       }
       if (data.competition) {
         set((s) => ({ apiConfig: { ...s.apiConfig, competition: data.competition } }));
-      }
-      if (data.theme && (data.theme === 'light' || data.theme === 'dark' || data.theme === 'system')) {
-        set({ theme: data.theme as ThemeMode });
-        applyTheme(data.theme as ThemeMode);
       }
       // 加载自动刷新设置
       await get().loadAutoRefreshSettings();
@@ -501,7 +496,6 @@ export const useAppStore = create<AppState>((set, get) => ({
     set({ theme });
     saveThemeToStorage(theme);
     applyTheme(theme);
-    saveToServer(get());
   },
 
   adminLogin: async (password) => {
@@ -665,10 +659,6 @@ export const useAppStore = create<AppState>((set, get) => ({
       }
       if (data.competition) {
         set((s) => ({ apiConfig: { ...s.apiConfig, competition: data.competition } }));
-      }
-      if (data.theme && (data.theme === 'light' || data.theme === 'dark' || data.theme === 'system')) {
-        set({ theme: data.theme as ThemeMode });
-        applyTheme(data.theme as ThemeMode);
       }
       await get().loadAutoRefreshSettings();
     } catch (e) {

@@ -53,8 +53,40 @@ if (!fs.existsSync(BACKUP_DIR)) {
   fs.mkdirSync(BACKUP_DIR, { recursive: true });
 }
 
+// 迁移旧的扁平数据文件到环境子目录
+function migrateDataFiles() {
+  const envs = ['production', 'test'];
+  envs.forEach((env) => {
+    const oldDataFile = path.join(DATA_DIR, `data-${env}.json`);
+    const oldMatchesFile = path.join(DATA_DIR, `matches-${env}.json`);
+    ensureEnvDir(env);
+    const newDataFile = getDataFile(env);
+    const newMatchesFile = getMatchesFile(env);
+
+    if (fs.existsSync(oldDataFile) && !fs.existsSync(newDataFile)) {
+      try {
+        fs.renameSync(oldDataFile, newDataFile);
+        console.log(`Migrated data-${env}.json to ${env}/data.json`);
+      } catch (e) {
+        console.error(`Failed to migrate data-${env}.json:`, e);
+      }
+    }
+    if (fs.existsSync(oldMatchesFile) && !fs.existsSync(newMatchesFile)) {
+      try {
+        fs.renameSync(oldMatchesFile, newMatchesFile);
+        console.log(`Migrated matches-${env}.json to ${env}/matches.json`);
+      } catch (e) {
+        console.error(`Failed to migrate matches-${env}.json:`, e);
+      }
+    }
+  });
+}
+migrateDataFiles();
+
 const AUTH_FILE = path.join(DATA_DIR, 'auth.json');
-const getDataFile = (env) => path.join(DATA_DIR, `data-${env}.json`);
+const getEnvDir = (env) => path.join(DATA_DIR, env);
+const getDataFile = (env) => path.join(getEnvDir(env), 'data.json');
+const getMatchesFile = (env) => path.join(getEnvDir(env), 'matches.json');
 const getBackupDir = (env) => path.join(BACKUP_DIR, env);
 
 function ensureBackupDir(env) {
@@ -115,17 +147,24 @@ const uploadBet = multer({
   }
 });
 
+function ensureEnvDir(env) {
+  const dir = getEnvDir(env);
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+  return dir;
+}
+
 function readData(env = 'production') {
   const file = getDataFile(env);
   if (!fs.existsSync(file)) {
     return {
       users: [],
       bets: [],
-      matches: [],
       apiKey: '',
       competition: 'WC',
-      theme: 'system',
       currentUserId: null,
+      refreshInterval: 60,
     };
   }
   try {
@@ -133,13 +172,43 @@ function readData(env = 'production') {
     return JSON.parse(raw);
   } catch (e) {
     console.error('Failed to read data:', e);
-    return { users: [], bets: [], matches: [], apiKey: '', competition: 'WC', theme: 'system', currentUserId: null };
+    return { users: [], bets: [], apiKey: '', competition: 'WC', currentUserId: null, refreshInterval: 60 };
   }
 }
 
 function writeData(env, data) {
+  ensureEnvDir(env);
   const file = getDataFile(env);
-  fs.writeFileSync(file, JSON.stringify(data, null, 2), 'utf-8');
+  // 不保存 matches 到用户数据文件
+  const dataToSave = {
+    users: data.users || [],
+    bets: data.bets || [],
+    apiKey: data.apiKey || '',
+    competition: data.competition || 'WC',
+    currentUserId: data.currentUserId || null,
+    refreshInterval: data.refreshInterval || 60,
+  };
+  fs.writeFileSync(file, JSON.stringify(dataToSave, null, 2), 'utf-8');
+}
+
+function readMatches(env = 'production') {
+  const file = getMatchesFile(env);
+  if (!fs.existsSync(file)) {
+    return [];
+  }
+  try {
+    const raw = fs.readFileSync(file, 'utf-8');
+    return JSON.parse(raw);
+  } catch (e) {
+    console.error('Failed to read matches:', e);
+    return [];
+  }
+}
+
+function writeMatches(env, matches) {
+  ensureEnvDir(env);
+  const file = getMatchesFile(env);
+  fs.writeFileSync(file, JSON.stringify(matches, null, 2), 'utf-8');
 }
 
 function readAuth() {
@@ -266,12 +335,32 @@ app.get('/api/health', (req, res) => {
 app.get('/api/data', (req, res) => {
   const environment = req.query.environment || 'production';
   const data = readData(environment);
-  res.json({ ...data, environment });
+  const matches = readMatches(environment);
+  res.json({ ...data, matches, environment });
 });
 
 app.post('/api/data', (req, res) => {
-  const { environment = 'production', ...data } = req.body;
+  const { environment = 'production', matches, ...data } = req.body;
   writeData(environment, data);
+  if (matches) {
+    writeMatches(environment, matches);
+  }
+  res.json({ success: true });
+});
+
+// 获取赛程数据
+app.get('/api/matches', (req, res) => {
+  const environment = req.query.environment || 'production';
+  const matches = readMatches(environment);
+  res.json({ matches, environment });
+});
+
+// 保存赛程数据
+app.post('/api/matches', (req, res) => {
+  const { environment = 'production', matches } = req.body;
+  if (matches) {
+    writeMatches(environment, matches);
+  }
   res.json({ success: true });
 });
 

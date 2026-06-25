@@ -1348,6 +1348,5 @@
   ],
   "apiKey": "d0955bedceb44221a8500648509d65d9",
   "competition": "WC",
-  "theme": "system",
-  "currentUserId": "user1"
+  "refreshInterval": 60
 }
