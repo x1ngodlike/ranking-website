@@ -164,7 +164,26 @@ export const api = {
         body: JSON.stringify({ environment, filename }),
       }, true
     ),
+
+  downloadBackup: (environment: string, filename: string) =>
+    request<{ success: boolean; data: BackupContent }>(
+      `/api/admin/backups/download?environment=${encodeURIComponent(environment)}&filename=${encodeURIComponent(filename)}`,
+      {}, true
+    ),
 };
+
+export interface BackupContent {
+  version: number;
+  environment: string;
+  createdAt: string;
+  label: string;
+  data: {
+    users: any[];
+    bets: any[];
+    apiKey: string;
+    competition: string;
+  };
+}
 
 export interface BackupInfo {
   filename: string;

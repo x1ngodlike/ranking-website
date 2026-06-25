@@ -523,6 +523,30 @@ app.post('/api/admin/backups/delete', requireAuth, (req, res) => {
   }
 });
 
+app.get('/api/admin/backups/download', requireAuth, (req, res) => {
+  try {
+    const environment = req.query.environment || 'production';
+    const filename = req.query.filename;
+    if (!filename) {
+      return res.status(400).json({ success: false, message: '请选择备份文件' });
+    }
+    const dir = getBackupDir(environment);
+    const filepath = path.join(dir, filename);
+    const resolved = path.resolve(filepath);
+    if (!resolved.startsWith(path.resolve(dir))) {
+      return res.status(400).json({ success: false, message: '非法的备份文件路径' });
+    }
+    if (!fs.existsSync(filepath)) {
+      return res.status(404).json({ success: false, message: '备份文件不存在' });
+    }
+    const content = fs.readFileSync(filepath, 'utf-8');
+    res.json({ success: true, data: JSON.parse(content) });
+  } catch (e) {
+    console.error('Failed to download backup:', e);
+    res.status(500).json({ success: false, message: '下载失败' });
+  }
+});
+
 // 自动备份机制
 function runAutoBackup() {
   try {

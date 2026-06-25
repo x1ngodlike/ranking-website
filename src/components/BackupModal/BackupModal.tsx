@@ -3,6 +3,7 @@ import { useAppStore } from '@/store/useAppStore';
 import { X, Database, RotateCcw, Trash2, Download, Save, Clock, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { BackupInfo } from '@/utils/api';
+import { api } from '@/utils/api';
 
 interface BackupModalProps {
   isOpen: boolean;
@@ -96,19 +97,26 @@ const BackupModal = ({ isOpen, onClose }: BackupModalProps) => {
     }
   };
 
-  const handleDownload = (backup: BackupInfo) => {
+  const handleDownload = async (filename: string) => {
     try {
-      const content = JSON.stringify(backup, null, 2);
-      const blob = new Blob([content], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = backup.filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      setError('');
+      const result = await api.downloadBackup(environment, filename);
+      if (result.success && result.data) {
+        const content = JSON.stringify(result.data, null, 2);
+        const blob = new Blob([content], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      } else {
+        setError('下载失败');
+      }
     } catch (e) {
+      console.error('Download failed:', e);
       setError('下载失败');
     }
   };
@@ -210,7 +218,7 @@ const BackupModal = ({ isOpen, onClose }: BackupModalProps) => {
                       </div>
                       <div className="flex items-center gap-1 ml-3">
                         <button
-                          onClick={() => handleDownload(backup)}
+                          onClick={() => handleDownload(backup.filename)}
                           className="p-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-500 hover:text-primary-500 transition-colors"
                           title="下载备份信息"
                         >
