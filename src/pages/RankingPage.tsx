@@ -27,7 +27,6 @@ const RankingPage = () => {
   const [pullDistance, setPullDistance] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const canPull = useRef(false);
-  const containerRef = useRef<HTMLDivElement>(null);
 
   const rankings = useMemo(
     () => calculateRankings(users, bets, sortType),

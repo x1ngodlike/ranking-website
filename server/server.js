@@ -19,8 +19,14 @@ const DEFAULT_ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '159357';
 const AUTO_BACKUP_INTERVAL_MS = parseInt(process.env.AUTO_BACKUP_INTERVAL_MS || '900000', 10);
 const MAX_BACKUPS = parseInt(process.env.MAX_BACKUPS || '50', 10);
 
-let adminTokens = new Set();
 const TOKEN_TTL = 24 * 60 * 60 * 1000;
+const JSON_INDENT = 2;
+const AVATAR_MAX_SIZE = 5 * 1024 * 1024;
+const BET_IMAGE_MAX_SIZE = 10 * 1024 * 1024;
+const FOOTBALL_API_BASE = 'https://api.football-data.org/v4/';
+const ENVIRONMENTS = ['production', 'test'];
+
+let adminTokens = new Set();
 
 const generateToken = () => {
   const token = crypto.randomBytes(32).toString('hex');
@@ -38,21 +44,15 @@ const requireAuth = (req, res, next) => {
   res.status(401).json({ success: false, message: '未授权，请先登录' });
 };
 
-if (!fs.existsSync(DATA_DIR)) {
-  fs.mkdirSync(DATA_DIR, { recursive: true });
-}
-if (!fs.existsSync(UPLOAD_DIR)) {
-  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
-}
-if (!fs.existsSync(AVATAR_DIR)) {
-  fs.mkdirSync(AVATAR_DIR, { recursive: true });
-}
-if (!fs.existsSync(BET_DIR)) {
-  fs.mkdirSync(BET_DIR, { recursive: true });
-}
-if (!fs.existsSync(BACKUP_DIR)) {
-  fs.mkdirSync(BACKUP_DIR, { recursive: true });
-}
+const ensureDir = (dir) => {
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+  return dir;
+};
+
+const REQUIRED_DIRS = [DATA_DIR, UPLOAD_DIR, AVATAR_DIR, BET_DIR, BACKUP_DIR];
+REQUIRED_DIRS.forEach(ensureDir);
 
 const AUTH_FILE = path.join(DATA_DIR, 'auth.json');
 const getEnvDir = (env) => path.join(DATA_DIR, env);
@@ -60,17 +60,28 @@ const getDataFile = (env) => path.join(getEnvDir(env), 'data.json');
 const getMatchesFile = (env) => path.join(getEnvDir(env), 'matches.json');
 const getBackupDir = (env) => path.join(BACKUP_DIR, env);
 
-function ensureEnvDir(env) {
-  const dir = getEnvDir(env);
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
-  return dir;
-}
+const ensureEnvDir = (env) => ensureDir(getEnvDir(env));
+const ensureBackupDir = (env) => ensureDir(getBackupDir(env));
 
-function migrateDataFiles() {
-  const envs = ['production', 'test'];
-  envs.forEach((env) => {
+const readJsonFile = (file, defaultValue) => {
+  if (!fs.existsSync(file)) {
+    return defaultValue;
+  }
+  try {
+    const raw = fs.readFileSync(file, 'utf-8');
+    return JSON.parse(raw);
+  } catch (e) {
+    console.error('Failed to read JSON file:', file, e);
+    return defaultValue;
+  }
+};
+
+const writeJsonFile = (file, data) => {
+  fs.writeFileSync(file, JSON.stringify(data, null, JSON_INDENT), 'utf-8');
+};
+
+const migrateDataFiles = () => {
+  ENVIRONMENTS.forEach((env) => {
     const oldDataFile = path.join(DATA_DIR, `data-${env}.json`);
     const oldMatchesFile = path.join(DATA_DIR, `matches-${env}.json`);
     ensureEnvDir(env);
@@ -94,25 +105,11 @@ function migrateDataFiles() {
       }
     }
   });
-}
+};
 migrateDataFiles();
 
-function ensureBackupDir(env) {
-  const dir = getBackupDir(env);
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
-  return dir;
-}
-
-app.use(cors());
-app.use(express.json({ limit: '10mb' }));
-app.use('/uploads', express.static(UPLOAD_DIR));
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, AVATAR_DIR);
-  },
+const createMulterStorage = (destination) => multer.diskStorage({
+  destination: (req, file, cb) => cb(null, destination),
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
     const ext = path.extname(file.originalname);
@@ -120,66 +117,39 @@ const storage = multer.diskStorage({
   }
 });
 
-const betStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, BET_DIR);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const ext = path.extname(file.originalname);
-    cb(null, uniqueSuffix + ext);
+const createImageFilter = () => (req, file, cb) => {
+  if (file.mimetype.startsWith('image/')) {
+    cb(null, true);
+  } else {
+    cb(new Error('Only image files are allowed'));
   }
-});
+};
 
 const upload = multer({
-  storage,
-  limits: { fileSize: 5 * 1024 * 1024 },
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) {
-      cb(null, true);
-    } else {
-      cb(new Error('Only image files are allowed'));
-    }
-  }
+  storage: createMulterStorage(AVATAR_DIR),
+  limits: { fileSize: AVATAR_MAX_SIZE },
+  fileFilter: createImageFilter(),
 });
 
 const uploadBet = multer({
-  storage: betStorage,
-  limits: { fileSize: 10 * 1024 * 1024 },
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) {
-      cb(null, true);
-    } else {
-      cb(new Error('Only image files are allowed'));
-    }
-  }
+  storage: createMulterStorage(BET_DIR),
+  limits: { fileSize: BET_IMAGE_MAX_SIZE },
+  fileFilter: createImageFilter(),
 });
 
-function readData(env = 'production') {
-  const file = getDataFile(env);
-  if (!fs.existsSync(file)) {
-    return {
-      users: [],
-      bets: [],
-      apiKey: '',
-      competition: 'WC',
-      currentUserId: null,
-      refreshInterval: 60,
-    };
-  }
-  try {
-    const raw = fs.readFileSync(file, 'utf-8');
-    return JSON.parse(raw);
-  } catch (e) {
-    console.error('Failed to read data:', e);
-    return { users: [], bets: [], apiKey: '', competition: 'WC', currentUserId: null, refreshInterval: 60 };
-  }
-}
+const getDefaultData = () => ({
+  users: [],
+  bets: [],
+  apiKey: '',
+  competition: 'WC',
+  currentUserId: null,
+  refreshInterval: 60,
+});
 
-function writeData(env, data) {
+const readData = (env = 'production') => readJsonFile(getDataFile(env), getDefaultData());
+
+const writeData = (env, data) => {
   ensureEnvDir(env);
-  const file = getDataFile(env);
-  // 不保存 matches 到用户数据文件
   const dataToSave = {
     users: data.users || [],
     bets: data.bets || [],
@@ -188,51 +158,31 @@ function writeData(env, data) {
     currentUserId: data.currentUserId || null,
     refreshInterval: data.refreshInterval || 60,
   };
-  fs.writeFileSync(file, JSON.stringify(dataToSave, null, 2), 'utf-8');
-}
+  writeJsonFile(getDataFile(env), dataToSave);
+};
 
-function readMatches(env = 'production') {
-  const file = getMatchesFile(env);
-  if (!fs.existsSync(file)) {
-    return [];
-  }
-  try {
-    const raw = fs.readFileSync(file, 'utf-8');
-    return JSON.parse(raw);
-  } catch (e) {
-    console.error('Failed to read matches:', e);
-    return [];
-  }
-}
+const readMatches = (env = 'production') => readJsonFile(getMatchesFile(env), []);
 
-function writeMatches(env, matches) {
+const writeMatches = (env, matches) => {
   ensureEnvDir(env);
-  const file = getMatchesFile(env);
-  fs.writeFileSync(file, JSON.stringify(matches, null, 2), 'utf-8');
-}
+  writeJsonFile(getMatchesFile(env), matches);
+};
 
-function readAuth() {
+const readAuth = () => {
   if (!fs.existsSync(AUTH_FILE)) {
     const hash = bcrypt.hashSync(DEFAULT_ADMIN_PASSWORD, 10);
     const auth = { adminPasswordHash: hash };
-    fs.writeFileSync(AUTH_FILE, JSON.stringify(auth, null, 2), 'utf-8');
+    writeJsonFile(AUTH_FILE, auth);
     return auth;
   }
-  try {
-    const raw = fs.readFileSync(AUTH_FILE, 'utf-8');
-    return JSON.parse(raw);
-  } catch (e) {
-    const hash = bcrypt.hashSync(DEFAULT_ADMIN_PASSWORD, 10);
-    return { adminPasswordHash: hash };
-  }
-}
+  return readJsonFile(AUTH_FILE, { adminPasswordHash: bcrypt.hashSync(DEFAULT_ADMIN_PASSWORD, 10) });
+};
 
-function writeAuth(auth) {
-  fs.writeFileSync(AUTH_FILE, JSON.stringify(auth, null, 2), 'utf-8');
-}
+const writeAuth = (auth) => {
+  writeJsonFile(AUTH_FILE, auth);
+};
 
-// 备份相关函数
-function createBackup(env, label = 'manual') {
+const createBackup = (env, label = 'manual') => {
   const dir = ensureBackupDir(env);
   const data = readData(env);
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
@@ -247,15 +197,13 @@ function createBackup(env, label = 'manual') {
     data,
   };
 
-  fs.writeFileSync(filepath, JSON.stringify(backupContent, null, 2), 'utf-8');
-
-  // 清理超出数量限制的旧备份
+  writeJsonFile(filepath, backupContent);
   cleanOldBackups(env);
 
   return { filename, createdAt: backupContent.createdAt, label, size: fs.statSync(filepath).size };
-}
+};
 
-function listBackups(env) {
+const listBackups = (env) => {
   const dir = getBackupDir(env);
   if (!fs.existsSync(dir)) return [];
   const files = fs.readdirSync(dir).filter((f) => f.endsWith('.json'));
@@ -269,7 +217,7 @@ function listBackups(env) {
         meta.createdAt = content.createdAt || meta.createdAt;
         meta.label = content.label || meta.label;
       } catch (e) {
-        // ignore
+        // ignore parse errors, use file stats fallback
       }
       return {
         filename: f,
@@ -279,11 +227,10 @@ function listBackups(env) {
       };
     })
     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-}
+};
 
-function cleanOldBackups(env) {
+const cleanOldBackups = (env) => {
   const backups = listBackups(env);
-  // 只清理自动备份，手动备份不删除
   const autoBackups = backups.filter(b => b.label === 'auto');
   if (autoBackups.length > MAX_BACKUPS) {
     const toDelete = autoBackups.slice(MAX_BACKUPS);
@@ -296,27 +243,27 @@ function cleanOldBackups(env) {
       }
     });
   }
-}
+};
 
-function deleteBackup(env, filename) {
+const resolveBackupPath = (env, filename) => {
   const dir = getBackupDir(env);
   const filepath = path.join(dir, filename);
-  if (!fs.existsSync(filepath)) return false;
-  // 安全检查：防止路径穿越
-  const resolved = path.resolve(filepath);
-  if (!resolved.startsWith(path.resolve(dir))) return false;
-  fs.unlinkSync(filepath);
-  return true;
-}
-
-function restoreBackup(env, filename) {
-  const dir = getBackupDir(env);
-  const filepath = path.join(dir, filename);
-  // 安全检查：防止路径穿越
   const resolved = path.resolve(filepath);
   if (!resolved.startsWith(path.resolve(dir))) {
     throw new Error('非法的备份文件路径');
   }
+  return filepath;
+};
+
+const deleteBackup = (env, filename) => {
+  const filepath = resolveBackupPath(env, filename);
+  if (!fs.existsSync(filepath)) return false;
+  fs.unlinkSync(filepath);
+  return true;
+};
+
+const restoreBackup = (env, filename) => {
+  const filepath = resolveBackupPath(env, filename);
   if (!fs.existsSync(filepath)) {
     throw new Error('备份文件不存在');
   }
@@ -326,7 +273,41 @@ function restoreBackup(env, filename) {
   }
   writeData(env, content.data);
   return content.data;
-}
+};
+
+const proxyFootballApi = async (req, res, method = 'GET') => {
+  const apiKey = req.query.apiKey || '';
+  const targetPath = req.params.path;
+  const targetUrl = `${FOOTBALL_API_BASE}${targetPath}`;
+
+  try {
+    const fetchOptions = {
+      method,
+      headers: {
+        'X-Auth-Token': apiKey,
+        'Content-Type': 'application/json'
+      }
+    };
+    if (method === 'POST') {
+      fetchOptions.body = JSON.stringify(req.body);
+    }
+    const response = await fetch(targetUrl, fetchOptions);
+    const data = await response.json();
+    res.status(response.status).json(data);
+  } catch (error) {
+    console.error('Football API proxy error:', error.message);
+    res.status(500).json({ message: '代理请求失败: ' + error.message });
+  }
+};
+
+const handleError = (res, error, defaultMessage) => {
+  console.error(defaultMessage + ':', error);
+  res.status(500).json({ success: false, message: error.message || defaultMessage });
+};
+
+app.use(cors());
+app.use(express.json({ limit: '10mb' }));
+app.use('/uploads', express.static(UPLOAD_DIR));
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
@@ -348,14 +329,12 @@ app.post('/api/data', (req, res) => {
   res.json({ success: true });
 });
 
-// 获取赛程数据
 app.get('/api/matches', (req, res) => {
   const environment = req.query.environment || 'production';
   const matches = readMatches(environment);
   res.json({ matches, environment });
 });
 
-// 保存赛程数据
 app.post('/api/matches', (req, res) => {
   const { environment = 'production', matches } = req.body;
   if (matches) {
@@ -364,7 +343,6 @@ app.post('/api/matches', (req, res) => {
   res.json({ success: true });
 });
 
-// 自动刷新设置 API
 app.get('/api/settings/auto-refresh', (req, res) => {
   const environment = req.query.environment || 'production';
   const data = readData(environment);
@@ -431,36 +409,35 @@ app.post('/api/upload/bet', uploadBet.single('file'), (req, res) => {
   res.json({ success: true, url });
 });
 
+const deleteUploadedFile = (filePath) => {
+  if (fs.existsSync(filePath)) {
+    try {
+      fs.unlinkSync(filePath);
+    } catch (e) {
+      console.error('Failed to delete file:', filePath, e);
+    }
+  }
+};
+
 app.post('/api/admin/clear-data', requireAuth, (req, res) => {
   const { environment = 'production' } = req.body;
 
   const oldData = readData(environment);
+
   if (oldData.users && oldData.users.length > 0) {
     oldData.users.forEach(user => {
       if (user.avatar && user.avatar.startsWith('/uploads/avatars/')) {
         const avatarPath = path.join(AVATAR_DIR, user.avatar.replace('/uploads/avatars/', ''));
-        if (fs.existsSync(avatarPath)) {
-          try {
-            fs.unlinkSync(avatarPath);
-          } catch (e) {
-            console.error('Failed to delete avatar:', avatarPath, e);
-          }
-        }
+        deleteUploadedFile(avatarPath);
       }
     });
   }
-  // 清除投注图片
+
   if (oldData.bets && oldData.bets.length > 0) {
     oldData.bets.forEach(bet => {
       if (bet.imageUrl && bet.imageUrl.startsWith('/uploads/bets/')) {
         const betImagePath = path.join(BET_DIR, bet.imageUrl.replace('/uploads/bets/', ''));
-        if (fs.existsSync(betImagePath)) {
-          try {
-            fs.unlinkSync(betImagePath);
-          } catch (e) {
-            console.error('Failed to delete bet image:', betImagePath, e);
-          }
-        }
+        deleteUploadedFile(betImagePath);
       }
     });
   }
@@ -478,7 +455,6 @@ app.post('/api/admin/clear-data', requireAuth, (req, res) => {
   res.json({ success: true });
 });
 
-// 备份相关API
 app.get('/api/admin/backups', requireAuth, (req, res) => {
   const environment = req.query.environment || 'production';
   const backups = listBackups(environment);
@@ -491,8 +467,7 @@ app.post('/api/admin/backups/create', requireAuth, (req, res) => {
     const result = createBackup(environment, label);
     res.json({ success: true, backup: result });
   } catch (e) {
-    console.error('Failed to create backup:', e);
-    res.status(500).json({ success: false, message: '创建备份失败' });
+    handleError(res, e, '创建备份失败');
   }
 });
 
@@ -505,8 +480,7 @@ app.post('/api/admin/backups/restore', requireAuth, (req, res) => {
     restoreBackup(environment, filename);
     res.json({ success: true, message: '还原成功' });
   } catch (e) {
-    console.error('Failed to restore backup:', e);
-    res.status(500).json({ success: false, message: e.message || '还原失败' });
+    handleError(res, e, '还原失败');
   }
 });
 
@@ -519,8 +493,7 @@ app.post('/api/admin/backups/delete', requireAuth, (req, res) => {
     const ok = deleteBackup(environment, filename);
     res.json({ success: ok });
   } catch (e) {
-    console.error('Failed to delete backup:', e);
-    res.status(500).json({ success: false, message: '删除失败' });
+    handleError(res, e, '删除失败');
   }
 });
 
@@ -531,30 +504,21 @@ app.get('/api/admin/backups/download', requireAuth, (req, res) => {
     if (!filename) {
       return res.status(400).json({ success: false, message: '请选择备份文件' });
     }
-    const dir = getBackupDir(environment);
-    const filepath = path.join(dir, filename);
-    const resolved = path.resolve(filepath);
-    if (!resolved.startsWith(path.resolve(dir))) {
-      return res.status(400).json({ success: false, message: '非法的备份文件路径' });
-    }
+    const filepath = resolveBackupPath(environment, filename);
     if (!fs.existsSync(filepath)) {
       return res.status(404).json({ success: false, message: '备份文件不存在' });
     }
     const content = fs.readFileSync(filepath, 'utf-8');
     res.json({ success: true, data: JSON.parse(content) });
   } catch (e) {
-    console.error('Failed to download backup:', e);
-    res.status(500).json({ success: false, message: '下载失败' });
+    handleError(res, e, '下载失败');
   }
 });
 
-// 自动备份机制
-function runAutoBackup() {
+const runAutoBackup = () => {
   try {
-    const environments = ['production', 'test'];
-    environments.forEach((env) => {
+    ENVIRONMENTS.forEach((env) => {
       const data = readData(env);
-      // 只备份有数据的环境
       if (data.users && data.users.length > 0) {
         createBackup(env, 'auto');
         console.log(`[AutoBackup] Created backup for ${env}`);
@@ -563,62 +527,22 @@ function runAutoBackup() {
   } catch (e) {
     console.error('[AutoBackup] Failed:', e);
   }
-}
+};
 
-// 启动时延迟5分钟执行首次自动备份，避免启动时立即备份空数据
-// 只在生产环境开启自动备份
 if (IS_PRODUCTION) {
   setTimeout(runAutoBackup, 5 * 60 * 1000);
-  // 之后按设定的间隔执行
   setInterval(runAutoBackup, AUTO_BACKUP_INTERVAL_MS);
   console.log(`Auto backup interval: ${AUTO_BACKUP_INTERVAL_MS / 1000}s, max backups: ${MAX_BACKUPS}`);
 } else {
   console.log('Auto backup disabled (development mode)');
 }
 
-// 代理 football-data.org API 请求
 app.get('/api/proxy/football/:path(*)', async (req, res) => {
-  const apiKey = req.query.apiKey || '';
-  const targetPath = req.params.path;
-  const targetUrl = `https://api.football-data.org/v4/${targetPath}`;
-  
-  try {
-    const response = await fetch(targetUrl, {
-      headers: {
-        'X-Auth-Token': apiKey,
-        'Content-Type': 'application/json'
-      }
-    });
-    
-    const data = await response.json();
-    res.status(response.status).json(data);
-  } catch (error) {
-    console.error('Football API proxy error:', error.message);
-    res.status(500).json({ message: '代理请求失败: ' + error.message });
-  }
+  await proxyFootballApi(req, res, 'GET');
 });
 
 app.post('/api/proxy/football/:path(*)', async (req, res) => {
-  const apiKey = req.query.apiKey || '';
-  const targetPath = req.params.path;
-  const targetUrl = `https://api.football-data.org/v4/${targetPath}`;
-  
-  try {
-    const response = await fetch(targetUrl, {
-      method: 'POST',
-      headers: {
-        'X-Auth-Token': apiKey,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(req.body)
-    });
-    
-    const data = await response.json();
-    res.status(response.status).json(data);
-  } catch (error) {
-    console.error('Football API proxy error:', error.message);
-    res.status(500).json({ message: '代理请求失败: ' + error.message });
-  }
+  await proxyFootballApi(req, res, 'POST');
 });
 
 app.use(express.static(DIST_DIR));

@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import BetForm from '@/components/BetForm/BetForm';
 import BetList from '@/components/BetList/BetList';
-import { Plus, Filter, X, TrendingDown, Trophy, Calendar, Users } from 'lucide-react';
+import { Plus, Filter, Trophy, Calendar } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const BetsPage = () => {

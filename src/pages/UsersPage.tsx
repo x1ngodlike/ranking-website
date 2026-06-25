@@ -175,8 +175,8 @@ const UsersPage = () => {
                     </div>
                   </Link>
 
-                  <div className="flex items-center gap-1">
-                    {(isAdmin || isAdminLoggedIn) && !user.isAdmin && (
+                  {(isAdmin || isAdminLoggedIn) && !user.isAdmin && (
+                    <div className="flex items-center gap-1">
                       <button
                         onClick={() => setEditingUser(user)}
                         className="p-2 rounded-lg text-neutral-500 dark:text-neutral-400 hover:text-primary-500 hover:bg-primary-500/10 transition-colors"
@@ -184,8 +184,6 @@ const UsersPage = () => {
                       >
                         <Edit2 size={18} />
                       </button>
-                    )}
-                    {(isAdmin || isAdminLoggedIn) && !user.isAdmin && (
                       <button
                         onClick={() => {
                           if (confirm(`确定要移除 ${user.nickname} 吗？`)) {
@@ -197,8 +195,8 @@ const UsersPage = () => {
                       >
                         <Trash2 size={18} />
                       </button>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-3 gap-2 pt-4 border-t border-neutral-200 dark:border-neutral-700">
