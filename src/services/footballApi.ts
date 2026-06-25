@@ -299,13 +299,9 @@ const teamNameMap: Record<string, string> = {
   'Libya': '利比亚',
 };
 
-const getTeamFlag = (teamName: string): string => {
-  return teamFlagMap[teamName] || '⚽️';
-};
+const getTeamFlag = (teamName: string): string => teamFlagMap[teamName] || '⚽️';
 
-const getTeamChineseName = (teamName: string): string => {
-  return teamNameMap[teamName] || teamName;
-};
+const getTeamChineseName = (teamName: string): string => teamNameMap[teamName] || teamName;
 
 const extractStageInfo = (apiMatch: ApiMatch): { stage: Match['stage']; groupName?: string } => {
   if (apiMatch.stage === 'GROUP_STAGE') {
@@ -373,16 +369,40 @@ const updateRateLimitFromHeaders = (headers: Headers) => {
   };
 };
 
-export const fetchMatchesFromApi = async (
-  competitionId: string = '2000'
-): Promise<Match[]> => {
+const getNetworkErrorMessage = (): string => {
+  if (import.meta.env.DEV) {
+    return '网络连接失败，请检查网络连接。如果是开发环境，请确保已启动开发服务器';
+  }
+  return '网络连接失败，请检查服务器网络连接';
+};
+
+const handleRequestError = (error: unknown): never => {
+  if (error instanceof Error) {
+    if (error.message === 'Failed to fetch' || error.message.includes('NetworkError')) {
+      throw new Error(getNetworkErrorMessage());
+    }
+    throw error;
+  }
+  throw new Error('网络请求失败');
+};
+
+const buildApiUrl = (baseUrl: string, path: string, apiKey: string): string => {
+  const separator = path.includes('?') ? '&' : '?';
+  return `${baseUrl}/${path}${separator}apiKey=${apiKey}`;
+};
+
+const fetchFootballApi = async <T>(
+  path: string,
+  options: { updateRateLimit?: boolean; detailedErrors?: boolean } = {}
+): Promise<T> => {
+  const { updateRateLimit = true, detailedErrors = true } = options;
   const config = loadApiConfig();
 
   if (!config.apiKey) {
     throw new Error('请先配置 API Key');
   }
 
-  const url = `${config.baseUrl}/competitions/${competitionId}/matches?apiKey=${config.apiKey}`;
+  const url = buildApiUrl(config.baseUrl, path, config.apiKey);
 
   try {
     const response = await fetch(url, {
@@ -391,9 +411,14 @@ export const fetchMatchesFromApi = async (
       },
     });
 
-    updateRateLimitFromHeaders(response.headers);
+    if (updateRateLimit) {
+      updateRateLimitFromHeaders(response.headers);
+    }
 
     if (!response.ok) {
+      if (!detailedErrors) {
+        throw new Error(`请求失败: ${response.status}`);
+      }
       if (response.status === 403) {
         throw new Error('API Key 无效或已过期，请检查你的 API Key 是否正确');
       }
@@ -408,95 +433,35 @@ export const fetchMatchesFromApi = async (
       throw new Error(`请求失败: HTTP ${response.status}`);
     }
 
-    const data: ApiMatchesResponse = await response.json();
-    return data.matches.map(apiMatchToLocal);
+    return response.json() as Promise<T>;
   } catch (error) {
-    if (error instanceof Error) {
-      if (error.message === 'Failed to fetch' || error.message.includes('NetworkError')) {
-        if (import.meta.env.DEV) {
-          throw new Error('网络连接失败，请检查网络连接。如果是开发环境，请确保已启动开发服务器');
-        } else {
-          throw new Error('网络连接失败，请检查服务器网络连接');
-        }
-      }
-      throw error;
-    }
-    throw new Error('网络请求失败');
+    handleRequestError(error);
   }
+};
+
+export const fetchMatchesFromApi = async (
+  competitionId: string = '2000'
+): Promise<Match[]> => {
+  const data = await fetchFootballApi<ApiMatchesResponse>(
+    `competitions/${competitionId}/matches`
+  );
+  return data.matches.map(apiMatchToLocal);
 };
 
 export const fetchLiveMatches = async (): Promise<Match[]> => {
-  const config = loadApiConfig();
-
-  if (!config.apiKey) {
-    throw new Error('请先配置 API Key');
-  }
-
-  const url = `${config.baseUrl}/matches?status=LIVE,IN_PLAY&apiKey=${config.apiKey}`;
-
-  try {
-    const response = await fetch(url, {
-      headers: {
-        'X-Auth-Token': config.apiKey,
-      },
-    });
-
-    updateRateLimitFromHeaders(response.headers);
-
-    if (!response.ok) {
-      if (response.status === 403) {
-        throw new Error('API Key 无效或已过期，请检查你的 API Key 是否正确');
-      }
-      if (response.status === 429) {
-        const resetTime = lastRateLimitInfo.requestsReset;
-        const resetMsg = resetTime ? `，将于 ${new Date(resetTime).toLocaleTimeString('zh-CN')} 重置` : '';
-        throw new Error(`请求过于频繁${resetMsg}，请稍后再试`);
-      }
-      throw new Error(`请求失败: HTTP ${response.status}`);
-    }
-
-    const data: ApiMatchesResponse = await response.json();
-    return data.matches.map(apiMatchToLocal);
-  } catch (error) {
-    if (error instanceof Error) {
-      if (error.message === 'Failed to fetch' || error.message.includes('NetworkError')) {
-        throw new Error('网络连接失败，请检查网络连接。如果是开发环境，请确保已启动开发服务器');
-      }
-      throw error;
-    }
-    throw new Error('网络请求失败');
-  }
+  const data = await fetchFootballApi<ApiMatchesResponse>(
+    'matches?status=LIVE,IN_PLAY'
+  );
+  return data.matches.map(apiMatchToLocal);
 };
 
 export const getCompetitions = async (): Promise<Array<{ id: string; name: string }>> => {
-  const config = loadApiConfig();
-
-  if (!config.apiKey) {
-    throw new Error('请先配置 API Key');
-  }
-
-  const url = `${config.baseUrl}/competitions?plan=TIER_ONE&apiKey=${config.apiKey}`;
-
-  try {
-    const response = await fetch(url, {
-      headers: {
-        'X-Auth-Token': config.apiKey,
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`请求失败: ${response.status}`);
-    }
-
-    const data = await response.json();
-    return data.competitions.map((c: any) => ({
-      id: String(c.id),
-      name: c.name,
-    }));
-  } catch (error) {
-    if (error instanceof Error) {
-      throw error;
-    }
-    throw new Error('网络请求失败');
-  }
+  const data = await fetchFootballApi<any>(
+    'competitions?plan=TIER_ONE',
+    { updateRateLimit: false, detailedErrors: false }
+  );
+  return data.competitions.map((c: any) => ({
+    id: String(c.id),
+    name: c.name,
+  }));
 };

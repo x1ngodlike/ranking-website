@@ -102,8 +102,8 @@ const BetList = ({ bets, showUser = false, canDelete = false }: BetListProps) =>
                 </div>
               </div>
 
-              <div className="flex items-center gap-1 flex-shrink-0">
-                {canManage && (
+              {canManage && (
+                <div className="flex items-center gap-1 flex-shrink-0">
                   <button
                     onClick={() => setEditingBet(bet)}
                     className="p-2 rounded-lg hover:bg-primary-50 dark:hover:bg-primary-900/20 text-neutral-400 hover:text-primary-500 transition-colors"
@@ -111,8 +111,6 @@ const BetList = ({ bets, showUser = false, canDelete = false }: BetListProps) =>
                   >
                     <Edit2 size={18} />
                   </button>
-                )}
-                {canManage && (
                   <button
                     onClick={() => setDeleteConfirmId(bet.id)}
                     className="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-neutral-400 hover:text-red-500 transition-colors"
@@ -120,8 +118,8 @@ const BetList = ({ bets, showUser = false, canDelete = false }: BetListProps) =>
                   >
                     <Trash2 size={18} />
                   </button>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           </motion.div>
         );

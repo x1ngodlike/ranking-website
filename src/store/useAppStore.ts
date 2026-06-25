@@ -14,7 +14,8 @@ import {
 import { api, getAdminToken, type BackupInfo } from '../utils/api';
 
 const DEFAULT_AVATAR = '⚽️';
-const ADMIN_STORAGE_KEY = 'ranking_website_admin_logged_in';
+const DEFAULT_USER_ID = 'user1';
+const DEFAULT_COMPETITION_ID = '2000';
 
 interface AppState {
   users: User[];
@@ -80,9 +81,7 @@ interface AppState {
 }
 
 const saveToServer = async (state: AppState) => {
-  if (!state.isDataLoaded) {
-    return;
-  }
+  if (!state.isDataLoaded) return;
   try {
     await api.saveData({
       environment: state.environment,
@@ -98,44 +97,7 @@ const saveToServer = async (state: AppState) => {
   }
 };
 
-const getInitialState = (): Omit<
-  AppState,
-  | 'init'
-  | 'setCurrentUser'
-  | 'setSortType'
-  | 'addUser'
-  | 'addUserWithUpload'
-  | 'updateUser'
-  | 'removeUser'
-  | 'addBet'
-  | 'removeBet'
-  | 'updateBet'
-  | 'updateMatchScore'
-  | 'getRankings'
-  | 'getCurrentUser'
-  | 'exportData'
-  | 'importData'
-  | 'resetData'
-  | 'setApiConfig'
-  | 'loadAutoRefreshSettings'
-  | 'saveAutoRefreshSettings'
-  | 'syncMatchesFromApi'
-  | 'refreshLiveMatches'
-  | 'setRefreshError'
-  | 'setTheme'
-  | 'adminLogin'
-  | 'adminLogout'
-  | 'changeAdminPassword'
-  | 'switchEnvironment'
-  | 'clearEnvironmentData'
-  | 'listBackups'
-  | 'createBackup'
-  | 'restoreBackup'
-  | 'deleteBackup'
-  | 'openSettings'
-  | 'closeSettings'
-  | 'refreshData'
-> => {
+const getInitialState = (): Omit<AppState, keyof ReturnType<typeof createStoreActions>> => {
   const apiConfig = loadApiConfig();
   const theme = loadTheme();
 
@@ -143,7 +105,7 @@ const getInitialState = (): Omit<
     users: mockUsers,
     matches: mockMatches,
     bets: mockBets,
-    currentUserId: 'user1',
+    currentUserId: DEFAULT_USER_ID,
     sortType: 'totalWin' as RankingSortType,
     apiConfig,
     isRefreshing: false,
@@ -158,30 +120,55 @@ const getInitialState = (): Omit<
   };
 };
 
-export const useAppStore = create<AppState>((set, get) => ({
-  ...getInitialState(),
+const buildDataState = (data: any) => ({
+  users: (data.users && data.users.length > 0) ? data.users : mockUsers,
+  matches: (data.matches && data.matches.length > 0) ? data.matches : mockMatches,
+  bets: (data.bets && data.bets.length > 0) ? data.bets : mockBets,
+  currentUserId: data.currentUserId ?? DEFAULT_USER_ID,
+});
 
+const updateApiConfigFromData = (set: any, data: any) => {
+  if (data.apiKey) {
+    set((s: AppState) => ({ apiConfig: { ...s.apiConfig, apiKey: data.apiKey } }));
+  }
+  if (data.competition) {
+    set((s: AppState) => ({ apiConfig: { ...s.apiConfig, competition: data.competition } }));
+  }
+};
+
+const updateAutoRefreshConfig = (
+  set: any,
+  autoRefresh: boolean,
+  refreshInterval: number
+) => {
+  set((s: AppState) => ({
+    apiConfig: {
+      ...s.apiConfig,
+      autoRefresh,
+      refreshInterval,
+    },
+  }));
+  saveApiConfigToStorage({ autoRefresh, refreshInterval });
+};
+
+const handleRefreshError = (set: any, error: unknown, defaultMessage: string) => {
+  const message = error instanceof Error ? error.message : defaultMessage;
+  set({ isRefreshing: false, refreshError: message });
+};
+
+const createStoreActions = (set: any, get: any) => ({
   init: async () => {
     const state = get();
     try {
       const data = await api.getData(state.environment);
       const isAdmin = !!getAdminToken();
       set({
-        users: (data.users && data.users.length > 0) ? data.users : mockUsers,
-        matches: (data.matches && data.matches.length > 0) ? data.matches : mockMatches,
-        bets: (data.bets && data.bets.length > 0) ? data.bets : mockBets,
-        currentUserId: data.currentUserId ?? 'user1',
+        ...buildDataState(data),
         isAdminLoggedIn: isAdmin,
         isLoading: false,
         isDataLoaded: true,
       });
-      if (data.apiKey) {
-        set((s) => ({ apiConfig: { ...s.apiConfig, apiKey: data.apiKey } }));
-      }
-      if (data.competition) {
-        set((s) => ({ apiConfig: { ...s.apiConfig, competition: data.competition } }));
-      }
-      // 加载自动刷新设置
+      updateApiConfigFromData(set, data);
       await get().loadAutoRefreshSettings();
     } catch (e) {
       console.warn('Failed to load data from server, using mock data:', e);
@@ -189,14 +176,14 @@ export const useAppStore = create<AppState>((set, get) => ({
     }
   },
 
-  setCurrentUser: (userId) => {
+  setCurrentUser: (userId: string | null) => {
     set({ currentUserId: userId });
     saveToServer(get());
   },
 
-  setSortType: (sortType) => set({ sortType }),
+  setSortType: (sortType: RankingSortType) => set({ sortType }),
 
-  addUser: (nickname, avatar) => {
+  addUser: (nickname: string, avatar: string) => {
     const newUser: User = {
       id: generateId(),
       nickname,
@@ -204,7 +191,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       isAdmin: false,
       createdAt: new Date().toISOString(),
     };
-    set((state) => ({ users: [...state.users, newUser] }));
+    set((state: AppState) => ({ users: [...state.users, newUser] }));
     saveToServer(get());
   },
 
@@ -230,12 +217,12 @@ export const useAppStore = create<AppState>((set, get) => ({
       isAdmin: false,
       createdAt: new Date().toISOString(),
     };
-    set((state) => ({ users: [...state.users, newUser] }));
+    set((state: AppState) => ({ users: [...state.users, newUser] }));
     saveToServer(get());
   },
 
-  updateUser: (userId, nickname, avatar) => {
-    set((state) => ({
+  updateUser: (userId: string, nickname: string, avatar: string) => {
+    set((state: AppState) => ({
       users: state.users.map((u) =>
         u.id === userId ? { ...u, nickname, avatar } : u
       ),
@@ -243,8 +230,8 @@ export const useAppStore = create<AppState>((set, get) => ({
     saveToServer(get());
   },
 
-  removeUser: (userId) => {
-    set((state) => ({
+  removeUser: (userId: string) => {
+    set((state: AppState) => ({
       users: state.users.filter((u) => u.id !== userId),
       bets: state.bets.filter((b) => b.userId !== userId),
       currentUserId: state.currentUserId === userId ? null : state.currentUserId,
@@ -252,18 +239,18 @@ export const useAppStore = create<AppState>((set, get) => ({
     saveToServer(get());
   },
 
-  addBet: (bet) => {
-    set((state) => ({ bets: [bet, ...state.bets] }));
+  addBet: (bet: Bet) => {
+    set((state: AppState) => ({ bets: [bet, ...state.bets] }));
     saveToServer(get());
   },
 
-  removeBet: (betId) => {
-    set((state) => ({ bets: state.bets.filter((b) => b.id !== betId) }));
+  removeBet: (betId: string) => {
+    set((state: AppState) => ({ bets: state.bets.filter((b) => b.id !== betId) }));
     saveToServer(get());
   },
 
-  updateBet: (betId, updates) => {
-    set((state) => ({
+  updateBet: (betId: string, updates: Partial<Bet>) => {
+    set((state: AppState) => ({
       bets: state.bets.map((b) =>
         b.id === betId ? { ...b, ...updates } : b
       ),
@@ -271,8 +258,8 @@ export const useAppStore = create<AppState>((set, get) => ({
     saveToServer(get());
   },
 
-  updateMatchScore: (matchId, homeScore, awayScore) => {
-    set((state) => {
+  updateMatchScore: (matchId: string, homeScore: number, awayScore: number) => {
+    set((state: AppState) => {
       const updatedMatches = state.matches.map((m) =>
         m.id === matchId
           ? { ...m, homeScore, awayScore, status: 'finished' as const }
@@ -304,7 +291,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     return JSON.stringify(data, null, 2);
   },
 
-  importData: (json) => {
+  importData: (json: string) => {
     try {
       const data = JSON.parse(json);
       if (!data.users || !data.matches || !data.bets) {
@@ -328,17 +315,16 @@ export const useAppStore = create<AppState>((set, get) => ({
       users: mockUsers,
       matches: mockMatches,
       bets: mockBets,
-      currentUserId: 'user1',
+      currentUserId: DEFAULT_USER_ID,
       sortType: 'totalWin',
     });
     saveToServer(get());
   },
 
-  setApiConfig: (config) => {
+  setApiConfig: (config: Partial<ApiConfig>) => {
     const newConfig = { ...get().apiConfig, ...config };
     set({ apiConfig: newConfig });
     saveApiConfigToStorage(config);
-    // Only save full data to server if not just updating refreshInterval
     if (config.refreshInterval === undefined) {
       saveToServer(get());
     }
@@ -349,17 +335,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     try {
       const settings = await api.getAutoRefreshSettings(state.environment);
       if (settings.success) {
-        set((s) => ({
-          apiConfig: {
-            ...s.apiConfig,
-            autoRefresh: settings.autoRefresh,
-            refreshInterval: settings.refreshInterval,
-          },
-        }));
-        saveApiConfigToStorage({
-          autoRefresh: settings.autoRefresh,
-          refreshInterval: settings.refreshInterval,
-        });
+        updateAutoRefreshConfig(set, settings.autoRefresh, settings.refreshInterval);
       }
     } catch (e) {
       console.warn('Failed to load auto-refresh settings:', e);
@@ -371,24 +347,14 @@ export const useAppStore = create<AppState>((set, get) => ({
     try {
       const result = await api.saveAutoRefreshSettings(state.environment, refreshInterval);
       if (result.success) {
-        set((s) => ({
-          apiConfig: {
-            ...s.apiConfig,
-            autoRefresh: true,
-            refreshInterval: result.refreshInterval,
-          },
-        }));
-        saveApiConfigToStorage({
-          autoRefresh: true,
-          refreshInterval: result.refreshInterval,
-        });
+        updateAutoRefreshConfig(set, true, result.refreshInterval);
       }
     } catch (e) {
       console.warn('Failed to save auto-refresh settings:', e);
     }
   },
 
-  syncMatchesFromApi: async (competitionId = '2000') => {
+  syncMatchesFromApi: async (competitionId = DEFAULT_COMPETITION_ID) => {
     set({ isRefreshing: true, refreshError: null });
 
     try {
@@ -396,32 +362,20 @@ export const useAppStore = create<AppState>((set, get) => ({
       let added = 0;
       let updated = 0;
 
-      set((state) => {
-        const existingMap = new Map(state.matches.map((m) => [m.id, m]));
+      set((state: AppState) => {
+        const existingById = new Map(state.matches.map((m) => [m.id, m]));
         const newMatches: Match[] = [];
 
         apiMatches.forEach((apiMatch) => {
-          const existingById = existingMap.get(apiMatch.id);
-          let matched = false;
+          const existing = existingById.get(apiMatch.id)
+            || state.matches.find(
+              (m) => m.homeTeam === apiMatch.homeTeam && m.awayTeam === apiMatch.awayTeam
+            );
 
-          if (existingById) {
+          if (existing) {
             newMatches.push(apiMatch);
             updated++;
-            matched = true;
           } else {
-            const existingByTeam = state.matches.find(
-              (m) =>
-                m.homeTeam === apiMatch.homeTeam &&
-                m.awayTeam === apiMatch.awayTeam
-            );
-            if (existingByTeam) {
-              newMatches.push(apiMatch);
-              updated++;
-              matched = true;
-            }
-          }
-
-          if (!matched) {
             newMatches.push(apiMatch);
             added++;
           }
@@ -435,8 +389,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 
       return { added, updated };
     } catch (error) {
-      const message = error instanceof Error ? error.message : '同步失败';
-      set({ isRefreshing: false, refreshError: message });
+      handleRefreshError(set, error, '同步失败');
       throw error;
     }
   },
@@ -445,12 +398,11 @@ export const useAppStore = create<AppState>((set, get) => ({
     set({ isRefreshing: true, refreshError: null });
 
     try {
-      const competitionId = '2000';
-      const apiMatches = await fetchMatchesFromApi(competitionId);
+      const apiMatches = await fetchMatchesFromApi(DEFAULT_COMPETITION_ID);
       let updatedCount = 0;
       let addedCount = 0;
 
-      set((state) => {
+      set((state: AppState) => {
         const newMatches = [...state.matches];
         const existingIds = new Set(newMatches.map((m) => m.id));
 
@@ -473,7 +425,6 @@ export const useAppStore = create<AppState>((set, get) => ({
           }
         });
 
-        // 重新排序
         newMatches.sort((a, b) => new Date(a.matchTime).getTime() - new Date(b.matchTime).getTime());
 
         return { matches: newMatches };
@@ -484,21 +435,20 @@ export const useAppStore = create<AppState>((set, get) => ({
 
       return updatedCount + addedCount;
     } catch (error) {
-      const message = error instanceof Error ? error.message : '刷新失败';
-      set({ isRefreshing: false, refreshError: message });
+      handleRefreshError(set, error, '刷新失败');
       throw error;
     }
   },
 
-  setRefreshError: (error) => set({ refreshError: error }),
+  setRefreshError: (error: string | null) => set({ refreshError: error }),
 
-  setTheme: (theme) => {
+  setTheme: (theme: ThemeMode) => {
     set({ theme });
     saveThemeToStorage(theme);
     applyTheme(theme);
   },
 
-  adminLogin: async (password) => {
+  adminLogin: async (password: string) => {
     try {
       const result = await api.adminLogin(password);
       if (result.success) {
@@ -517,7 +467,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     set({ isAdminLoggedIn: false });
   },
 
-  changeAdminPassword: async (oldPassword, newPassword) => {
+  changeAdminPassword: async (oldPassword: string, newPassword: string) => {
     try {
       const result = await api.changeAdminPassword(oldPassword, newPassword);
       return result.success;
@@ -527,7 +477,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     }
   },
 
-  switchEnvironment: async (env) => {
+  switchEnvironment: async (env: Environment) => {
     const state = get();
     if (state.environment === env) return;
 
@@ -536,33 +486,25 @@ export const useAppStore = create<AppState>((set, get) => ({
     try {
       const data = await api.getData(env);
       set({
-        users: (data.users && data.users.length > 0) ? data.users : mockUsers,
-        matches: (data.matches && data.matches.length > 0) ? data.matches : mockMatches,
-        bets: (data.bets && data.bets.length > 0) ? data.bets : mockBets,
-        currentUserId: data.currentUserId ?? 'user1',
+        ...buildDataState(data),
         isLoading: false,
         isDataLoaded: true,
       });
-      if (data.apiKey) {
-        set((s) => ({ apiConfig: { ...s.apiConfig, apiKey: data.apiKey } }));
-      }
-      if (data.competition) {
-        set((s) => ({ apiConfig: { ...s.apiConfig, competition: data.competition } }));
-      }
+      updateApiConfigFromData(set, data);
     } catch (e) {
       console.warn('Failed to load environment data from server, using mock data:', e);
       set({
         users: mockUsers,
         matches: mockMatches,
         bets: mockBets,
-        currentUserId: 'user1',
+        currentUserId: DEFAULT_USER_ID,
         isLoading: false,
         isDataLoaded: true,
       });
     }
   },
 
-  clearEnvironmentData: async (environment) => {
+  clearEnvironmentData: async (environment: Environment) => {
     try {
       const result = await api.clearEnvironmentData(environment);
       if (result.success) {
@@ -572,7 +514,7 @@ export const useAppStore = create<AppState>((set, get) => ({
             users: mockUsers,
             matches: mockMatches,
             bets: mockBets,
-            currentUserId: 'user1',
+            currentUserId: DEFAULT_USER_ID,
           });
         }
         return true;
@@ -584,7 +526,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     }
   },
 
-  listBackups: async (environment) => {
+  listBackups: async (environment: Environment) => {
     try {
       const result = await api.listBackups(environment);
       return result.backups || [];
@@ -594,7 +536,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     }
   },
 
-  createBackup: async (environment, label = 'manual') => {
+  createBackup: async (environment: Environment, label = 'manual') => {
     try {
       const result = await api.createBackup(environment, label);
       return result.success;
@@ -604,20 +546,14 @@ export const useAppStore = create<AppState>((set, get) => ({
     }
   },
 
-  restoreBackup: async (environment, filename) => {
+  restoreBackup: async (environment: Environment, filename: string) => {
     try {
       const result = await api.restoreBackup(environment, filename);
       if (result.success) {
-        // 还原后重新加载当前环境数据
         const state = get();
         if (state.environment === environment) {
           const data = await api.getData(environment);
-          set({
-            users: data.users || mockUsers,
-            matches: data.matches || mockMatches,
-            bets: data.bets || mockBets,
-            currentUserId: data.currentUserId ?? 'user1',
-          });
+          set(buildDataState(data));
         }
         return true;
       }
@@ -628,7 +564,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     }
   },
 
-  deleteBackup: async (environment, filename) => {
+  deleteBackup: async (environment: Environment, filename: string) => {
     try {
       const result = await api.deleteBackup(environment, filename);
       return result.success;
@@ -648,22 +584,19 @@ export const useAppStore = create<AppState>((set, get) => ({
     try {
       const data = await api.getData(state.environment);
       set({
-        users: (data.users && data.users.length > 0) ? data.users : mockUsers,
-        matches: (data.matches && data.matches.length > 0) ? data.matches : mockMatches,
-        bets: (data.bets && data.bets.length > 0) ? data.bets : mockBets,
-        currentUserId: data.currentUserId ?? 'user1',
+        ...buildDataState(data),
         isLoading: false,
       });
-      if (data.apiKey) {
-        set((s) => ({ apiConfig: { ...s.apiConfig, apiKey: data.apiKey } }));
-      }
-      if (data.competition) {
-        set((s) => ({ apiConfig: { ...s.apiConfig, competition: data.competition } }));
-      }
+      updateApiConfigFromData(set, data);
       await get().loadAutoRefreshSettings();
     } catch (e) {
       console.warn('Failed to refresh data:', e);
       set({ isLoading: false });
     }
   },
+});
+
+export const useAppStore = create<AppState>((set, get) => ({
+  ...getInitialState(),
+  ...createStoreActions(set, get),
 }));

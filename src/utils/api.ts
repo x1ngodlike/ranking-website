@@ -24,21 +24,31 @@ export interface ServerData {
   refreshInterval?: number;
 }
 
+const buildAuthHeaders = (requireAuth: boolean): Record<string, string> => {
+  const headers: Record<string, string> = {};
+  if (requireAuth && adminToken) {
+    headers.Authorization = `Bearer ${adminToken}`;
+  }
+  return headers;
+};
+
+const handle401 = (status: number, requireAuth: boolean) => {
+  if (status === 401 && requireAuth) {
+    setAdminToken(null);
+  }
+};
+
 async function request<T>(url: string, options: RequestInit = {}, requireAuth = false): Promise<T> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...(options.headers as Record<string, string> || {}),
+    ...buildAuthHeaders(requireAuth),
   };
-  if (requireAuth && adminToken) {
-    headers['Authorization'] = `Bearer ${adminToken}`;
-  }
   const res = await fetch(`${API_BASE}${url}`, {
     ...options,
     headers,
   });
-  if (res.status === 401 && requireAuth) {
-    setAdminToken(null);
-  }
+  handle401(res.status, requireAuth);
   if (!res.ok) {
     const err = await res.json().catch(() => ({ message: 'Request failed' }));
     throw new Error(err.message || `HTTP ${res.status}`);
@@ -47,18 +57,13 @@ async function request<T>(url: string, options: RequestInit = {}, requireAuth = 
 }
 
 async function uploadRequest(url: string, formData: FormData, requireAuth = false): Promise<any> {
-  const headers: Record<string, string> = {};
-  if (requireAuth && adminToken) {
-    headers['Authorization'] = `Bearer ${adminToken}`;
-  }
+  const headers = buildAuthHeaders(requireAuth);
   const res = await fetch(`${API_BASE}${url}`, {
     method: 'POST',
     body: formData,
     headers,
   });
-  if (res.status === 401 && requireAuth) {
-    setAdminToken(null);
-  }
+  handle401(res.status, requireAuth);
   if (!res.ok) throw new Error('Upload failed');
   return res.json();
 }

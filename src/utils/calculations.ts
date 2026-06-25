@@ -1,12 +1,29 @@
-import type { User, Bet, RankingItem, RankingSortType, Environment, Match } from '../types';
+import type { User, Bet, RankingItem, RankingSortType, Environment } from '../types';
 
 const STORAGE_KEY = 'world_cup_betting_app';
 const ADMIN_KEY = 'world_cup_betting_admin';
 const ENV_KEY = 'world_cup_betting_env';
+const DEFAULT_ADMIN_PASSWORD = '159357';
 
-export const getStorageKey = (env: Environment) => {
-  return env === 'test' ? `${STORAGE_KEY}_test` : STORAGE_KEY;
+const safeLocalStorageGet = <T>(key: string, defaultValue: T): T => {
+  try {
+    const value = localStorage.getItem(key);
+    return value ? JSON.parse(value) : defaultValue;
+  } catch {
+    return defaultValue;
+  }
 };
+
+const safeLocalStorageSet = (key: string, value: unknown, errorMsg: string): void => {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch (e) {
+    console.error(errorMsg, e);
+  }
+};
+
+export const getStorageKey = (env: Environment): string =>
+  env === 'test' ? `${STORAGE_KEY}_test` : STORAGE_KEY;
 
 export const loadEnvironment = (): Environment => {
   try {
@@ -25,56 +42,46 @@ export const saveEnvironment = (env: Environment): void => {
   }
 };
 
-export const loadAdminConfig = (): { password: string; isLoggedIn: boolean } => {
-  try {
-    const data = localStorage.getItem(ADMIN_KEY);
-    if (data) {
-      return JSON.parse(data);
-    }
-  } catch (e) {
-    console.error('Failed to load admin config:', e);
-  }
-  return { password: '159357', isLoggedIn: false };
-};
+export const loadAdminConfig = (): { password: string; isLoggedIn: boolean } =>
+  safeLocalStorageGet(ADMIN_KEY, { password: DEFAULT_ADMIN_PASSWORD, isLoggedIn: false });
 
-export const saveAdminConfig = (config: { password: string; isLoggedIn: boolean }): void => {
-  try {
-    localStorage.setItem(ADMIN_KEY, JSON.stringify(config));
-  } catch (e) {
-    console.error('Failed to save admin config:', e);
-  }
-};
+export const saveAdminConfig = (config: { password: string; isLoggedIn: boolean }): void =>
+  safeLocalStorageSet(ADMIN_KEY, config, 'Failed to save admin config:');
 
 export interface AppData {
   users: User[];
-  matches: Match[];
+  matches: any[];
   bets: Bet[];
   currentUserId: string | null;
 }
+
+const migrateBetData = (parsed: any): void => {
+  if (!parsed.bets || parsed.bets.length === 0) return;
+
+  const firstBet = parsed.bets[0];
+  if ('amount' in firstBet && !('winAmount' in firstBet)) {
+    parsed.bets = parsed.bets.map((bet: any) => ({
+      id: bet.id,
+      userId: bet.userId,
+      date: bet.date || new Date(bet.createdAt).toISOString().split('T')[0],
+      winAmount: bet.profitLoss !== undefined ? bet.amount + bet.profitLoss : undefined,
+      note: bet.note,
+      imageUrl: bet.imageUrl || undefined,
+      createdAt: bet.createdAt,
+    }));
+  }
+  parsed.bets = parsed.bets.map((bet: any) => ({
+    ...bet,
+    winAmount: bet.winAmount ?? undefined,
+  }));
+};
 
 export const loadFromStorage = (env: Environment = 'production'): AppData | null => {
   try {
     const data = localStorage.getItem(getStorageKey(env));
     if (data) {
       const parsed = JSON.parse(data);
-      if (parsed.bets && parsed.bets.length > 0) {
-        const firstBet = parsed.bets[0];
-        if ('amount' in firstBet && !('winAmount' in firstBet)) {
-          parsed.bets = parsed.bets.map((bet: any) => ({
-            id: bet.id,
-            userId: bet.userId,
-            date: bet.date || new Date(bet.createdAt).toISOString().split('T')[0],
-            winAmount: bet.profitLoss !== undefined ? bet.amount + bet.profitLoss : undefined,
-            note: bet.note,
-            imageUrl: bet.imageUrl || undefined,
-            createdAt: bet.createdAt,
-          }));
-        }
-        parsed.bets = parsed.bets.map((bet: any) => ({
-          ...bet,
-          winAmount: bet.winAmount ?? undefined,
-        }));
-      }
+      migrateBetData(parsed);
       return parsed;
     }
   } catch (e) {
@@ -83,13 +90,8 @@ export const loadFromStorage = (env: Environment = 'production'): AppData | null
   return null;
 };
 
-export const saveToStorage = (data: AppData, env: Environment = 'production'): void => {
-  try {
-    localStorage.setItem(getStorageKey(env), JSON.stringify(data));
-  } catch (e) {
-    console.error('Failed to save to localStorage:', e);
-  }
-};
+export const saveToStorage = (data: AppData, env: Environment = 'production'): void =>
+  safeLocalStorageSet(getStorageKey(env), data, 'Failed to save to localStorage:');
 
 export const clearStorage = (): void => {
   localStorage.removeItem(STORAGE_KEY);

@@ -17,10 +17,17 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 type TabType = 'upcoming' | 'finished' | 'all';
 
-const formatDateKey = (date: Date): string => {
+const BEIJING_OFFSET_MINUTES = 8 * 60;
+const WEEKDAYS = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+const DATE_SCROLL_AMOUNT = 200;
+
+const getBeijingTime = (date: Date): Date => {
   const utcDate = new Date(date.toISOString());
-  const beijingOffset = 8 * 60; // Beijing is UTC+8
-  const beijingTime = new Date(utcDate.getTime() + beijingOffset * 60 * 1000);
+  return new Date(utcDate.getTime() + BEIJING_OFFSET_MINUTES * 60 * 1000);
+};
+
+const formatDateKey = (date: Date): string => {
+  const beijingTime = getBeijingTime(date);
   const year = beijingTime.getUTCFullYear();
   const month = String(beijingTime.getUTCMonth() + 1).padStart(2, '0');
   const day = String(beijingTime.getUTCDate()).padStart(2, '0');
@@ -28,16 +35,8 @@ const formatDateKey = (date: Date): string => {
 };
 
 const getWeekdayName = (date: Date): string => {
-  const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
-  // Get day of week in Beijing time
-  const utcDate = new Date(date.toISOString());
-  const beijingOffset = 8 * 60;
-  const beijingTime = new Date(utcDate.getTime() + beijingOffset * 60 * 1000);
-  return weekdays[beijingTime.getUTCDay()];
-};
-
-const isSameDay = (date1: Date, date2: Date): boolean => {
-  return formatDateKey(date1) === formatDateKey(date2);
+  const beijingTime = getBeijingTime(date);
+  return WEEKDAYS[beijingTime.getUTCDay()];
 };
 
 const MatchesPage = () => {
@@ -114,9 +113,8 @@ const MatchesPage = () => {
 
   const scrollDates = useCallback((direction: 'left' | 'right') => {
     if (dateScrollRef.current) {
-      const scrollAmount = 200;
       dateScrollRef.current.scrollBy({
-        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        left: direction === 'left' ? -DATE_SCROLL_AMOUNT : DATE_SCROLL_AMOUNT,
         behavior: 'smooth',
       });
     }
