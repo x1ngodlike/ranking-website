@@ -12,7 +12,8 @@ const tabs: { type: RankingSortType; label: string; icon: typeof Trophy }[] = [
   { type: 'totalBets', label: '记录总数', icon: Hash },
 ];
 
-const PULL_REFRESH_THRESHOLD = 80;
+const PULL_THRESHOLD = 60;
+const PULL_MAX = 100;
 
 const RankingPage = () => {
   const sortType = useAppStore((state) => state.sortType);
@@ -20,13 +21,12 @@ const RankingPage = () => {
   const users = useAppStore((state) => state.users);
   const matches = useAppStore((state) => state.matches);
   const bets = useAppStore((state) => state.bets);
-  const isLoading = useAppStore((state) => state.isLoading);
   const refreshData = useAppStore((state) => state.refreshData);
 
-  const pullStartY = useRef<number | null>(null);
+  const pullStartY = useRef<number>(0);
   const [pullDistance, setPullDistance] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const [canPull, setCanPull] = useState(false);
 
   const rankings = useMemo(
     () => calculateRankings(users, bets, sortType),
@@ -39,67 +39,81 @@ const RankingPage = () => {
     .reduce((sum, b) => sum + (b.winAmount ?? 0), 0);
 
   const handleTouchStart = (e: React.TouchEvent) => {
-    if (containerRef.current && containerRef.current.scrollTop === 0) {
+    if (isRefreshing) return;
+    if (window.scrollY <= 0) {
+      setCanPull(true);
       pullStartY.current = e.touches[0].clientY;
     }
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (pullStartY.current === null || isRefreshing) return;
+    if (!canPull || isRefreshing) return;
     const currentY = e.touches[0].clientY;
     const diff = currentY - pullStartY.current;
-    if (diff > 0 && containerRef.current && containerRef.current.scrollTop === 0) {
-      const distance = Math.min(diff * 0.5, PULL_REFRESH_THRESHOLD * 1.5);
+    if (diff > 0 && window.scrollY <= 0) {
+      e.preventDefault();
+      const distance = Math.min(diff * 0.5, PULL_MAX);
       setPullDistance(distance);
+    } else if (diff <= 0) {
+      setCanPull(false);
     }
   };
 
   const handleTouchEnd = async () => {
-    if (pullStartY.current === null || isRefreshing) {
-      pullStartY.current = null;
+    if (!canPull || isRefreshing) {
+      setCanPull(false);
       return;
     }
 
-    if (pullDistance >= PULL_REFRESH_THRESHOLD) {
+    if (pullDistance >= PULL_THRESHOLD) {
       setIsRefreshing(true);
-      await refreshData();
-      setIsRefreshing(false);
+      try {
+        await refreshData();
+      } finally {
+        setTimeout(() => {
+          setIsRefreshing(false);
+          setPullDistance(0);
+        }, 300);
+      }
+    } else {
+      setPullDistance(0);
     }
-
-    setPullDistance(0);
-    pullStartY.current = null;
+    setCanPull(false);
   };
 
   return (
     <div
-      ref={containerRef}
-      className="max-w-5xl mx-auto overflow-y-auto overflow-x-hidden h-full"
+      className="max-w-5xl mx-auto"
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
-      style={{ touchAction: 'pan-y' }}
     >
       <div
-        className="flex items-center justify-center overflow-hidden transition-all duration-200"
+        className="flex items-center justify-center overflow-hidden transition-all ease-out"
         style={{
-          height: isRefreshing ? 60 : Math.max(0, pullDistance),
+          height: isRefreshing ? 50 : pullDistance,
+          transitionDuration: isRefreshing || pullDistance === 0 ? '300ms' : '0ms',
           opacity: isRefreshing || pullDistance > 0 ? 1 : 0,
         }}
       >
-        <div className="flex items-center gap-2 text-primary-500">
+        <div className="flex items-center gap-2 text-primary-500 text-sm">
           <RefreshCw
-            size={20}
+            size={18}
             className={isRefreshing ? 'animate-spin' : ''}
             style={{
-              transform: `rotate(${pullDistance * 3}deg)`,
-              transition: isRefreshing ? 'none' : 'transform 0.1s',
+              transform: isRefreshing ? undefined : `rotate(${pullDistance * 2}deg)`,
             }}
           />
-          <span className="text-sm">
-            {isRefreshing ? '刷新中...' : pullDistance >= PULL_REFRESH_THRESHOLD ? '释放刷新' : '下拉刷新'}
+          <span>
+            {isRefreshing
+              ? '刷新中...'
+              : pullDistance >= PULL_THRESHOLD
+              ? '释放刷新'
+              : '下拉刷新'}
           </span>
         </div>
       </div>
+
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
