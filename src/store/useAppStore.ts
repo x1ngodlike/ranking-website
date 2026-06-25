@@ -150,7 +150,7 @@ const getInitialState = (): Omit<
     lastRefreshTime: null,
     refreshError: null,
     theme,
-    environment: 'test' as Environment,
+    environment: import.meta.env.PROD ? 'production' as Environment : 'test' as Environment,
     isAdminLoggedIn: false,
     isLoading: true,
     isDataLoaded: false,
