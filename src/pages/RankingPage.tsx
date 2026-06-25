@@ -1,7 +1,7 @@
-import { useMemo } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { calculateRankings } from '@/utils/calculations';
-import { Trophy, Hash } from 'lucide-react';
+import { Trophy, Hash, RefreshCw } from 'lucide-react';
 import RankingPodium from '@/components/RankingPodium/RankingPodium';
 import RankingList from '@/components/RankingList/RankingList';
 import type { RankingSortType } from '@/types';
@@ -12,12 +12,21 @@ const tabs: { type: RankingSortType; label: string; icon: typeof Trophy }[] = [
   { type: 'totalBets', label: '记录总数', icon: Hash },
 ];
 
+const PULL_REFRESH_THRESHOLD = 80;
+
 const RankingPage = () => {
   const sortType = useAppStore((state) => state.sortType);
   const setSortType = useAppStore((state) => state.setSortType);
   const users = useAppStore((state) => state.users);
   const matches = useAppStore((state) => state.matches);
   const bets = useAppStore((state) => state.bets);
+  const isLoading = useAppStore((state) => state.isLoading);
+  const refreshData = useAppStore((state) => state.refreshData);
+
+  const pullStartY = useRef<number | null>(null);
+  const [pullDistance, setPullDistance] = useState(0);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const rankings = useMemo(
     () => calculateRankings(users, bets, sortType),
@@ -29,8 +38,68 @@ const RankingPage = () => {
     .filter((b) => (b.winAmount ?? 0) > 0)
     .reduce((sum, b) => sum + (b.winAmount ?? 0), 0);
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (containerRef.current && containerRef.current.scrollTop === 0) {
+      pullStartY.current = e.touches[0].clientY;
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (pullStartY.current === null || isRefreshing) return;
+    const currentY = e.touches[0].clientY;
+    const diff = currentY - pullStartY.current;
+    if (diff > 0 && containerRef.current && containerRef.current.scrollTop === 0) {
+      const distance = Math.min(diff * 0.5, PULL_REFRESH_THRESHOLD * 1.5);
+      setPullDistance(distance);
+    }
+  };
+
+  const handleTouchEnd = async () => {
+    if (pullStartY.current === null || isRefreshing) {
+      pullStartY.current = null;
+      return;
+    }
+
+    if (pullDistance >= PULL_REFRESH_THRESHOLD) {
+      setIsRefreshing(true);
+      await refreshData();
+      setIsRefreshing(false);
+    }
+
+    setPullDistance(0);
+    pullStartY.current = null;
+  };
+
   return (
-    <div className="max-w-5xl mx-auto">
+    <div
+      ref={containerRef}
+      className="max-w-5xl mx-auto overflow-y-auto overflow-x-hidden h-full"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      style={{ touchAction: 'pan-y' }}
+    >
+      <div
+        className="flex items-center justify-center overflow-hidden transition-all duration-200"
+        style={{
+          height: isRefreshing ? 60 : Math.max(0, pullDistance),
+          opacity: isRefreshing || pullDistance > 0 ? 1 : 0,
+        }}
+      >
+        <div className="flex items-center gap-2 text-primary-500">
+          <RefreshCw
+            size={20}
+            className={isRefreshing ? 'animate-spin' : ''}
+            style={{
+              transform: `rotate(${pullDistance * 3}deg)`,
+              transition: isRefreshing ? 'none' : 'transform 0.1s',
+            }}
+          />
+          <span className="text-sm">
+            {isRefreshing ? '刷新中...' : pullDistance >= PULL_REFRESH_THRESHOLD ? '释放刷新' : '下拉刷新'}
+          </span>
+        </div>
+      </div>
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}

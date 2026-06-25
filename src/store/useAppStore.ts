@@ -76,6 +76,7 @@ interface AppState {
 
   openSettings: () => void;
   closeSettings: () => void;
+  refreshData: () => Promise<void>;
 }
 
 const saveToServer = async (state: AppState) => {
@@ -134,6 +135,7 @@ const getInitialState = (): Omit<
   | 'deleteBackup'
   | 'openSettings'
   | 'closeSettings'
+  | 'refreshData'
 > => {
   const apiConfig = loadApiConfig();
   const theme = loadTheme();
@@ -166,9 +168,9 @@ export const useAppStore = create<AppState>((set, get) => ({
       const data = await api.getData(state.environment);
       const isAdmin = !!getAdminToken();
       set({
-        users: data.users || mockUsers,
-        matches: data.matches || mockMatches,
-        bets: data.bets || mockBets,
+        users: (data.users && data.users.length > 0) ? data.users : mockUsers,
+        matches: (data.matches && data.matches.length > 0) ? data.matches : mockMatches,
+        bets: (data.bets && data.bets.length > 0) ? data.bets : mockBets,
         currentUserId: data.currentUserId ?? 'user1',
         isAdminLoggedIn: isAdmin,
         isLoading: false,
@@ -451,9 +453,11 @@ export const useAppStore = create<AppState>((set, get) => ({
       const competitionId = '2000';
       const apiMatches = await fetchMatchesFromApi(competitionId);
       let updatedCount = 0;
+      let addedCount = 0;
 
       set((state) => {
         const newMatches = [...state.matches];
+        const existingIds = new Set(newMatches.map((m) => m.id));
 
         apiMatches.forEach((apiMatch) => {
           const index = newMatches.findIndex((m) => m.id === apiMatch.id);
@@ -468,8 +472,14 @@ export const useAppStore = create<AppState>((set, get) => ({
               newMatches[index] = apiMatch;
               updatedCount++;
             }
+          } else {
+            newMatches.push(apiMatch);
+            addedCount++;
           }
         });
+
+        // 重新排序
+        newMatches.sort((a, b) => new Date(a.matchTime).getTime() - new Date(b.matchTime).getTime());
 
         return { matches: newMatches };
       });
@@ -477,7 +487,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       saveToServer(get());
       set({ isRefreshing: false, lastRefreshTime: new Date().toISOString() });
 
-      return updatedCount;
+      return updatedCount + addedCount;
     } catch (error) {
       const message = error instanceof Error ? error.message : '刷新失败';
       set({ isRefreshing: false, refreshError: message });
@@ -532,9 +542,9 @@ export const useAppStore = create<AppState>((set, get) => ({
     try {
       const data = await api.getData(env);
       set({
-        users: data.users || mockUsers,
-        matches: data.matches || mockMatches,
-        bets: data.bets || mockBets,
+        users: (data.users && data.users.length > 0) ? data.users : mockUsers,
+        matches: (data.matches && data.matches.length > 0) ? data.matches : mockMatches,
+        bets: (data.bets && data.bets.length > 0) ? data.bets : mockBets,
         currentUserId: data.currentUserId ?? 'user1',
         isLoading: false,
         isDataLoaded: true,
@@ -636,4 +646,34 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   openSettings: () => set({ showSettingsModal: true }),
   closeSettings: () => set({ showSettingsModal: false }),
+
+  refreshData: async () => {
+    const state = get();
+    if (state.isLoading) return;
+    set({ isLoading: true });
+    try {
+      const data = await api.getData(state.environment);
+      set({
+        users: (data.users && data.users.length > 0) ? data.users : mockUsers,
+        matches: (data.matches && data.matches.length > 0) ? data.matches : mockMatches,
+        bets: (data.bets && data.bets.length > 0) ? data.bets : mockBets,
+        currentUserId: data.currentUserId ?? 'user1',
+        isLoading: false,
+      });
+      if (data.apiKey) {
+        set((s) => ({ apiConfig: { ...s.apiConfig, apiKey: data.apiKey } }));
+      }
+      if (data.competition) {
+        set((s) => ({ apiConfig: { ...s.apiConfig, competition: data.competition } }));
+      }
+      if (data.theme && (data.theme === 'light' || data.theme === 'dark' || data.theme === 'system')) {
+        set({ theme: data.theme as ThemeMode });
+        applyTheme(data.theme as ThemeMode);
+      }
+      await get().loadAutoRefreshSettings();
+    } catch (e) {
+      console.warn('Failed to refresh data:', e);
+      set({ isLoading: false });
+    }
+  },
 }));

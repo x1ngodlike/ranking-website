@@ -658,9 +658,9 @@
       "matchTime": "2026-06-24T19:00:00Z",
       "stage": "group",
       "groupName": "GROUP_B",
-      "homeScore": null,
-      "awayScore": null,
-      "status": "upcoming"
+      "homeScore": 2,
+      "awayScore": 1,
+      "status": "finished"
     },
     {
       "id": "api_537338",
@@ -671,9 +671,9 @@
       "matchTime": "2026-06-24T19:00:00Z",
       "stage": "group",
       "groupName": "GROUP_B",
-      "homeScore": null,
-      "awayScore": null,
-      "status": "upcoming"
+      "homeScore": 3,
+      "awayScore": 1,
+      "status": "finished"
     },
     {
       "id": "api_537344",
@@ -684,9 +684,9 @@
       "matchTime": "2026-06-24T22:00:00Z",
       "stage": "group",
       "groupName": "GROUP_C",
-      "homeScore": null,
-      "awayScore": null,
-      "status": "upcoming"
+      "homeScore": 4,
+      "awayScore": 2,
+      "status": "finished"
     },
     {
       "id": "api_537343",
@@ -697,9 +697,9 @@
       "matchTime": "2026-06-24T22:00:00Z",
       "stage": "group",
       "groupName": "GROUP_C",
-      "homeScore": null,
-      "awayScore": null,
-      "status": "upcoming"
+      "homeScore": 0,
+      "awayScore": 3,
+      "status": "finished"
     },
     {
       "id": "api_537331",
