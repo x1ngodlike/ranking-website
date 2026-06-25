@@ -35,27 +35,3 @@ export const getBetTypeLabel = (type: string): string => {
   };
   return labels[type] || type;
 };
-
-export const getSelectionLabel = (selection: string, betType: string): string => {
-  if (betType === '1x2') {
-    const labels: Record<string, string> = {
-      home: '主胜',
-      draw: '平局',
-      away: '客胜',
-    };
-    return labels[selection] || selection;
-  }
-  return selection;
-};
-
-export const getStatusLabel = (status: string): string => {
-  const labels: Record<string, string> = {
-    pending: '待结算',
-    won: '已赢',
-    lost: '已输',
-    upcoming: '未开始',
-    live: '进行中',
-    finished: '已结束',
-  };
-  return labels[status] || status;
-};

@@ -44,5 +44,3 @@ export const saveApiConfig = (config: Partial<ApiConfig>): void => {
     console.error('Failed to save API config:', e);
   }
 };
-
-export const getDefaultConfig = (): ApiConfig => defaultConfig;
