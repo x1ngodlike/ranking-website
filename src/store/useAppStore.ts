@@ -150,7 +150,7 @@ const getInitialState = (): Omit<
     lastRefreshTime: null,
     refreshError: null,
     theme,
-    environment: 'production' as Environment,
+    environment: 'test' as Environment,
     isAdminLoggedIn: false,
     isLoading: true,
     isDataLoaded: false,
