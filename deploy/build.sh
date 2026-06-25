@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ================================================
-# 世界杯体彩收支统计排行榜 - Unraid 部署脚本
+# 世界杯体彩中奖排行榜 - Unraid 部署脚本
 # ================================================
 
 set -e
@@ -17,8 +17,8 @@ PORT=5936
 ADMIN_PASSWORD=${ADMIN_PASSWORD:-"159357"}
 DATA_DIR="${PROJECT_DIR}/data"
 UPLOADS_DIR="${PROJECT_DIR}/uploads"
-AUTO_BACKUP_INTERVAL=${AUTO_BACKUP_INTERVAL:-"3600000"}
-MAX_BACKUPS=${MAX_BACKUPS:-"30"}
+AUTO_BACKUP_INTERVAL_MS=${AUTO_BACKUP_INTERVAL_MS:-"900000"}
+MAX_BACKUPS=${MAX_BACKUPS:-"50"}
 
 # 颜色输出
 RED='\033[0;31m'
@@ -92,12 +92,13 @@ create_directories() {
     mkdir -p "${DATA_DIR}/test"
     mkdir -p "${DATA_DIR}/backups/production"
     mkdir -p "${DATA_DIR}/backups/test"
-    mkdir -p "${UPLOADS_DIR}"
-    
+    mkdir -p "${UPLOADS_DIR}/avatars"
+    mkdir -p "${UPLOADS_DIR}/bets"
+
     # 设置权限
     chmod -R 755 "${DATA_DIR}" 2>/dev/null || true
     chmod -R 755 "${UPLOADS_DIR}" 2>/dev/null || true
-    
+
     log_success "数据目录创建完成"
 }
 
@@ -114,16 +115,16 @@ cleanup_old_image() {
 build_image() {
     log_info "开始构建 Docker 镜像..."
     log_info "这可能需要几分钟时间，请耐心等待..."
-    
+
     cd "${PROJECT_DIR}"
-    
+
     # 使用缓存或不适用缓存构建
     if [ "$1" == "--no-cache" ]; then
         docker build --no-cache -t ${IMAGE_NAME}:latest .
     else
         docker build -t ${IMAGE_NAME}:latest .
     fi
-    
+
     if [ $? -eq 0 ]; then
         log_success "镜像构建成功"
     else
@@ -135,27 +136,28 @@ build_image() {
 # 运行容器
 run_container() {
     log_info "启动容器..."
-    
+
     # 检查端口是否被占用
     if docker ps --format '{{.Ports}}' | grep -q ":${PORT}->"; then
         log_error "端口 ${PORT} 已被占用，请先停止占用该端口的容器"
         exit 1
     fi
-    
+
     cd "${PROJECT_DIR}"
-    
-    # 使用 docker run 启动（兼容性更好）
+
+    # 使用 docker run 启动
     docker run -d \
         --name ${CONTAINER_NAME} \
         --restart unless-stopped \
         -p ${PORT}:${PORT} \
         -e PORT=${PORT} \
+        -e NODE_ENV=production \
         -e ADMIN_PASSWORD=${ADMIN_PASSWORD} \
         -e TZ=Asia/Shanghai \
         -e DATA_DIR=/app/data \
         -e UPLOAD_DIR=/app/uploads \
         -e DIST_DIR=/app/dist \
-        -e AUTO_BACKUP_INTERVAL_MS=${AUTO_BACKUP_INTERVAL} \
+        -e AUTO_BACKUP_INTERVAL_MS=${AUTO_BACKUP_INTERVAL_MS} \
         -e MAX_BACKUPS=${MAX_BACKUPS} \
         -v "${DATA_DIR}:/app/data" \
         -v "${UPLOADS_DIR}:/app/uploads" \
@@ -167,7 +169,7 @@ run_container() {
         --health-retries=3 \
         --health-start-period=15s \
         ${IMAGE_NAME}:latest
-    
+
     if [ $? -eq 0 ]; then
         log_success "容器启动成功"
     else
@@ -179,10 +181,10 @@ run_container() {
 # 等待服务启动
 wait_for_service() {
     log_info "等待服务启动..."
-    
+
     local max_attempts=30
     local attempt=1
-    
+
     while [ $attempt -le $max_attempts ]; do
         if curl -s http://localhost:${PORT}/api/health &>/dev/null; then
             log_success "服务已就绪"
@@ -192,7 +194,7 @@ wait_for_service() {
         sleep 1
         ((attempt++))
     done
-    
+
     echo ""
     log_error "服务启动失败！下面是容器日志："
     echo "============================================"
@@ -206,7 +208,7 @@ wait_for_service() {
 # 显示部署信息
 show_info() {
     local server_ip=$(get_server_ip)
-    
+
     echo ""
     print_line
     echo ""
@@ -217,6 +219,9 @@ show_info() {
     echo -e "  ${BLUE}管理员密码：${NC} ${ADMIN_PASSWORD}"
     echo -e "  ${BLUE}数据目录：${NC} ${DATA_DIR}"
     echo -e "  ${BLUE}上传目录：${NC} ${UPLOADS_DIR}"
+    echo ""
+    echo -e "  ${BLUE}自动备份：${NC} 每 $((AUTO_BACKUP_INTERVAL_MS / 60000)) 分钟一次"
+    echo -e "  ${BLUE}最大备份数：${NC} ${MAX_BACKUPS} 份"
     echo ""
     print_line
     echo ""
@@ -294,7 +299,7 @@ uninstall() {
 # 显示帮助
 show_help() {
     echo ""
-    echo "世界杯体彩收支统计排行榜 - 部署脚本"
+    echo "世界杯体彩中奖排行榜 - 部署脚本"
     echo ""
     echo "用法: bash build.sh [命令]"
     echo ""
@@ -310,12 +315,13 @@ show_help() {
     echo "  help          显示帮助信息"
     echo ""
     echo "环境变量："
-    echo "  ADMIN_PASSWORD         管理员密码（默认：159357）"
-    echo "  AUTO_BACKUP_INTERVAL   自动备份间隔毫秒（默认：3600000 = 1小时）"
-    echo "  MAX_BACKUPS            最大备份数量（默认：30）"
+    echo "  ADMIN_PASSWORD           管理员密码（默认：159357）"
+    echo "  AUTO_BACKUP_INTERVAL_MS  自动备份间隔毫秒（默认：900000 = 15分钟）"
+    echo "  MAX_BACKUPS             最大备份数量（默认：50）"
     echo ""
     echo "示例："
     echo "  ADMIN_PASSWORD=abc123 bash build.sh          # 使用自定义密码部署"
+    echo "  AUTO_BACKUP_INTERVAL_MS=600000 bash build.sh # 10分钟备份一次"
     echo "  bash build.sh --rebuild                     # 重新构建并部署"
     echo "  bash build.sh restart                       # 重启服务"
     echo ""
@@ -325,10 +331,10 @@ show_help() {
 main() {
     echo ""
     print_line
-    echo "  世界杯体彩收支统计排行榜 - 部署脚本"
+    echo "  世界杯体彩中奖排行榜 - 部署脚本"
     print_line
     echo ""
-    
+
     case "${1:-}" in
         --rebuild)
             rebuild
