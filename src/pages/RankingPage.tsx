@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState, useEffect } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { calculateRankings } from '@/utils/calculations';
 import { Trophy, Hash, RefreshCw } from 'lucide-react';
@@ -26,7 +26,8 @@ const RankingPage = () => {
   const pullStartY = useRef<number>(0);
   const [pullDistance, setPullDistance] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [canPull, setCanPull] = useState(false);
+  const canPull = useRef(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const rankings = useMemo(
     () => calculateRankings(users, bets, sortType),
@@ -38,61 +39,75 @@ const RankingPage = () => {
     .filter((b) => (b.winAmount ?? 0) > 0)
     .reduce((sum, b) => sum + (b.winAmount ?? 0), 0);
 
-  const handleTouchStart = (e: React.TouchEvent) => {
-    if (isRefreshing) return;
-    if (window.scrollY <= 0) {
-      setCanPull(true);
-      pullStartY.current = e.touches[0].clientY;
-    }
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!canPull || isRefreshing) return;
-    const currentY = e.touches[0].clientY;
-    const diff = currentY - pullStartY.current;
-    if (diff > 0 && window.scrollY <= 0) {
-      e.preventDefault();
-      const distance = Math.min(diff * 0.5, PULL_MAX);
-      setPullDistance(distance);
-    } else if (diff <= 0) {
-      setCanPull(false);
-    }
-  };
-
-  const handleTouchEnd = async () => {
-    if (!canPull || isRefreshing) {
-      setCanPull(false);
-      return;
-    }
-
-    if (pullDistance >= PULL_THRESHOLD) {
-      setIsRefreshing(true);
-      try {
-        await refreshData();
-      } finally {
-        setTimeout(() => {
-          setIsRefreshing(false);
-          setPullDistance(0);
-        }, 300);
+  useEffect(() => {
+    const handleTouchStart = (e: TouchEvent) => {
+      if (isRefreshing) return;
+      const scrollY = window.scrollY || window.pageYOffset;
+      if (scrollY <= 0) {
+        canPull.current = true;
+        pullStartY.current = e.touches[0].clientY;
+      } else {
+        canPull.current = false;
       }
-    } else {
-      setPullDistance(0);
-    }
-    setCanPull(false);
-  };
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (!canPull.current || isRefreshing) return;
+      const currentY = e.touches[0].clientY;
+      const diff = currentY - pullStartY.current;
+      const scrollY = window.scrollY || window.pageYOffset;
+
+      if (diff > 0 && scrollY <= 0) {
+        if (e.cancelable) {
+          e.preventDefault();
+        }
+        const distance = Math.min(diff * 0.5, PULL_MAX);
+        setPullDistance(distance);
+      } else if (diff <= 0) {
+        canPull.current = false;
+      }
+    };
+
+    const handleTouchEnd = async () => {
+      if (!canPull.current || isRefreshing) {
+        canPull.current = false;
+        return;
+      }
+
+      if (pullDistance >= PULL_THRESHOLD) {
+        setIsRefreshing(true);
+        try {
+          await refreshData();
+        } finally {
+          setTimeout(() => {
+            setIsRefreshing(false);
+            setPullDistance(0);
+          }, 400);
+        }
+      } else {
+        setPullDistance(0);
+      }
+      canPull.current = false;
+    };
+
+    document.addEventListener('touchstart', handleTouchStart, { passive: true });
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
+    document.addEventListener('touchend', handleTouchEnd, { passive: true });
+
+    return () => {
+      document.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [isRefreshing, pullDistance, refreshData]);
 
   return (
-    <div
-      className="max-w-5xl mx-auto"
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
-    >
+    <div className="max-w-5xl mx-auto">
       <div
-        className="flex items-center justify-center overflow-hidden transition-all ease-out"
+        className="flex items-center justify-center overflow-hidden"
         style={{
           height: isRefreshing ? 50 : pullDistance,
-          transitionDuration: isRefreshing || pullDistance === 0 ? '300ms' : '0ms',
+          transition: isRefreshing || pullDistance === 0 ? 'height 300ms ease-out' : 'none',
           opacity: isRefreshing || pullDistance > 0 ? 1 : 0,
         }}
       >
