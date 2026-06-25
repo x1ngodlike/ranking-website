@@ -80,18 +80,30 @@ const writeJsonFile = (file, data) => {
   fs.writeFileSync(file, JSON.stringify(data, null, JSON_INDENT), 'utf-8');
 };
 
+const splitDataAndMatches = (oldData) => {
+  const { matches, ...dataOnly } = oldData;
+  return { data: dataOnly, matches: matches || [] };
+};
+
 const migrateDataFiles = () => {
   ENVIRONMENTS.forEach((env) => {
     const oldDataFile = path.join(DATA_DIR, `data-${env}.json`);
     const oldMatchesFile = path.join(DATA_DIR, `matches-${env}.json`);
+    const legacyDataFile = path.join(DATA_DIR, 'data.json');
     ensureEnvDir(env);
     const newDataFile = getDataFile(env);
     const newMatchesFile = getMatchesFile(env);
 
     if (fs.existsSync(oldDataFile) && !fs.existsSync(newDataFile)) {
       try {
-        fs.renameSync(oldDataFile, newDataFile);
-        console.log(`Migrated data-${env}.json to ${env}/data.json`);
+        const oldData = readJsonFile(oldDataFile, {});
+        const { data, matches } = splitDataAndMatches(oldData);
+        writeJsonFile(newDataFile, data);
+        if (matches.length > 0 && !fs.existsSync(newMatchesFile)) {
+          writeJsonFile(newMatchesFile, matches);
+        }
+        fs.unlinkSync(oldDataFile);
+        console.log(`Migrated data-${env}.json to ${env}/data.json (matches split)`);
       } catch (e) {
         console.error(`Failed to migrate data-${env}.json:`, e);
       }
@@ -102,6 +114,19 @@ const migrateDataFiles = () => {
         console.log(`Migrated matches-${env}.json to ${env}/matches.json`);
       } catch (e) {
         console.error(`Failed to migrate matches-${env}.json:`, e);
+      }
+    }
+    if (env === 'production' && fs.existsSync(legacyDataFile) && !fs.existsSync(newDataFile)) {
+      try {
+        const legacyData = readJsonFile(legacyDataFile, {});
+        const { data, matches } = splitDataAndMatches(legacyData);
+        writeJsonFile(newDataFile, data);
+        if (matches.length > 0 && !fs.existsSync(newMatchesFile)) {
+          writeJsonFile(newMatchesFile, matches);
+        }
+        console.log('Migrated legacy data.json to production/');
+      } catch (e) {
+        console.error('Failed to migrate legacy data.json:', e);
       }
     }
   });
