@@ -317,11 +317,34 @@ const proxyFootballApi = async (req, res, method = 'GET') => {
       fetchOptions.body = JSON.stringify(req.body);
     }
     const response = await fetch(targetUrl, fetchOptions);
-    const data = await response.json();
+
+    const contentType = response.headers.get('content-type');
+    let data;
+    if (contentType && contentType.includes('application/json')) {
+      data = await response.json();
+    } else {
+      const text = await response.text();
+      data = { message: text || `HTTP ${response.status}` };
+    }
+
+    if (!response.ok) {
+      let errorMessage = `外部 API 请求失败: HTTP ${response.status}`;
+      if (data.message) {
+        errorMessage = `外部 API 错误: ${data.message}`;
+      } else if (response.status === 403) {
+        errorMessage = 'API Key 无效或已过期';
+      } else if (response.status === 429) {
+        errorMessage = '请求过于频繁，请稍后再试';
+      } else if (response.status === 404) {
+        errorMessage = '赛事不存在，请选择正确的赛事';
+      }
+      return res.status(response.status).json({ success: false, message: errorMessage });
+    }
+
     res.status(response.status).json(data);
   } catch (error) {
     console.error('Football API proxy error:', error.message);
-    res.status(500).json({ message: '代理请求失败: ' + error.message });
+    res.status(500).json({ success: false, message: '代理请求失败: ' + error.message });
   }
 };
 
