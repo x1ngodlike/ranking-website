@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAppStore } from '@/store/useAppStore';
-import { X, Settings, RefreshCw, Key, Globe, Clock, Lock, Eye, EyeOff } from 'lucide-react';
+import { X, Settings, RefreshCw, Key, Globe, Clock, Lock, Eye, EyeOff, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface ApiSettingsModalProps {
@@ -20,25 +20,21 @@ const ApiSettingsModal = ({ isOpen, onClose }: ApiSettingsModalProps) => {
 
   const [apiKey, setApiKey] = useState('');
   const [competitionId, setCompetitionId] = useState('2000');
-  const [refreshInterval, setRefreshInterval] = useState('60');
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loginError, setLoginError] = useState('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
-  const saveAutoRefreshSettings = useAppStore((state) => state.saveAutoRefreshSettings);
-
   useEffect(() => {
     if (isOpen) {
       setApiKey(apiConfig.apiKey);
       setCompetitionId('2000');
-      setRefreshInterval(String(apiConfig.refreshInterval));
       setSyncMessage(null);
       setPassword('');
       setLoginError('');
     }
-  }, [isOpen, apiConfig.apiKey, apiConfig.refreshInterval]);
+  }, [isOpen, apiConfig.apiKey]);
 
   const handleLogin = async () => {
     if (!password.trim()) return;
@@ -56,18 +52,14 @@ const ApiSettingsModal = ({ isOpen, onClose }: ApiSettingsModalProps) => {
     setApiConfig({
       apiKey: apiKey.trim(),
       autoRefresh: true,
-      refreshInterval: parseInt(refreshInterval) || 60,
     });
   };
 
   const handleSave = async () => {
-    // 保存 API Key 等设置
     setApiConfig({
       apiKey: apiKey.trim(),
       autoRefresh: true,
     });
-    // 保存自动刷新间隔到后端
-    await saveAutoRefreshSettings(parseInt(refreshInterval) || 60);
     setSyncMessage('设置已保存');
     setTimeout(() => setSyncMessage(null), 2000);
   };
@@ -223,28 +215,19 @@ const ApiSettingsModal = ({ isOpen, onClose }: ApiSettingsModalProps) => {
             </div>
 
             <div className="p-4 rounded-xl bg-neutral-50 dark:bg-neutral-950/50 border border-neutral-200 dark:border-neutral-700">
-              <div className="flex items-center justify-between mb-3">
-                <label className="flex items-center gap-2 text-sm text-neutral-500 dark:text-neutral-400">
-                    <Clock size={16} className="text-primary-400" />
-                    自动刷新间隔 {!isAdminLoggedIn && <span className="text-xs text-neutral-400">(仅查看)</span>}
-                  </label>
+              <div className="flex items-center gap-2 mb-3">
+                <Clock size={16} className="text-primary-400" />
+                <span className="text-sm text-neutral-500 dark:text-neutral-400">自动刷新策略</span>
               </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="number"
-                    min="10"
-                    max="3600"
-                    value={refreshInterval}
-                    onChange={(e) => setRefreshInterval(e.target.value)}
-                    disabled={!isAdminLoggedIn}
-                    className="flex-1 px-3 py-2 rounded-lg bg-white dark:bg-neutral-800 border border-primary/20 text-neutral-800 dark:text-neutral-200 text-sm focus:outline-none focus:border-primary/500 disabled:opacity-60 disabled:cursor-not-allowed"
-                  />
-                  <span className="text-sm text-neutral-500 dark:text-neutral-400">秒</span>
+              <div className="space-y-2 text-sm text-neutral-600 dark:text-neutral-400">
+                <div className="flex items-start gap-2">
+                  <Info size={14} className="text-primary-400 mt-0.5 flex-shrink-0" />
+                  <span>比赛进行中：每 <span className="font-medium text-neutral-800 dark:text-neutral-200">1 分钟</span> 刷新一次</span>
                 </div>
-                <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
-                  免费版建议 ≥ 60 秒（每分钟10次请求限制），范围 10-3600 秒
-                </p>
+                <div className="flex items-start gap-2">
+                  <Info size={14} className="text-primary-400 mt-0.5 flex-shrink-0" />
+                  <span>无比赛进行时：每 <span className="font-medium text-neutral-800 dark:text-neutral-200">4 小时</span> 刷新一次</span>
+                </div>
               </div>
             </div>
 

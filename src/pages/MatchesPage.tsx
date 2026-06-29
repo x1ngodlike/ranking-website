@@ -148,15 +148,15 @@ const MatchesPage = () => {
   }, [isRefreshing, apiConfig.apiKey, syncMatchesFromApi, setRefreshError]);
 
   useEffect(() => {
-    // 自动刷新始终开启，只要配置了 API Key
     if (!apiConfig.apiKey) return;
 
+    const intervalMs = hasLiveMatches ? 60 * 1000 : 4 * 60 * 60 * 1000;
     const interval = setInterval(() => {
       refreshLiveMatches().catch(() => {});
-    }, apiConfig.refreshInterval * 1000);
+    }, intervalMs);
 
     return () => clearInterval(interval);
-  }, [apiConfig.apiKey, apiConfig.refreshInterval, refreshLiveMatches]);
+  }, [apiConfig.apiKey, hasLiveMatches, refreshLiveMatches]);
 
   const tabs = [
     { key: 'all', label: '全部', icon: CalendarDays },
@@ -164,6 +164,7 @@ const MatchesPage = () => {
     { key: 'finished', label: '已结束', icon: Trophy },
   ];
 
+  const hasLiveMatches = matches.some((m) => m.status === 'live');
   const liveCount = matches.filter((m) => m.status === 'live').length;
   const selectedDateMatches = matches.filter((m) =>
     formatDateKey(new Date(m.matchTime)) === selectedDate
@@ -406,7 +407,7 @@ const MatchesPage = () => {
               <span className="relative inline-flex rounded-full h-2 w-2 bg-profit-500" />
             </span>
             <span className="text-profit-500">
-              自动刷新中（每 {apiConfig.refreshInterval} 秒）
+              自动刷新中（{hasLiveMatches ? '比赛中，每1分钟' : '无比赛，每4小时'}）
             </span>
             {lastRefreshTime && (
               <span className="text-neutral-500 dark:text-neutral-400">
