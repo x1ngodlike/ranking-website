@@ -34,6 +34,8 @@ const RankingPage = () => {
   );
 
   const finishedMatches = matches.filter((m) => m.status === 'finished').length;
+  const totalMatches = matches.length;
+  const remainingMatches = totalMatches - finishedMatches;
   const totalWinAmount = bets
     .filter((b) => (b.winAmount ?? 0) > 0)
     .reduce((sum, b) => sum + (b.winAmount ?? 0), 0);
@@ -148,13 +150,13 @@ const RankingPage = () => {
           </div>
           <div className="w-px h-7 sm:h-9 md:h-10 bg-primary/20" />
           <div className="text-center">
-            <p className="font-display text-xl sm:text-2xl md:text-3xl text-primary-500">{finishedMatches}</p>
-            <p className="text-xs sm:text-sm md:text-sm text-neutral-500 dark:text-neutral-500">已赛场次</p>
+            <p className="font-display text-xl sm:text-2xl md:text-3xl text-primary-500">{bets.length}</p>
+            <p className="text-xs sm:text-sm md:text-sm text-neutral-500 dark:text-neutral-500">记录总数</p>
           </div>
           <div className="w-px h-7 sm:h-9 md:h-10 bg-primary/20" />
           <div className="text-center">
-            <p className="font-display text-xl sm:text-2xl md:text-3xl text-primary-500">{bets.length}</p>
-            <p className="text-xs sm:text-sm md:text-sm text-neutral-500 dark:text-neutral-500">记录总数</p>
+            <p className="font-display text-xl sm:text-2xl md:text-3xl text-primary-500">{finishedMatches}/{remainingMatches}</p>
+            <p className="text-xs sm:text-sm md:text-sm text-neutral-500 dark:text-neutral-500">已赛/剩余场次</p>
           </div>
           <div className="w-px h-7 sm:h-9 md:h-10 bg-primary/20" />
           <div className="text-center">
