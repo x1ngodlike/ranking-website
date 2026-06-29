@@ -1,31 +1,346 @@
 {
   "users": [
     {
-      "id": "fwtmfd2nkmqs0xqrj",
-      "nickname": "1",
-      "avatar": "⚽️",
+      "id": "user-champion",
+      "nickname": "体彩之王",
+      "avatar": "🏆",
+      "isAdmin": true,
+      "createdAt": "2026-06-01T00:00:00.000Z"
+    },
+    {
+      "id": "user-veteran",
+      "nickname": "老玩家",
+      "avatar": "🎯",
       "isAdmin": false,
-      "createdAt": "2026-06-24T12:02:58.111Z"
+      "createdAt": "2026-06-05T00:00:00.000Z"
+    },
+    {
+      "id": "user-newbie",
+      "nickname": "新手上路",
+      "avatar": "🌱",
+      "isAdmin": false,
+      "createdAt": "2026-06-20T00:00:00.000Z"
+    },
+    {
+      "id": "user-bigwin",
+      "nickname": "一夜暴富",
+      "avatar": "💰",
+      "isAdmin": false,
+      "createdAt": "2026-06-10T00:00:00.000Z"
+    },
+    {
+      "id": "user-consistent",
+      "nickname": "稳扎稳打",
+      "avatar": "🐢",
+      "isAdmin": false,
+      "createdAt": "2026-06-08T00:00:00.000Z"
     }
   ],
   "bets": [
     {
-      "id": "oeq7y2ps8mqs0yngz",
-      "userId": "fwtmfd2nkmqs0xqrj",
-      "date": "2026-06-24",
-      "winAmount": 13,
-      "createdAt": "2026-06-24T12:03:40.499Z"
+      "id": "bet-001",
+      "userId": "user-champion",
+      "date": "2026-06-15",
+      "winAmount": 200,
+      "createdAt": "2026-06-15T20:00:00.000Z"
     },
     {
-      "id": "blmgdkq0xmqs0yh75",
-      "userId": "fwtmfd2nkmqs0xqrj",
+      "id": "bet-002",
+      "userId": "user-champion",
+      "date": "2026-06-15",
+      "winAmount": 350,
+      "createdAt": "2026-06-15T22:00:00.000Z"
+    },
+    {
+      "id": "bet-003",
+      "userId": "user-champion",
+      "date": "2026-06-16",
+      "winAmount": 180,
+      "createdAt": "2026-06-16T20:00:00.000Z"
+    },
+    {
+      "id": "bet-004",
+      "userId": "user-champion",
+      "date": "2026-06-16",
+      "winAmount": 420,
+      "createdAt": "2026-06-16T22:00:00.000Z"
+    },
+    {
+      "id": "bet-005",
+      "userId": "user-champion",
+      "date": "2026-06-17",
+      "winAmount": 500,
+      "createdAt": "2026-06-17T20:00:00.000Z"
+    },
+    {
+      "id": "bet-006",
+      "userId": "user-champion",
+      "date": "2026-06-18",
+      "winAmount": 300,
+      "createdAt": "2026-06-18T20:00:00.000Z"
+    },
+    {
+      "id": "bet-007",
+      "userId": "user-champion",
+      "date": "2026-06-19",
+      "winAmount": 800,
+      "createdAt": "2026-06-19T20:00:00.000Z"
+    },
+    {
+      "id": "bet-008",
+      "userId": "user-champion",
+      "date": "2026-06-20",
+      "winAmount": 250,
+      "createdAt": "2026-06-20T20:00:00.000Z"
+    },
+    {
+      "id": "bet-009",
+      "userId": "user-champion",
+      "date": "2026-06-21",
+      "winAmount": 600,
+      "createdAt": "2026-06-21T20:00:00.000Z"
+    },
+    {
+      "id": "bet-010",
+      "userId": "user-champion",
+      "date": "2026-06-22",
+      "winAmount": 450,
+      "createdAt": "2026-06-22T20:00:00.000Z"
+    },
+    {
+      "id": "bet-011",
+      "userId": "user-champion",
+      "date": "2026-06-23",
+      "winAmount": 150,
+      "createdAt": "2026-06-23T20:00:00.000Z"
+    },
+    {
+      "id": "bet-012",
+      "userId": "user-champion",
       "date": "2026-06-24",
-      "winAmount": 2123,
-      "createdAt": "2026-06-24T12:03:32.369Z"
+      "winAmount": 1200,
+      "createdAt": "2026-06-24T20:00:00.000Z"
+    },
+    {
+      "id": "bet-013",
+      "userId": "user-champion",
+      "date": "2026-06-25",
+      "winAmount": 900,
+      "createdAt": "2026-06-25T20:00:00.000Z"
+    },
+    {
+      "id": "bet-014",
+      "userId": "user-champion",
+      "date": "2026-06-26",
+      "winAmount": 200,
+      "createdAt": "2026-06-26T20:00:00.000Z"
+    },
+    {
+      "id": "bet-015",
+      "userId": "user-champion",
+      "date": "2026-06-27",
+      "winAmount": 550,
+      "createdAt": "2026-06-27T20:00:00.000Z"
+    },
+    {
+      "id": "bet-016",
+      "userId": "user-champion",
+      "date": "2026-07-19",
+      "winAmount": 3000,
+      "createdAt": "2026-07-19T20:00:00.000Z"
+    },
+    {
+      "id": "bet-017",
+      "userId": "user-veteran",
+      "date": "2026-06-10",
+      "winAmount": 150,
+      "createdAt": "2026-06-10T20:00:00.000Z"
+    },
+    {
+      "id": "bet-018",
+      "userId": "user-veteran",
+      "date": "2026-06-12",
+      "winAmount": 200,
+      "createdAt": "2026-06-12T20:00:00.000Z"
+    },
+    {
+      "id": "bet-019",
+      "userId": "user-veteran",
+      "date": "2026-06-14",
+      "winAmount": 300,
+      "createdAt": "2026-06-14T20:00:00.000Z"
+    },
+    {
+      "id": "bet-020",
+      "userId": "user-veteran",
+      "date": "2026-06-16",
+      "winAmount": 250,
+      "createdAt": "2026-06-16T20:00:00.000Z"
+    },
+    {
+      "id": "bet-021",
+      "userId": "user-veteran",
+      "date": "2026-06-18",
+      "winAmount": 180,
+      "createdAt": "2026-06-18T20:00:00.000Z"
+    },
+    {
+      "id": "bet-022",
+      "userId": "user-veteran",
+      "date": "2026-06-20",
+      "winAmount": 400,
+      "createdAt": "2026-06-20T20:00:00.000Z"
+    },
+    {
+      "id": "bet-023",
+      "userId": "user-veteran",
+      "date": "2026-06-22",
+      "winAmount": 350,
+      "createdAt": "2026-06-22T20:00:00.000Z"
+    },
+    {
+      "id": "bet-024",
+      "userId": "user-veteran",
+      "date": "2026-06-24",
+      "winAmount": 280,
+      "createdAt": "2026-06-24T20:00:00.000Z"
+    },
+    {
+      "id": "bet-025",
+      "userId": "user-veteran",
+      "date": "2026-06-26",
+      "winAmount": 500,
+      "createdAt": "2026-06-26T20:00:00.000Z"
+    },
+    {
+      "id": "bet-026",
+      "userId": "user-veteran",
+      "date": "2026-06-28",
+      "winAmount": 220,
+      "createdAt": "2026-06-28T20:00:00.000Z"
+    },
+    {
+      "id": "bet-027",
+      "userId": "user-newbie",
+      "date": "2026-06-21",
+      "winAmount": 100,
+      "createdAt": "2026-06-21T20:00:00.000Z"
+    },
+    {
+      "id": "bet-028",
+      "userId": "user-newbie",
+      "date": "2026-06-23",
+      "winAmount": 150,
+      "createdAt": "2026-06-23T20:00:00.000Z"
+    },
+    {
+      "id": "bet-029",
+      "userId": "user-newbie",
+      "date": "2026-06-25",
+      "winAmount": 80,
+      "createdAt": "2026-06-25T20:00:00.000Z"
+    },
+    {
+      "id": "bet-030",
+      "userId": "user-bigwin",
+      "date": "2026-06-15",
+      "winAmount": 1500,
+      "createdAt": "2026-06-15T20:00:00.000Z"
+    },
+    {
+      "id": "bet-031",
+      "userId": "user-bigwin",
+      "date": "2026-06-18",
+      "winAmount": 2000,
+      "createdAt": "2026-06-18T20:00:00.000Z"
+    },
+    {
+      "id": "bet-032",
+      "userId": "user-bigwin",
+      "date": "2026-06-20",
+      "winAmount": 800,
+      "createdAt": "2026-06-20T20:00:00.000Z"
+    },
+    {
+      "id": "bet-033",
+      "userId": "user-bigwin",
+      "date": "2026-06-22",
+      "winAmount": 1200,
+      "createdAt": "2026-06-22T20:00:00.000Z"
+    },
+    {
+      "id": "bet-034",
+      "userId": "user-consistent",
+      "date": "2026-06-10",
+      "winAmount": 50,
+      "createdAt": "2026-06-10T20:00:00.000Z"
+    },
+    {
+      "id": "bet-035",
+      "userId": "user-consistent",
+      "date": "2026-06-12",
+      "winAmount": 60,
+      "createdAt": "2026-06-12T20:00:00.000Z"
+    },
+    {
+      "id": "bet-036",
+      "userId": "user-consistent",
+      "date": "2026-06-14",
+      "winAmount": 70,
+      "createdAt": "2026-06-14T20:00:00.000Z"
+    },
+    {
+      "id": "bet-037",
+      "userId": "user-consistent",
+      "date": "2026-06-16",
+      "winAmount": 80,
+      "createdAt": "2026-06-16T20:00:00.000Z"
+    },
+    {
+      "id": "bet-038",
+      "userId": "user-consistent",
+      "date": "2026-06-18",
+      "winAmount": 90,
+      "createdAt": "2026-06-18T20:00:00.000Z"
+    },
+    {
+      "id": "bet-039",
+      "userId": "user-consistent",
+      "date": "2026-06-20",
+      "winAmount": 100,
+      "createdAt": "2026-06-20T20:00:00.000Z"
+    },
+    {
+      "id": "bet-040",
+      "userId": "user-consistent",
+      "date": "2026-06-22",
+      "winAmount": 110,
+      "createdAt": "2026-06-22T20:00:00.000Z"
+    },
+    {
+      "id": "bet-041",
+      "userId": "user-consistent",
+      "date": "2026-06-24",
+      "winAmount": 120,
+      "createdAt": "2026-06-24T20:00:00.000Z"
+    },
+    {
+      "id": "bet-042",
+      "userId": "user-consistent",
+      "date": "2026-06-26",
+      "winAmount": 130,
+      "createdAt": "2026-06-26T20:00:00.000Z"
+    },
+    {
+      "id": "bet-043",
+      "userId": "user-consistent",
+      "date": "2026-06-28",
+      "winAmount": 140,
+      "createdAt": "2026-06-28T20:00:00.000Z"
     }
   ],
   "apiKey": "",
   "competition": "WC",
-  "currentUserId": "user1",
+  "currentUserId": "user-champion",
   "refreshInterval": 60
 }

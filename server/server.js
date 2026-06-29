@@ -387,6 +387,109 @@ app.post('/api/settings/auto-refresh', requireAuth, (req, res) => {
   res.json({ success: true, refreshInterval: data.refreshInterval });
 });
 
+// ========== 成就徽章系统 ==========
+
+// 徽章配置
+const BADGE_DEFINITIONS = [
+  // 单日爆发类
+  { id: 'meierduka', name: '梅开二度', condition: { type: 'dailyWins', value: 2 }, rarity: 2 },
+  { id: 'maozixifa', name: '帽子戏法', condition: { type: 'dailyWins', value: 3 }, rarity: 3 },
+  { id: 'sixilinmen', name: '四喜临门', condition: { type: 'dailyWins', value: 4 }, rarity: 4 },
+  { id: 'wuzidengke', name: '五子登科', condition: { type: 'dailyWins', value: 5 }, rarity: 5 },
+  // 累计盈利类
+  { id: 'xiaoyouhuoshou', name: '小有收获', condition: { type: 'totalProfit', value: 200 }, rarity: 1 },
+  { id: 'caiyuanggungun', name: '财源滚滚', condition: { type: 'totalProfit', value: 1000 }, rarity: 2 },
+  { id: 'jinkubazhu', name: '金库霸主', condition: { type: 'totalProfit', value: 2000 }, rarity: 3 },
+  { id: 'rijindoujin', name: '日进斗金', condition: { type: 'totalProfit', value: 6000 }, rarity: 4 },
+  { id: 'yiwanfuweng', name: '亿万富翁', condition: { type: 'totalProfit', value: 10000 }, rarity: 5 },
+  // 累计次数类
+  { id: 'kaimenhong', name: '开门红', condition: { type: 'totalWins', value: 1 }, rarity: 1 },
+  { id: 'shinaojiuwen', name: '十拿九稳', condition: { type: 'totalWins', value: 10 }, rarity: 3 },
+  { id: 'baizhanbaisheng', name: '百战百胜', condition: { type: 'totalWins', value: 50 }, rarity: 5 },
+  // 特殊里程碑类
+  { id: 'jimuzhanxianzhi', name: '揭幕战先知', condition: { type: 'milestoneDate', value: '2026-06-15' }, rarity: 2 },
+  { id: 'juesaiyuyanjia', name: '决赛预言家', condition: { type: 'milestoneDate', value: '2026-07-19' }, rarity: 5 },
+  // 单日盈利类
+  { id: 'yiyebaofu', name: '一夜暴富', condition: { type: 'dailyProfit', value: 500 }, rarity: 3 },
+  { id: 'caishenjianglin', name: '财神降临', condition: { type: 'dailyProfit', value: 2500 }, rarity: 4 },
+  { id: 'fuguizaitian', name: '富贵在天', condition: { type: 'dailyProfit', value: 5000 }, rarity: 5 },
+];
+
+// 计算用户成就徽章
+app.get('/api/badges/:userId', (req, res) => {
+  const environment = req.query.environment || 'production';
+  const userId = req.params.userId;
+  const data = readData(environment);
+
+  // 获取用户的所有中奖记录
+  const userBets = (data.bets || []).filter(b => b.userId === userId);
+
+  // 计算各项统计数据
+  const winBets = userBets.filter(b => (b.winAmount || 0) > 0);
+  const totalProfit = winBets.reduce((sum, b) => sum + (b.winAmount || 0), 0);
+  const totalWins = winBets.length;
+
+  // 按日期分组
+  const dailyStats = {};
+  userBets.forEach(bet => {
+    const date = bet.createdAt ? bet.createdAt.substring(0, 10) : 'unknown';
+    if (!dailyStats[date]) {
+      dailyStats[date] = { wins: 0, profit: 0 };
+    }
+    if ((bet.winAmount || 0) > 0) {
+      dailyStats[date].wins += 1;
+      dailyStats[date].profit += bet.winAmount || 0;
+    }
+  });
+
+  // 计算最大单日中奖次数和最大单日盈利
+  const maxDailyWins = Math.max(0, ...Object.values(dailyStats).map(d => d.wins));
+  const maxDailyProfit = Math.max(0, ...Object.values(dailyStats).map(d => d.profit));
+
+  // 检查特殊日期是否有中奖
+  const milestoneDates = {
+    '2026-06-15': dailyStats['2026-06-15']?.wins > 0,
+    '2026-07-19': dailyStats['2026-07-19']?.wins > 0,
+  };
+
+  // 计算已获得的徽章
+  const earnedBadges = BADGE_DEFINITIONS.filter(badge => {
+    const { type, value } = badge.condition;
+    switch (type) {
+      case 'dailyWins':
+        return maxDailyWins >= value;
+      case 'totalProfit':
+        return totalProfit >= value;
+      case 'totalWins':
+        return totalWins >= value;
+      case 'milestoneDate':
+        return milestoneDates[value] === true;
+      case 'dailyProfit':
+        return maxDailyProfit >= value;
+      default:
+        return false;
+    }
+  });
+
+  // 返回结果
+  res.json({
+    success: true,
+    userId,
+    badges: earnedBadges.map(b => ({
+      id: b.id,
+      name: b.name,
+      rarity: b.rarity,
+      earnedAt: new Date().toISOString(), // 简化处理，实际可记录首次获得时间
+    })),
+    stats: {
+      totalProfit,
+      totalWins,
+      maxDailyWins,
+      maxDailyProfit,
+    },
+  });
+});
+
 app.post('/api/admin/login', (req, res) => {
   const { password } = req.body;
   const auth = readAuth();

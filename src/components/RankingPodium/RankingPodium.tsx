@@ -3,6 +3,7 @@ import type { RankingItem } from '@/types';
 import { formatCurrency } from '@/utils/helpers';
 import { motion } from 'framer-motion';
 import { isImageAvatar } from '@/components/Avatar';
+import { RARITY_STYLES, BadgeRarity } from '@/utils/badges';
 
 interface RankingPodiumProps {
   rankings: RankingItem[];
@@ -71,6 +72,20 @@ const RankingPodium = ({ rankings }: RankingPodiumProps) => {
               <p className="font-display text-lg md:text-xl text-neutral-800 dark:text-neutral-200 mb-1 text-center">
                 {item.nickname}
               </p>
+
+              {item.topBadges && item.topBadges.length > 0 && (
+                <div className="flex items-center gap-1 mb-1">
+                  {item.topBadges.slice(0, 3).map((badge) => (
+                    <div
+                      key={badge.id}
+                      className={`flex items-center gap-1 px-2 py-0.5 rounded-full border ${RARITY_STYLES[badge.rarity as BadgeRarity].borderColor} ${RARITY_STYLES[badge.rarity as BadgeRarity].bgColor}`}
+                      title={badge.name}
+                    >
+                      <span className="text-sm">{badge.emoji}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
 
               <p
                 className={`text-xl md:text-2xl font-bold text-amber-600 dark:text-gold-400`}

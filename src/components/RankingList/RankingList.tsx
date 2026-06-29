@@ -3,6 +3,7 @@ import type { RankingItem, RankingSortType } from '@/types';
 import { formatCurrency } from '@/utils/helpers';
 import { motion } from 'framer-motion';
 import Avatar from '@/components/Avatar';
+import { RARITY_STYLES, BadgeRarity } from '@/utils/badges';
 
 interface RankingListProps {
   rankings: RankingItem[];
@@ -66,9 +67,23 @@ const RankingList = ({ rankings, sortType }: RankingListProps) => {
                       <p className="font-medium text-neutral-800 dark:text-neutral-200 group-hover:text-primary-500 transition-colors">
                         {item.nickname}
                       </p>
-                      <p className="text-xs text-neutral-500 dark:text-neutral-500">
-                        中奖 {item.winDays} 天
-                      </p>
+                      {item.topBadges && item.topBadges.length > 0 ? (
+                        <div className="flex items-center gap-1 mt-0.5">
+                          {item.topBadges.slice(0, 3).map((badge) => (
+                            <div
+                              key={badge.id}
+                              className={`flex items-center justify-center w-7 h-7 rounded-full border ${RARITY_STYLES[badge.rarity as BadgeRarity].borderColor} ${RARITY_STYLES[badge.rarity as BadgeRarity].bgColor}`}
+                              title={badge.name}
+                            >
+                              <span className="text-xs">{badge.emoji}</span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-xs text-neutral-500 dark:text-neutral-500">
+                          中奖 {item.winDays} 天
+                        </p>
+                      )}
                     </div>
                   </Link>
                 </td>

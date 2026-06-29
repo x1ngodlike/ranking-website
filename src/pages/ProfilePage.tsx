@@ -5,7 +5,8 @@ import { calculateRankings, getDailyWinAmount } from '@/utils/calculations';
 import { ProfitChart } from '@/components/Charts/ProfitChart';
 import BetList from '@/components/BetList/BetList';
 import BetForm from '@/components/BetForm/BetForm';
-import { ArrowLeft, TrendingUp, Trophy, DollarSign, Calendar, Plus } from 'lucide-react';
+import BadgeDisplay from '@/components/BadgeDisplay/BadgeDisplay';
+import { ArrowLeft, TrendingUp, Trophy, DollarSign, Calendar, Plus, Award } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Avatar from '@/components/Avatar';
 
@@ -152,6 +153,22 @@ const ProfilePage = () => {
             ¥{ranking.avgWin.toFixed(2)}
           </p>
         </div>
+      </motion.div>
+
+      {/* 成就徽章 */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.25 }}
+        className="card mb-8"
+      >
+        <div className="flex items-center gap-2 mb-4">
+          <Award size={20} className="text-amber-500" />
+          <h3 className="font-display text-xl text-blue-600 dark:text-blue-400">
+            成就徽章
+          </h3>
+        </div>
+        <BadgeDisplay userId={userId || ''} />
       </motion.div>
 
       <motion.div

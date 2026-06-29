@@ -34,6 +34,14 @@ export interface Bet {
   createdAt: string;
 }
 
+export interface UserBadge {
+  id: string;
+  name: string;
+  rarity: number;
+  icon: string;
+  emoji: string;
+}
+
 export interface RankingItem {
   userId: string;
   nickname: string;
@@ -43,6 +51,7 @@ export interface RankingItem {
   winDays: number;
   biggestWin: number;
   avgWin: number;
+  topBadges?: UserBadge[];
 }
 
 export type RankingSortType = 'totalWin' | 'winDays' | 'totalBets';
