@@ -75,7 +75,7 @@ const RankingPodium = ({ rankings }: RankingPodiumProps) => {
 
               {item.topBadges && item.topBadges.length > 0 && (
                 <div className="flex items-center gap-1 mb-1">
-                  {item.topBadges.slice(0, 3).map((badge) => (
+                  {item.topBadges.map((badge) => (
                     <div
                       key={badge.id}
                       className={`flex items-center gap-1 px-2 py-0.5 rounded-full border ${RARITY_STYLES[badge.rarity as BadgeRarity].borderColor} ${RARITY_STYLES[badge.rarity as BadgeRarity].bgColor} ${RARITY_STYLES[badge.rarity as BadgeRarity].animation}`}

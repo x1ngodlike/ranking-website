@@ -120,8 +120,8 @@ const calculateUserTopBadges = (userId: string, bets: Bet[]): UserBadge[] => {
   const maxDailyProfit = Math.max(0, ...Object.values(dailyStats).map((d) => d.profit));
 
   const milestoneDates: Record<string, boolean> = {
-    '2026-06-15': (dailyStats['2026-06-15']?.wins ?? 0) > 0,
     '2026-07-19': (dailyStats['2026-07-19']?.wins ?? 0) > 0,
+    '2026-07-20': (dailyStats['2026-07-20']?.wins ?? 0) > 0,
   };
 
   const earnedBadges = BADGES.filter((badge) => {
@@ -150,14 +150,26 @@ const calculateUserTopBadges = (userId: string, bets: Bet[]): UserBadge[] => {
 
   if (earnedBadges.length === 0) return [];
 
-  // 按稀有度降序，最多返回3个
-  earnedBadges.sort((a, b) => b.rarity - a.rarity);
-  return earnedBadges.slice(0, 3).map((badge) => ({
-    id: badge.id,
-    name: badge.name,
-    rarity: badge.rarity,
-    emoji: badge.emoji,
-  }));
+  // 按类型分组，每个类型取星级最高的徽章
+  const categoryMap = new Map<string, typeof earnedBadges[0]>();
+  earnedBadges.forEach((badge) => {
+    const existing = categoryMap.get(badge.category);
+    if (!existing || badge.rarity > existing.rarity) {
+      categoryMap.set(badge.category, badge);
+    }
+  });
+
+  // 转换为数组并按稀有度降序排列
+  const topBadges = Array.from(categoryMap.values())
+    .sort((a, b) => b.rarity - a.rarity)
+    .map((badge) => ({
+      id: badge.id,
+      name: badge.name,
+      rarity: badge.rarity,
+      emoji: badge.emoji,
+    }));
+
+  return topBadges;
 };
 
 export const calculateRankings = (
