@@ -147,6 +147,8 @@ const MatchesPage = () => {
     }
   }, [isRefreshing, apiConfig.apiKey, syncMatchesFromApi, setRefreshError]);
 
+  const hasLiveMatches = matches.some((m) => m.status === 'live');
+
   useEffect(() => {
     if (!apiConfig.apiKey) return;
 
@@ -164,7 +166,6 @@ const MatchesPage = () => {
     { key: 'finished', label: '已结束', icon: Trophy },
   ];
 
-  const hasLiveMatches = matches.some((m) => m.status === 'live');
   const liveCount = matches.filter((m) => m.status === 'live').length;
   const selectedDateMatches = matches.filter((m) =>
     formatDateKey(new Date(m.matchTime)) === selectedDate
