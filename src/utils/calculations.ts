@@ -156,7 +156,6 @@ const calculateUserTopBadges = (userId: string, bets: Bet[]): UserBadge[] => {
     id: badge.id,
     name: badge.name,
     rarity: badge.rarity,
-    icon: badge.icon,
     emoji: badge.emoji,
   }));
 };

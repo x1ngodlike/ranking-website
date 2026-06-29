@@ -38,7 +38,6 @@ export interface UserBadge {
   id: string;
   name: string;
   rarity: number;
-  icon: string;
   emoji: string;
 }
 

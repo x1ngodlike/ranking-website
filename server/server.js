@@ -392,26 +392,25 @@ app.post('/api/settings/auto-refresh', requireAuth, (req, res) => {
 // 徽章配置
 const BADGE_DEFINITIONS = [
   // 单日爆发类
-  { id: 'meierduka', name: '梅开二度', condition: { type: 'dailyWins', value: 2 }, rarity: 2 },
-  { id: 'maozixifa', name: '帽子戏法', condition: { type: 'dailyWins', value: 3 }, rarity: 3 },
-  { id: 'sixilinmen', name: '四喜临门', condition: { type: 'dailyWins', value: 4 }, rarity: 4 },
-  { id: 'wuzidengke', name: '五子登科', condition: { type: 'dailyWins', value: 5 }, rarity: 5 },
+  { id: 'meierduka', name: '梅开二度', condition: { type: 'dailyWins', value: 2 }, rarity: 3 },
+  { id: 'maozixifa', name: '帽子戏法', condition: { type: 'dailyWins', value: 3 }, rarity: 4 },
+  { id: 'sixilinmen', name: '四喜临门', condition: { type: 'dailyWins', value: 4 }, rarity: 5 },
   // 累计盈利类
   { id: 'xiaoyouhuoshou', name: '小有收获', condition: { type: 'totalProfit', value: 200 }, rarity: 1 },
   { id: 'caiyuanggungun', name: '财源滚滚', condition: { type: 'totalProfit', value: 1000 }, rarity: 2 },
   { id: 'jinkubazhu', name: '金库霸主', condition: { type: 'totalProfit', value: 2000 }, rarity: 3 },
-  { id: 'rijindoujin', name: '日进斗金', condition: { type: 'totalProfit', value: 6000 }, rarity: 4 },
+  { id: 'rijindoujin', name: '日进斗金', condition: { type: 'totalProfit', value: 5000 }, rarity: 4 },
   { id: 'yiwanfuweng', name: '亿万富翁', condition: { type: 'totalProfit', value: 10000 }, rarity: 5 },
   // 累计次数类
   { id: 'kaimenhong', name: '开门红', condition: { type: 'totalWins', value: 1 }, rarity: 1 },
   { id: 'shinaojiuwen', name: '十拿九稳', condition: { type: 'totalWins', value: 10 }, rarity: 3 },
-  { id: 'baizhanbaisheng', name: '百战百胜', condition: { type: 'totalWins', value: 50 }, rarity: 5 },
+  { id: 'baizhanbaisheng', name: '百战百胜', condition: { type: 'totalWins', value: 20 }, rarity: 5 },
   // 特殊里程碑类
-  { id: 'jimuzhanxianzhi', name: '揭幕战先知', condition: { type: 'milestoneDate', value: '2026-06-15' }, rarity: 2 },
-  { id: 'juesaiyuyanjia', name: '决赛预言家', condition: { type: 'milestoneDate', value: '2026-07-19' }, rarity: 5 },
+  { id: 'jijunsaiyuyanjia', name: '季军赛预言家', condition: { type: 'milestoneDate', value: '2026-07-19' }, rarity: 2 },
+  { id: 'juesaiyuyanjia', name: '决赛预言家', condition: { type: 'milestoneDate', value: '2026-07-20' }, rarity: 5 },
   // 单日盈利类
   { id: 'yiyebaofu', name: '一夜暴富', condition: { type: 'dailyProfit', value: 500 }, rarity: 3 },
-  { id: 'caishenjianglin', name: '财神降临', condition: { type: 'dailyProfit', value: 2500 }, rarity: 4 },
+  { id: 'caishenjianglin', name: '财神降临', condition: { type: 'dailyProfit', value: 2000 }, rarity: 4 },
   { id: 'fuguizaitian', name: '富贵在天', condition: { type: 'dailyProfit', value: 5000 }, rarity: 5 },
 ];
 
@@ -432,7 +431,7 @@ app.get('/api/badges/:userId', (req, res) => {
   // 按日期分组
   const dailyStats = {};
   userBets.forEach(bet => {
-    const date = bet.createdAt ? bet.createdAt.substring(0, 10) : 'unknown';
+    const date = bet.date || (bet.createdAt ? bet.createdAt.substring(0, 10) : 'unknown');
     if (!dailyStats[date]) {
       dailyStats[date] = { wins: 0, profit: 0 };
     }

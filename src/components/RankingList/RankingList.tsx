@@ -72,7 +72,7 @@ const RankingList = ({ rankings, sortType }: RankingListProps) => {
                           {item.topBadges.slice(0, 3).map((badge) => (
                             <div
                               key={badge.id}
-                              className={`flex items-center justify-center w-7 h-7 rounded-full border ${RARITY_STYLES[badge.rarity as BadgeRarity].borderColor} ${RARITY_STYLES[badge.rarity as BadgeRarity].bgColor}`}
+                              className={`flex items-center justify-center w-7 h-7 rounded-full border ${RARITY_STYLES[badge.rarity as BadgeRarity].borderColor} ${RARITY_STYLES[badge.rarity as BadgeRarity].bgColor} ${RARITY_STYLES[badge.rarity as BadgeRarity].animation}`}
                               title={badge.name}
                             >
                               <span className="text-xs">{badge.emoji}</span>

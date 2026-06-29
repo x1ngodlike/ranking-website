@@ -112,7 +112,7 @@ function BadgeItem({ badge, earned }: { badge: BadgeDefinition; earned?: EarnedB
     <div
       className={`relative flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all cursor-pointer
         ${isEarned
-          ? `${style.borderColor} ${style.bgColor} ${style.glow}`
+          ? `${style.borderColor} ${style.bgColor} ${style.glow} ${style.animation}`
           : 'border-neutral-300 dark:border-neutral-600 bg-neutral-100 dark:bg-neutral-800/50 opacity-60'
         }
       `}

@@ -286,3 +286,57 @@ body {
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
+.badge-pulse-gold {
+  animation: badgePulseGold 2s ease-in-out infinite;
+}
+
+@keyframes badgePulseGold {
+  0%, 100% {
+    box-shadow: 0 0 8px rgba(251, 191, 36, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(251, 191, 36, 0.6), 0 0 30px rgba(251, 191, 36, 0.3);
+  }
+}
+
+.badge-pulse-legendary {
+  position: relative;
+  animation: badgePulseLegendary 2.5s ease-in-out infinite;
+}
+
+.badge-pulse-legendary::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  padding: 2px;
+  background: linear-gradient(135deg, #22d3ee, #a855f7, #ec4899, #22d3ee);
+  background-size: 300% 300%;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: gradientRotate 3s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes badgePulseLegendary {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(168, 85, 247, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(168, 85, 247, 0.6), 0 0 50px rgba(236, 72, 153, 0.3);
+  }
+}
+
+@keyframes gradientRotate {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
