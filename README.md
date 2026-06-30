@@ -149,8 +149,7 @@ cd /mnt/user/appdata/ranking-website/deploy
   "bets": [...],
   "apiKey": "...",
   "competition": "WC",
-  "currentUserId": "user1",
-  "refreshInterval": 60
+  "currentUserId": "user1"
 }
 ```
 

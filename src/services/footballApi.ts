@@ -416,21 +416,37 @@ const fetchFootballApi = async <T>(
     }
 
     if (!response.ok) {
+      let errorMessage = '';
+      try {
+        const errorData = await response.json();
+        if (errorData.message) {
+          errorMessage = errorData.message;
+        }
+      } catch {
+        // ignore
+      }
+
       if (!detailedErrors) {
-        throw new Error(`请求失败: ${response.status}`);
+        throw new Error(errorMessage || `请求失败: ${response.status}`);
       }
       if (response.status === 403) {
-        throw new Error('API Key 无效或已过期，请检查你的 API Key 是否正确');
+        throw new Error(errorMessage || 'API Key 无效或已过期，请检查你的 API Key 是否正确');
       }
       if (response.status === 429) {
         const resetTime = lastRateLimitInfo.requestsReset;
         const resetMsg = resetTime ? `，将于 ${new Date(resetTime).toLocaleTimeString('zh-CN')} 重置` : '';
-        throw new Error(`请求过于频繁${resetMsg}，请稍后再试`);
+        throw new Error(errorMessage || `请求过于频繁${resetMsg}，请稍后再试`);
       }
       if (response.status === 404) {
-        throw new Error('赛事不存在，请选择正确的赛事');
+        throw new Error(errorMessage || '赛事不存在，请选择正确的赛事');
       }
-      throw new Error(`请求失败: HTTP ${response.status}`);
+      if (response.status === 502) {
+        throw new Error(errorMessage || '请求失败，请稍后重试');
+      }
+      if (response.status === 504) {
+        throw new Error(errorMessage || '请求超时，请稍后重试');
+      }
+      throw new Error(errorMessage || `请求失败: HTTP ${response.status}`);
     }
 
     return response.json() as Promise<T>;

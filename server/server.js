@@ -168,7 +168,6 @@ const getDefaultData = () => ({
   apiKey: '',
   competition: 'WC',
   currentUserId: null,
-  refreshInterval: 60,
 });
 
 const readData = (env = 'production') => readJsonFile(getDataFile(env), getDefaultData());
@@ -181,7 +180,6 @@ const writeData = (env, data) => {
     apiKey: data.apiKey || '',
     competition: data.competition || 'WC',
     currentUserId: data.currentUserId || null,
-    refreshInterval: data.refreshInterval || 60,
   };
   writeJsonFile(getDataFile(env), dataToSave);
 };
@@ -305,24 +303,101 @@ const proxyFootballApi = async (req, res, method = 'GET') => {
   const targetPath = req.params.path;
   const targetUrl = `${FOOTBALL_API_BASE}${targetPath}`;
 
-  try {
-    const fetchOptions = {
-      method,
-      headers: {
-        'X-Auth-Token': apiKey,
-        'Content-Type': 'application/json'
-      }
-    };
-    if (method === 'POST') {
-      fetchOptions.body = JSON.stringify(req.body);
+  const maxRetries = 2;
+  const timeoutMs = 15000;
+
+  const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+  const fetchWithTimeout = async (url, options, timeout) => {
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), timeout);
+    try {
+      const response = await fetch(url, { ...options, signal: controller.signal });
+      return response;
+    } finally {
+      clearTimeout(id);
     }
-    const response = await fetch(targetUrl, fetchOptions);
-    const data = await response.json();
-    res.status(response.status).json(data);
-  } catch (error) {
-    console.error('Football API proxy error:', error.message);
-    res.status(500).json({ message: '代理请求失败: ' + error.message });
+  };
+
+  let lastError = null;
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const fetchOptions = {
+        method,
+        headers: {
+          'X-Auth-Token': apiKey,
+          'Content-Type': 'application/json',
+          'Accept-Encoding': 'gzip, deflate'
+        }
+      };
+      if (method === 'POST') {
+        fetchOptions.body = JSON.stringify(req.body);
+      }
+
+      const response = await fetchWithTimeout(targetUrl, fetchOptions, timeoutMs);
+
+      const rateLimitHeaders = {};
+      ['x-requests-available', 'x-requests-limit', 'x-requests-reset'].forEach(h => {
+        const value = response.headers.get(h);
+        if (value) rateLimitHeaders[h] = value;
+      });
+
+      const contentType = response.headers.get('content-type') || '';
+      let data;
+      if (contentType.includes('application/json')) {
+        data = await response.json();
+      } else {
+        data = { message: await response.text() };
+      }
+
+      if (response.status === 429) {
+        const resetTime = response.headers.get('x-requests-reset') || '';
+        const resetDate = resetTime ? new Date(parseInt(resetTime) * 1000).toLocaleString('zh-CN') : '';
+        console.warn(`Football API rate limited (attempt ${attempt + 1}/${maxRetries + 1}), reset at ${resetDate}`);
+        if (attempt < maxRetries) {
+          const waitMs = Math.min(5000 * (attempt + 1), 15000);
+          await delay(waitMs);
+          continue;
+        }
+        return res.status(429).json({
+          message: `请求过于频繁，请稍后再试${resetDate ? '，将于 ' + resetDate + ' 重置' : ''}`,
+          ...rateLimitHeaders
+        });
+      }
+
+      if (!response.ok) {
+        console.warn(`Football API error: ${response.status} - ${targetPath}`);
+        if (attempt < maxRetries && (response.status >= 500 || response.status === 408)) {
+          const waitMs = 1000 * (attempt + 1);
+          await delay(waitMs);
+          continue;
+        }
+      }
+
+      return res.status(response.status).json({ ...data, ...rateLimitHeaders });
+
+    } catch (error) {
+      lastError = error;
+      console.error(`Football API proxy error (attempt ${attempt + 1}/${maxRetries + 1}):`, error.message);
+
+      if (error.name === 'AbortError') {
+        if (attempt < maxRetries) {
+          await delay(2000 * (attempt + 1));
+          continue;
+        }
+        return res.status(504).json({ message: '请求超时，请稍后重试' });
+      }
+
+      if (attempt < maxRetries) {
+        await delay(2000 * (attempt + 1));
+        continue;
+      }
+    }
   }
+
+  console.error('Football API all attempts failed:', lastError?.message);
+  res.status(502).json({ message: '请求失败，请稍后重试' });
 };
 
 const handleError = (res, error, defaultMessage) => {
@@ -367,26 +442,6 @@ app.post('/api/matches', (req, res) => {
   }
   res.json({ success: true });
 });
-
-app.get('/api/settings/auto-refresh', (req, res) => {
-  const environment = req.query.environment || 'production';
-  const data = readData(environment);
-  res.json({
-    success: true,
-    autoRefresh: true,
-    refreshInterval: data.refreshInterval || 60,
-  });
-});
-
-app.post('/api/settings/auto-refresh', requireAuth, (req, res) => {
-  const environment = req.query.environment || 'production';
-  const { refreshInterval = 60 } = req.body;
-  const data = readData(environment);
-  data.refreshInterval = Math.max(10, Math.min(3600, parseInt(refreshInterval) || 60));
-  writeData(environment, data);
-  res.json({ success: true, refreshInterval: data.refreshInterval });
-});
-
 // ========== 成就徽章系统 ==========
 
 // 徽章配置

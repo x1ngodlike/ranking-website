@@ -57,8 +57,6 @@ interface AppState {
   resetData: () => void;
 
   setApiConfig: (config: Partial<ApiConfig>) => void;
-  loadAutoRefreshSettings: () => Promise<void>;
-  saveAutoRefreshSettings: (refreshInterval: number) => Promise<void>;
   syncMatchesFromApi: (competitionId?: string) => Promise<{ added: number; updated: number }>;
   refreshLiveMatches: () => Promise<number>;
   setRefreshError: (error: string | null) => void;
@@ -138,17 +136,15 @@ const updateApiConfigFromData = (set: any, data: any) => {
 
 const updateAutoRefreshConfig = (
   set: any,
-  autoRefresh: boolean,
-  refreshInterval: number
+  autoRefresh: boolean
 ) => {
   set((s: AppState) => ({
     apiConfig: {
       ...s.apiConfig,
       autoRefresh,
-      refreshInterval,
     },
   }));
-  saveApiConfigToStorage({ autoRefresh, refreshInterval });
+  saveApiConfigToStorage({ autoRefresh });
 };
 
 const handleRefreshError = (set: any, error: unknown, defaultMessage: string) => {
@@ -169,7 +165,6 @@ const createStoreActions = (set: any, get: any) => ({
         isDataLoaded: true,
       });
       updateApiConfigFromData(set, data);
-      await get().loadAutoRefreshSettings();
     } catch (e) {
       console.warn('Failed to load data from server, using mock data:', e);
       set({ isLoading: false, isDataLoaded: true });
@@ -325,33 +320,7 @@ const createStoreActions = (set: any, get: any) => ({
     const newConfig = { ...get().apiConfig, ...config };
     set({ apiConfig: newConfig });
     saveApiConfigToStorage(config);
-    if (config.refreshInterval === undefined) {
-      saveToServer(get());
-    }
-  },
-
-  loadAutoRefreshSettings: async () => {
-    const state = get();
-    try {
-      const settings = await api.getAutoRefreshSettings(state.environment);
-      if (settings.success) {
-        updateAutoRefreshConfig(set, settings.autoRefresh, settings.refreshInterval);
-      }
-    } catch (e) {
-      console.warn('Failed to load auto-refresh settings:', e);
-    }
-  },
-
-  saveAutoRefreshSettings: async (refreshInterval: number) => {
-    const state = get();
-    try {
-      const result = await api.saveAutoRefreshSettings(state.environment, refreshInterval);
-      if (result.success) {
-        updateAutoRefreshConfig(set, true, result.refreshInterval);
-      }
-    } catch (e) {
-      console.warn('Failed to save auto-refresh settings:', e);
-    }
+    saveToServer(get());
   },
 
   syncMatchesFromApi: async (competitionId = DEFAULT_COMPETITION_ID) => {

@@ -21,7 +21,6 @@ export interface ServerData {
   apiKey?: string;
   competition?: string;
   currentUserId: string | null;
-  refreshInterval?: number;
 }
 
 const buildAuthHeaders = (requireAuth: boolean): Record<string, string> => {
@@ -79,21 +78,6 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(data),
     }, false),
-
-  getAutoRefreshSettings: (environment: string) =>
-    request<{ success: boolean; autoRefresh: boolean; refreshInterval: number }>(
-      `/api/settings/auto-refresh?environment=${encodeURIComponent(environment)}`
-    ),
-
-  saveAutoRefreshSettings: (environment: string, refreshInterval: number) =>
-    request<{ success: boolean; refreshInterval: number }>(
-      `/api/settings/auto-refresh?environment=${encodeURIComponent(environment)}`,
-      {
-        method: 'POST',
-        body: JSON.stringify({ refreshInterval }),
-      },
-      true
-    ),
 
   adminLogin: async (password: string) => {
     const res = await request<{ success: boolean; token?: string; message?: string }>('/api/admin/login', {

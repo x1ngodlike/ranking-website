@@ -3,7 +3,6 @@ export interface ApiConfig {
   apiKey: string;
   baseUrl: string;
   autoRefresh: boolean;
-  refreshInterval: number;
   competition: string;
 }
 
@@ -16,7 +15,6 @@ const defaultConfig: ApiConfig = {
   apiKey: '',
   baseUrl: isDev ? '/football-api/v4' : '/api/proxy/football',
   autoRefresh: true,
-  refreshInterval: 60,
   competition: '2000',
 };
 
