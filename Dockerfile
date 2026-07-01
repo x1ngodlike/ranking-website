@@ -22,7 +22,7 @@ COPY server/package*.json ./
 RUN npm ci --production
 
 COPY --from=builder /app/dist ./dist
-COPY server/server.js ./
+COPY server/*.js ./
 
 RUN mkdir -p /app/data /app/uploads
 
