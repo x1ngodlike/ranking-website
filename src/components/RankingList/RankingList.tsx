@@ -24,10 +24,10 @@ const RankingList = ({ rankings, sortType }: RankingListProps) => {
         <table className="w-full">
           <thead>
             <tr className="border-b border-neutral-100 dark:border-neutral-800/50">
-              <th className="text-left py-3 px-4 text-neutral-500 dark:text-neutral-500 text-sm font-medium">
+              <th className="text-left py-3 px-2 sm:px-4 text-neutral-500 dark:text-neutral-500 text-sm font-medium">
                 排名
               </th>
-              <th className="text-left py-3 px-4 text-neutral-500 dark:text-neutral-500 text-sm font-medium">
+              <th className="text-left py-3 px-2 sm:px-4 text-neutral-500 dark:text-neutral-500 text-sm font-medium">
                 用户
               </th>
               <th className="text-right py-3 px-4 text-neutral-500 dark:text-neutral-500 text-sm font-medium">
@@ -52,17 +52,17 @@ const RankingList = ({ rankings, sortType }: RankingListProps) => {
                 transition={{ duration: 0.4, delay: index * 0.05 }}
                 className="border-b border-gold/5 hover:bg-gold-500/5 transition-colors"
               >
-                <td className="py-4 px-4">
+                <td className="py-4 px-2 sm:px-4">
                   <div className={`badge-rank ${getRankBadgeClass(index + 1)}`}>
                     {index + 1}
                   </div>
                 </td>
-                <td className="py-4 px-4">
+                <td className="py-4 px-2 sm:px-4">
                   <Link
                     to={`/profile/${item.userId}`}
-                    className="flex items-center gap-3 group"
+                    className="flex items-center gap-2 sm:gap-3 group"
                   >
-                    <Avatar src={item.avatar} alt={item.nickname} size="md" />
+                    <Avatar src={item.avatar} alt={item.nickname} size="sm" />
                     <div>
                       <p className="font-medium text-neutral-800 dark:text-neutral-200 group-hover:text-primary-500 transition-colors">
                         {item.nickname}
