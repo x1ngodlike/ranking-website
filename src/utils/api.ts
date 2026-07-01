@@ -79,6 +79,13 @@ export const api = {
       body: JSON.stringify(data),
     }, false),
 
+  syncMatches: (environment: string) =>
+    request<{ success: boolean; count?: number; liveCount?: number; message?: string }>(
+      `/api/matches/sync?environment=${encodeURIComponent(environment)}`,
+      { method: 'POST' },
+      true
+    ),
+
   adminLogin: async (password: string) => {
     const res = await request<{ success: boolean; token?: string; message?: string }>('/api/admin/login', {
       method: 'POST',

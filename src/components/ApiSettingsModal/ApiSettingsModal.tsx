@@ -75,8 +75,8 @@ const ApiSettingsModal = ({ isOpen, onClose }: ApiSettingsModalProps) => {
       setSyncMessage(null);
       saveCurrentSettings();
 
-      const result = await syncMatchesFromApi(competitionId);
-      setSyncMessage(`同步成功！新增 ${result.added} 场，更新 ${result.updated} 场比赛结果`);
+      const result = await syncMatchesFromApi();
+      setSyncMessage(`同步成功！共 ${result.added} 场比赛`);
       setTimeout(() => setSyncMessage(null), 4000);
     } catch (error) {
     }

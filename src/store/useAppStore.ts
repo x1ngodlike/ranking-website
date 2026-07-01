@@ -2,20 +2,18 @@ import { create } from 'zustand';
 import type { User, Match, Bet, RankingSortType, Environment } from '../types';
 import { mockUsers, mockMatches, mockBets } from '../utils/mockData';
 import { calculateRankings } from '../utils/calculations';
-import { generateId } from '../utils/helpers';
-import { loadApiConfig, saveApiConfig as saveApiConfigToStorage, type ApiConfig } from '../utils/apiConfig';
-import { fetchMatchesFromApi } from '../services/footballApi';
+import { generateId } from '@/utils/helpers';
+import { loadApiConfig, saveApiConfig as saveApiConfigToStorage, type ApiConfig } from '@/utils/apiConfig';
 import {
   loadTheme,
   saveTheme as saveThemeToStorage,
   applyTheme,
   type ThemeMode,
-} from '../utils/theme';
-import { api, getAdminToken, type BackupInfo } from '../utils/api';
+} from '@/utils/theme';
+import { api, getAdminToken, type BackupInfo } from '@/utils/api';
 
 const DEFAULT_AVATAR = '⚽️';
 const DEFAULT_USER_ID = 'user1';
-const DEFAULT_COMPETITION_ID = '2000';
 
 interface AppState {
   users: User[];
@@ -57,8 +55,7 @@ interface AppState {
   resetData: () => void;
 
   setApiConfig: (config: Partial<ApiConfig>) => void;
-  syncMatchesFromApi: (competitionId?: string) => Promise<{ added: number; updated: number }>;
-  refreshLiveMatches: () => Promise<number>;
+  syncMatchesFromApi: () => Promise<{ added: number; updated: number }>;
   setRefreshError: (error: string | null) => void;
 
   setTheme: (theme: ThemeMode) => void;
@@ -323,88 +320,21 @@ const createStoreActions = (set: any, get: any) => ({
     saveToServer(get());
   },
 
-  syncMatchesFromApi: async (competitionId = DEFAULT_COMPETITION_ID) => {
+  syncMatchesFromApi: async () => {
     set({ isRefreshing: true, refreshError: null });
 
     try {
-      const apiMatches = await fetchMatchesFromApi(competitionId);
-      let added = 0;
-      let updated = 0;
-
-      set((state: AppState) => {
-        const existingById = new Map(state.matches.map((m) => [m.id, m]));
-        const newMatches: Match[] = [];
-
-        apiMatches.forEach((apiMatch) => {
-          const existing = existingById.get(apiMatch.id)
-            || state.matches.find(
-              (m) => m.homeTeam === apiMatch.homeTeam && m.awayTeam === apiMatch.awayTeam
-            );
-
-          if (existing) {
-            newMatches.push(apiMatch);
-            updated++;
-          } else {
-            newMatches.push(apiMatch);
-            added++;
-          }
-        });
-
-        return { matches: newMatches };
-      });
-
-      saveToServer(get());
-      set({ isRefreshing: false, lastRefreshTime: new Date().toISOString() });
-
-      return { added, updated };
+      const result = await api.syncMatches(get().environment);
+      if (result.success) {
+        // 同步成功后重新从服务器读取数据
+        const data = await api.getData(get().environment);
+        set({ matches: data.matches || [] });
+        set({ isRefreshing: false, lastRefreshTime: new Date().toISOString() });
+        return { added: result.count || 0, updated: 0 };
+      }
+      throw new Error(result.message || '同步失败');
     } catch (error) {
       handleRefreshError(set, error, '同步失败');
-      throw error;
-    }
-  },
-
-  refreshLiveMatches: async () => {
-    set({ isRefreshing: true, refreshError: null });
-
-    try {
-      const apiMatches = await fetchMatchesFromApi(DEFAULT_COMPETITION_ID);
-      let updatedCount = 0;
-      let addedCount = 0;
-
-      set((state: AppState) => {
-        const newMatches = [...state.matches];
-        const existingIds = new Set(newMatches.map((m) => m.id));
-
-        apiMatches.forEach((apiMatch) => {
-          const index = newMatches.findIndex((m) => m.id === apiMatch.id);
-          if (index > -1) {
-            const oldMatch = newMatches[index];
-            const scoreChanged =
-              oldMatch.homeScore !== apiMatch.homeScore ||
-              oldMatch.awayScore !== apiMatch.awayScore ||
-              oldMatch.status !== apiMatch.status;
-
-            if (scoreChanged) {
-              newMatches[index] = apiMatch;
-              updatedCount++;
-            }
-          } else {
-            newMatches.push(apiMatch);
-            addedCount++;
-          }
-        });
-
-        newMatches.sort((a, b) => new Date(a.matchTime).getTime() - new Date(b.matchTime).getTime());
-
-        return { matches: newMatches };
-      });
-
-      saveToServer(get());
-      set({ isRefreshing: false, lastRefreshTime: new Date().toISOString() });
-
-      return updatedCount + addedCount;
-    } catch (error) {
-      handleRefreshError(set, error, '刷新失败');
       throw error;
     }
   },

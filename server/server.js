@@ -5,6 +5,7 @@ const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const path = require('path');
 const fs = require('fs');
+const { syncMatches, hasLiveMatches } = require('./matchSync');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -442,6 +443,42 @@ app.post('/api/matches', (req, res) => {
   }
   res.json({ success: true });
 });
+
+// 手动触发赛程同步
+app.post('/api/matches/sync', async (req, res) => {
+  const environment = req.query.environment || 'production';
+  const data = readData(environment);
+  const apiKey = data.apiKey;
+  const competition = data.competition || '2000';
+
+  if (!apiKey) {
+    return res.status(400).json({ success: false, message: '请先配置 API Key' });
+  }
+
+  const result = await syncMatches(apiKey, competition);
+  if (result.success) {
+    writeMatches(environment, result.matches);
+    // 同步成功后重新调度定时器
+    scheduleNextMatchSync(hasLiveMatches(result.matches));
+    res.json({
+      success: true,
+      count: result.matches.length,
+      liveCount: result.matches.filter(m => m.status === 'live').length,
+    });
+  } else {
+    const errorMessages = {
+      no_api_key: '请先配置 API Key',
+      timeout: '请求超时，请稍后重试',
+      network_error: '网络错误，请稍后重试',
+      invalid_response: 'API 返回数据格式错误',
+    };
+    res.status(500).json({
+      success: false,
+      message: errorMessages[result.reason] || `同步失败: ${result.reason}`,
+    });
+  }
+});
+
 // ========== 成就徽章系统 ==========
 
 // 徽章配置
@@ -717,6 +754,59 @@ if (IS_PRODUCTION) {
   console.log(`Auto backup interval: ${AUTO_BACKUP_INTERVAL_MS / 1000}s, max backups: ${MAX_BACKUPS}`);
 } else {
   console.log('Auto backup disabled (development mode)');
+}
+
+// ========== 服务器端赛程自动同步 ==========
+const MATCH_SYNC_LIVE_INTERVAL = 60 * 1000;       // 有比赛时：1分钟
+const MATCH_SYNC_NORMAL_INTERVAL = 4 * 60 * 60 * 1000;  // 无比赛时：4小时
+
+let matchSyncTimer = null;
+
+const runMatchSync = async () => {
+  try {
+    const env = 'production';
+    const data = readData(env);
+    const apiKey = data.apiKey;
+    const competition = data.competition || '2000';
+
+    if (!apiKey) {
+      console.warn('[MatchSync] No API key configured, skipping');
+      return;
+    }
+
+    const result = await syncMatches(apiKey, competition);
+    if (result.success) {
+      writeMatches(env, result.matches);
+      console.log(`[MatchSync] Synced ${result.matches.length} matches`);
+
+      // 根据是否有直播比赛调整下次同步间隔
+      scheduleNextMatchSync(hasLiveMatches(result.matches));
+    } else {
+      console.warn(`[MatchSync] Failed: ${result.reason}`);
+      scheduleNextMatchSync(false);
+    }
+  } catch (e) {
+    console.error('[MatchSync] Error:', e);
+    scheduleNextMatchSync(false);
+  }
+};
+
+const scheduleNextMatchSync = (live) => {
+  if (matchSyncTimer) clearTimeout(matchSyncTimer);
+  const interval = live ? MATCH_SYNC_LIVE_INTERVAL : MATCH_SYNC_NORMAL_INTERVAL;
+  console.log(`[MatchSync] Next sync in ${interval / 1000}s (live: ${live})`);
+  matchSyncTimer = setTimeout(runMatchSync, interval);
+};
+
+if (IS_PRODUCTION) {
+  // 启动后2分钟首次同步
+  setTimeout(() => {
+    console.log('[MatchSync] Starting initial sync...');
+    runMatchSync();
+  }, 2 * 60 * 1000);
+  console.log('Match auto-sync enabled (initial sync in 2min)');
+} else {
+  console.log('Match auto-sync disabled (development mode)');
 }
 
 app.get('/api/proxy/football/:path(*)', async (req, res) => {

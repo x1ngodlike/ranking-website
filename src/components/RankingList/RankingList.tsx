@@ -62,7 +62,7 @@ const RankingList = ({ rankings, sortType }: RankingListProps) => {
                     to={`/profile/${item.userId}`}
                     className="flex items-center gap-2 sm:gap-3 group"
                   >
-                    <Avatar src={item.avatar} alt={item.nickname} size="sm" />
+                    <Avatar src={item.avatar} alt={item.nickname} size="sm" className="sm:w-10 sm:h-10 sm:text-xl" />
                     <div>
                       <p className="font-medium text-neutral-800 dark:text-neutral-200 group-hover:text-primary-500 transition-colors">
                         {item.nickname}
@@ -89,7 +89,7 @@ const RankingList = ({ rankings, sortType }: RankingListProps) => {
                 </td>
                 <td className="py-4 px-4 text-right">
                   {sortType === 'totalWin' && (
-                    <span className="font-bold text-lg text-amber-600 dark:text-gold-400">
+                    <span className="font-display text-lg text-amber-600 dark:text-gold-400">
                       ¥{item.totalWinAmount.toFixed(2)}
                     </span>
                   )}
@@ -105,7 +105,7 @@ const RankingList = ({ rankings, sortType }: RankingListProps) => {
                   )}
                 </td>
                 <td className="py-4 px-4 text-right hidden md:table-cell">
-                  <span className="text-sm text-amber-600 dark:text-gold-400">
+                  <span className="font-display text-sm text-amber-600 dark:text-gold-400">
                     ¥{item.avgWin.toFixed(2)}
                   </span>
                 </td>

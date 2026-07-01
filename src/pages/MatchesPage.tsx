@@ -53,7 +53,6 @@ const MatchesPage = () => {
   const isRefreshing = useAppStore((state) => state.isRefreshing);
   const lastRefreshTime = useAppStore((state) => state.lastRefreshTime);
   const refreshError = useAppStore((state) => state.refreshError);
-  const refreshLiveMatches = useAppStore((state) => state.refreshLiveMatches);
   const syncMatchesFromApi = useAppStore((state) => state.syncMatchesFromApi);
   const setRefreshError = useAppStore((state) => state.setRefreshError);
   const isAdminLoggedIn = useAppStore((state) => state.isAdminLoggedIn);
@@ -148,17 +147,6 @@ const MatchesPage = () => {
   }, [isRefreshing, apiConfig.apiKey, syncMatchesFromApi, setRefreshError]);
 
   const hasLiveMatches = matches.some((m) => m.status === 'live');
-
-  useEffect(() => {
-    if (!apiConfig.apiKey) return;
-
-    const intervalMs = hasLiveMatches ? 60 * 1000 : 4 * 60 * 60 * 1000;
-    const interval = setInterval(() => {
-      refreshLiveMatches().catch(() => {});
-    }, intervalMs);
-
-    return () => clearInterval(interval);
-  }, [apiConfig.apiKey, hasLiveMatches, refreshLiveMatches]);
 
   const tabs = [
     { key: 'all', label: '全部', icon: CalendarDays },
@@ -408,7 +396,7 @@ const MatchesPage = () => {
               <span className="relative inline-flex rounded-full h-2 w-2 bg-profit-500" />
             </span>
             <span className="text-profit-500">
-              自动刷新中（{hasLiveMatches ? '比赛中，每1分钟' : '无比赛，每4小时'}）
+              自动同步中（{hasLiveMatches ? '比赛中，每1分钟' : '无比赛，每4小时'}）
             </span>
             {lastRefreshTime && (
               <span className="text-neutral-500 dark:text-neutral-400">
