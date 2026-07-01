@@ -73,8 +73,14 @@ const RankingPodium = ({ rankings }: RankingPodiumProps) => {
                 {item.nickname}
               </p>
 
+              <p
+                className={`font-display text-xl md:text-2xl text-amber-600 dark:text-gold-400 mb-1`}
+              >
+                ¥{item.totalWinAmount.toFixed(2)}
+              </p>
+
               {item.topBadges && item.topBadges.length > 0 && (
-                <div className="flex items-center gap-1 mb-1">
+                <div className="flex items-center gap-1">
                   {item.topBadges.map((badge) => (
                     <div
                       key={badge.id}
@@ -86,12 +92,6 @@ const RankingPodium = ({ rankings }: RankingPodiumProps) => {
                   ))}
                 </div>
               )}
-
-              <p
-                className={`font-display text-xl md:text-2xl text-amber-600 dark:text-gold-400`}
-              >
-                ¥{item.totalWinAmount.toFixed(2)}
-              </p>
             </Link>
 
             <div

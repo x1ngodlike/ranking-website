@@ -1,4 +1,4 @@
-import type { User, Bet, RankingItem, RankingSortType, Environment, UserBadge } from '../types';
+import type { User, Bet, RankingItem, RankingSortType, Environment, UserBadge, DailyTrendItem } from '../types';
 import { BADGES } from './badges';
 
 const STORAGE_KEY = 'world_cup_betting_app';
@@ -245,6 +245,67 @@ export const getDailyWinAmount = (
       date,
       winAmount: dayData.winAmount,
       cumulative,
+    };
+  });
+};
+
+export const calculateDailyTrend = (
+  users: User[],
+  bets: Bet[]
+): DailyTrendItem[] => {
+  const winBets = bets.filter((b) => (b.winAmount ?? 0) > 0);
+
+  const dailyMap = new Map<string, {
+    winAmount: number;
+    userMap: Map<string, { amount: number; count: number }>;
+  }>();
+
+  winBets.forEach((bet) => {
+    const date = bet.date;
+    if (!dailyMap.has(date)) {
+      dailyMap.set(date, { winAmount: 0, userMap: new Map() });
+    }
+    const day = dailyMap.get(date)!;
+    day.winAmount += bet.winAmount ?? 0;
+
+    const userEntry = day.userMap.get(bet.userId);
+    if (userEntry) {
+      userEntry.amount += bet.winAmount ?? 0;
+      userEntry.count += 1;
+    } else {
+      day.userMap.set(bet.userId, { amount: bet.winAmount ?? 0, count: 1 });
+    }
+  });
+
+  const sortedDates = Array.from(dailyMap.keys()).sort(
+    (a, b) => new Date(a).getTime() - new Date(b).getTime()
+  );
+
+  const userMap = new Map(users.map((u) => [u.id, u]));
+  let cumulative = 0;
+
+  return sortedDates.map((date) => {
+    const dayData = dailyMap.get(date)!;
+    cumulative += dayData.winAmount;
+
+    const contributors = Array.from(dayData.userMap.entries())
+      .map(([userId, data]) => {
+        const user = userMap.get(userId);
+        return {
+          userId,
+          nickname: user?.nickname || '未知用户',
+          avatar: user?.avatar || '👤',
+          amount: data.amount,
+          count: data.count,
+        };
+      })
+      .sort((a, b) => b.amount - a.amount);
+
+    return {
+      date,
+      winAmount: dayData.winAmount,
+      cumulative,
+      contributors,
     };
   });
 };

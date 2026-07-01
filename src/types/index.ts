@@ -55,6 +55,19 @@ export interface RankingItem {
 
 export type RankingSortType = 'totalWin' | 'winDays' | 'totalBets';
 
+export interface DailyTrendItem {
+  date: string;
+  winAmount: number;
+  cumulative: number;
+  contributors: Array<{
+    userId: string;
+    nickname: string;
+    avatar: string;
+    amount: number;
+    count: number;
+  }>;
+}
+
 export interface ApiConfig {
   apiKey: string;
   competition: string;

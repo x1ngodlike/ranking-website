@@ -1,14 +1,18 @@
 import { useMemo, useRef, useState, useEffect } from 'react';
 import { useAppStore } from '@/store/useAppStore';
-import { calculateRankings } from '@/utils/calculations';
-import { Trophy, Hash, RefreshCw } from 'lucide-react';
+import { calculateRankings, calculateDailyTrend } from '@/utils/calculations';
+import { Trophy, Hash, RefreshCw, TrendingUp } from 'lucide-react';
 import RankingPodium from '@/components/RankingPodium/RankingPodium';
 import RankingList from '@/components/RankingList/RankingList';
+import TrendChart from '@/components/TrendChart/TrendChart';
 import type { RankingSortType } from '@/types';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
-const tabs: { type: RankingSortType; label: string; icon: typeof Trophy }[] = [
+type TabType = RankingSortType | 'trend';
+
+const tabs: { type: TabType; label: string; icon: typeof Trophy }[] = [
   { type: 'totalWin', label: '中奖总额', icon: Trophy },
+  { type: 'trend', label: '趋势走势', icon: TrendingUp },
   { type: 'totalBets', label: '记录总数', icon: Hash },
 ];
 
@@ -23,6 +27,8 @@ const RankingPage = () => {
   const bets = useAppStore((state) => state.bets);
   const refreshData = useAppStore((state) => state.refreshData);
 
+  const [activeTab, setActiveTab] = useState<TabType>('totalWin');
+
   const pullStartY = useRef<number>(0);
   const [pullDistance, setPullDistance] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -31,6 +37,16 @@ const RankingPage = () => {
   const rankings = useMemo(
     () => calculateRankings(users, bets, sortType),
     [users, bets, sortType]
+  );
+
+  const podiumRankings = useMemo(
+    () => calculateRankings(users, bets, 'totalWin'),
+    [users, bets]
+  );
+
+  const dailyTrend = useMemo(
+    () => calculateDailyTrend(users, bets),
+    [users, bets]
   );
 
   const finishedMatches = matches.filter((m) => m.status === 'finished').length;
@@ -171,7 +187,7 @@ const RankingPage = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.2 }}
       >
-        <RankingPodium rankings={rankings} />
+        <RankingPodium rankings={podiumRankings} />
       </motion.div>
 
       <motion.div
@@ -182,25 +198,56 @@ const RankingPage = () => {
         <div className="flex items-center justify-center gap-2 mb-6">
           {tabs.map((tab) => {
             const Icon = tab.icon;
-            const isActive = sortType === tab.type;
+            const isActive = activeTab === tab.type;
+            const handleClick = () => {
+              if (tab.type === 'trend') {
+                setActiveTab('trend');
+              } else {
+                setActiveTab(tab.type);
+                setSortType(tab.type);
+              }
+            };
             return (
               <button
                 key={tab.type}
-                onClick={() => setSortType(tab.type)}
-                className={`flex items-center gap-2 px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
+                onClick={handleClick}
+                className={`flex items-center gap-2 px-4 sm:px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
                   isActive
                     ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/30'
                     : 'bg-neutral-50 dark:bg-neutral-800/50 text-neutral-600 dark:text-neutral-400 hover:text-primary-500 hover:bg-neutral-100 dark:hover:bg-neutral-700/50'
                 }`}
               >
                 <Icon size={16} />
-                {tab.label}
+                <span className="hidden sm:inline">{tab.label}</span>
+                <span className="sm:hidden">{tab.label.replace('总额', '').replace('走势', '').replace('总数', '')}</span>
               </button>
             );
           })}
         </div>
 
-        <RankingList rankings={rankings} sortType={sortType} />
+        <AnimatePresence mode="wait">
+          {activeTab === 'trend' ? (
+            <motion.div
+              key="trend"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <TrendChart data={dailyTrend} />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="ranking"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <RankingList rankings={rankings} sortType={sortType} />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.div>
     </div>
   );

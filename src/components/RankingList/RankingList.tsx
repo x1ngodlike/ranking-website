@@ -62,7 +62,7 @@ const RankingList = ({ rankings, sortType }: RankingListProps) => {
                     to={`/profile/${item.userId}`}
                     className="flex items-center gap-2 sm:gap-3 group"
                   >
-                    <Avatar src={item.avatar} alt={item.nickname} size="sm" className="sm:w-10 sm:h-10 sm:text-xl" />
+                    <Avatar src={item.avatar} alt={item.nickname} size="sm" className="sm:w-[60px] sm:h-[60px] sm:text-2xl" />
                     <div>
                       <p className="font-medium text-neutral-800 dark:text-neutral-200 group-hover:text-primary-500 transition-colors">
                         {item.nickname}
