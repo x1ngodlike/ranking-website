@@ -4,6 +4,7 @@ import { formatCurrency } from '@/utils/helpers';
 import { motion } from 'framer-motion';
 import Avatar from '@/components/Avatar';
 import { RARITY_STYLES, BadgeRarity } from '@/utils/badges';
+import { TrendingUp, Minus } from 'lucide-react';
 
 interface RankingListProps {
   rankings: RankingItem[];
@@ -64,9 +65,16 @@ const RankingList = ({ rankings, sortType }: RankingListProps) => {
                   >
                     <Avatar src={item.avatar} alt={item.nickname} size="sm" className="sm:w-[60px] sm:h-[60px] sm:text-2xl" />
                     <div>
-                      <p className="font-medium text-neutral-800 dark:text-neutral-200 group-hover:text-primary-500 transition-colors">
-                        {item.nickname}
-                      </p>
+                      <div className="flex items-center gap-1">
+                        <p className="font-medium text-neutral-800 dark:text-neutral-200 group-hover:text-primary-500 transition-colors">
+                          {item.nickname}
+                        </p>
+                        {item.winDays > 0 ? (
+                          <TrendingUp size={13} className="text-loss-500 flex-shrink-0" />
+                        ) : (
+                          <Minus size={13} className="text-neutral-400 flex-shrink-0" />
+                        )}
+                      </div>
                       {item.topBadges && item.topBadges.length > 0 ? (
                         <div className="flex items-center gap-0.5 sm:gap-1 mt-0.5">
                           {item.topBadges.map((badge) => (

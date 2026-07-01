@@ -309,3 +309,32 @@ export const calculateDailyTrend = (
     };
   });
 };
+
+export const getTodayStr = (): string => {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, '0');
+  const d = String(now.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+};
+
+export const getDailyStarUserId = (bets: Bet[], date?: string): string | null => {
+  const targetDate = date || getTodayStr();
+  const winBets = bets.filter((b) => b.date === targetDate && (b.winAmount ?? 0) > 0);
+  if (winBets.length === 0) return null;
+
+  const userAmounts = new Map<string, number>();
+  winBets.forEach((b) => {
+    userAmounts.set(b.userId, (userAmounts.get(b.userId) || 0) + (b.winAmount ?? 0));
+  });
+
+  let maxUserId: string | null = null;
+  let maxAmount = 0;
+  userAmounts.forEach((amount, userId) => {
+    if (amount > maxAmount) {
+      maxAmount = amount;
+      maxUserId = userId;
+    }
+  });
+  return maxUserId;
+};

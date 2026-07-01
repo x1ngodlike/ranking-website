@@ -6,6 +6,7 @@ import { isImageAvatar } from '@/components/Avatar';
 
 interface TrendChartProps {
   data: DailyTrendItem[];
+  dailyStarUserId?: string | null;
 }
 
 const formatDateShort = (dateStr: string): string => {
@@ -21,13 +22,13 @@ const formatDateFull = (dateStr: string): string => {
 const MAX_VISIBLE_AVATARS = 4;
 const POINT_WIDTH = 92;
 const CHART_HEIGHT = 380;
-const PAD_TOP = 80;
+const PAD_TOP = 84;
 const PAD_BOTTOM = 34;
 const PAD_X = 28;
-const AVATAR_TOP = 12;
+const AVATAR_TOP = 6;
 const AVATAR_SIZE = 30;
 
-const TrendChart = ({ data }: TrendChartProps) => {
+const TrendChart = ({ data, dailyStarUserId }: TrendChartProps) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const innerRef = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(0);
@@ -113,7 +114,7 @@ const TrendChart = ({ data }: TrendChartProps) => {
         <div className="flex items-center gap-2 mb-4">
           <TrendingUp size={20} className="text-primary-500" />
           <h2 className="font-display text-lg text-neutral-800 dark:text-neutral-200">
-            趋势走势
+            中奖走势
           </h2>
         </div>
         <div className="h-64 flex flex-col items-center justify-center text-neutral-500 dark:text-neutral-500">
@@ -138,7 +139,7 @@ const TrendChart = ({ data }: TrendChartProps) => {
         <div className="flex items-center gap-2">
           <TrendingUp size={20} className="text-primary-500" />
           <h2 className="font-display text-lg text-neutral-800 dark:text-neutral-200">
-            趋势走势
+            中奖走势
           </h2>
         </div>
         <div className="flex items-center gap-1 text-sm text-neutral-500 dark:text-neutral-500">
@@ -289,6 +290,7 @@ const TrendChart = ({ data }: TrendChartProps) => {
                   const contributors = p.contributors || [];
                   const visible = contributors.slice(0, MAX_VISIBLE_AVATARS);
                   const rest = contributors.length - visible.length;
+                  const isDailyStar = dailyStarUserId && visible.length > 0 && visible[0].userId === dailyStarUserId;
                   return (
                     <div
                       key={`avatar-${i}`}
@@ -302,6 +304,11 @@ const TrendChart = ({ data }: TrendChartProps) => {
                       onMouseLeave={() => setHovered(null)}
                       onClick={() => setPinned(pinned === i ? null : i)}
                     >
+                      {isDailyStar && (
+                        <div className="text-xl mb-0.5 animate-bounce" title="今日之星">
+                          👑
+                        </div>
+                      )}
                       <div className="flex -space-x-2">
                         {visible.map((c, ci) => (
                           <div
@@ -325,7 +332,7 @@ const TrendChart = ({ data }: TrendChartProps) => {
                             )}
                             {c.count > 1 && (
                               <span
-                                className="absolute -top-1 -right-1 min-w-[16px] h-[16px] px-1 bg-profit-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center border-2 border-white dark:border-neutral-800 shadow-sm"
+                                className="absolute -top-1 -left-1 min-w-[16px] h-[16px] px-1 bg-profit-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center border-2 border-white dark:border-neutral-800 shadow-sm"
                                 style={{ zIndex: MAX_VISIBLE_AVATARS - ci + 10 }}
                               >
                                 {c.count}

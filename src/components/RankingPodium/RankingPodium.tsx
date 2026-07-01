@@ -4,9 +4,11 @@ import { formatCurrency } from '@/utils/helpers';
 import { motion } from 'framer-motion';
 import { isImageAvatar } from '@/components/Avatar';
 import { RARITY_STYLES, BadgeRarity } from '@/utils/badges';
+import { TrendingUp, Minus } from 'lucide-react';
 
 interface RankingPodiumProps {
   rankings: RankingItem[];
+  dailyStarUserId?: string | null;
 }
 
 const podiumConfig = [
@@ -15,7 +17,7 @@ const podiumConfig = [
   { rank: 3, height: 'h-20', medal: '🥉', glow: 'from-amber-600 to-amber-800' },
 ];
 
-const RankingPodium = ({ rankings }: RankingPodiumProps) => {
+const RankingPodium = ({ rankings, dailyStarUserId }: RankingPodiumProps) => {
   const top3 = rankings.slice(0, 3);
 
   if (top3.length === 0) return null;
@@ -62,6 +64,11 @@ const RankingPodium = ({ rankings }: RankingPodiumProps) => {
                     item.avatar
                   )}
                 </div>
+                {dailyStarUserId === item.userId && (
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 text-2xl md:text-3xl animate-bounce z-10" title="今日之星">
+                    👑
+                  </div>
+                )}
               <div className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-white dark:bg-neutral-800 border-2 border-neutral-100 dark:border-neutral-700 flex items-center justify-center text-base font-bold">
                 <span className={config.rank === 1 ? 'text-gold-600' : config.rank === 2 ? 'text-neutral-500' : 'text-amber-700'}>
                   {config.rank}
@@ -69,9 +76,16 @@ const RankingPodium = ({ rankings }: RankingPodiumProps) => {
               </div>
               </div>
 
-              <p className="font-display text-lg md:text-xl text-neutral-800 dark:text-neutral-200 mb-1 text-center">
-                {item.nickname}
-              </p>
+              <div className="flex items-center gap-1 mb-1">
+                <p className="font-display text-lg md:text-xl text-neutral-800 dark:text-neutral-200 text-center">
+                  {item.nickname}
+                </p>
+                {item.winDays > 0 ? (
+                  <TrendingUp size={14} className="text-loss-500 flex-shrink-0" />
+                ) : (
+                  <Minus size={14} className="text-neutral-400 flex-shrink-0" />
+                )}
+              </div>
 
               <p
                 className={`font-display text-xl md:text-2xl text-amber-600 dark:text-gold-400 mb-1`}

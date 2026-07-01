@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState, useEffect } from 'react';
 import { useAppStore } from '@/store/useAppStore';
-import { calculateRankings, calculateDailyTrend } from '@/utils/calculations';
+import { calculateRankings, calculateDailyTrend, getDailyStarUserId, getTodayStr } from '@/utils/calculations';
 import { Trophy, Hash, RefreshCw, TrendingUp } from 'lucide-react';
 import RankingPodium from '@/components/RankingPodium/RankingPodium';
 import RankingList from '@/components/RankingList/RankingList';
@@ -12,7 +12,7 @@ type TabType = RankingSortType | 'trend';
 
 const tabs: { type: TabType; label: string; icon: typeof Trophy }[] = [
   { type: 'totalWin', label: '中奖总额', icon: Trophy },
-  { type: 'trend', label: '趋势走势', icon: TrendingUp },
+  { type: 'trend', label: '中奖走势', icon: TrendingUp },
   { type: 'totalBets', label: '记录总数', icon: Hash },
 ];
 
@@ -48,6 +48,13 @@ const RankingPage = () => {
     () => calculateDailyTrend(users, bets),
     [users, bets]
   );
+
+  const dailyStarUserId = useMemo(
+    () => getDailyStarUserId(bets),
+    [bets]
+  );
+
+  const todayStr = getTodayStr();
 
   const finishedMatches = matches.filter((m) => m.status === 'finished').length;
   const totalMatches = matches.length;
@@ -187,7 +194,7 @@ const RankingPage = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.2 }}
       >
-        <RankingPodium rankings={podiumRankings} />
+        <RankingPodium rankings={podiumRankings} dailyStarUserId={dailyStarUserId} />
       </motion.div>
 
       <motion.div
@@ -234,7 +241,7 @@ const RankingPage = () => {
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.3 }}
             >
-              <TrendChart data={dailyTrend} />
+              <TrendChart data={dailyTrend} dailyStarUserId={dailyStarUserId} />
             </motion.div>
           ) : (
             <motion.div
