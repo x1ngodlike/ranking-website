@@ -372,63 +372,85 @@ const TrendChart = ({ data }: TrendChartProps) => {
                   );
                 })}
 
-                {/* 悬浮信息卡（放在数据点下方，避免被上边缘遮挡） */}
-                {active !== null && points[active] && (
-                  <div
-                    className="absolute z-30 pointer-events-none"
-                    style={{
-                      left: `${(points[active].x / width) * 100}%`,
-                      top: `${points[active].y + 16}px`,
-                      transform: 'translateX(-50%)',
-                    }}
-                  >
-                    <div className="bg-primary-700/95 backdrop-blur-sm text-white text-xs rounded-xl shadow-2xl px-3 py-2.5 min-w-[170px] max-w-[220px] border border-primary-500/30">
-                      <p className="font-bold mb-2 text-sm">{formatDateFull(points[active].date)}</p>
-                      <div className="flex justify-between gap-2 mb-1">
-                        <span className="text-profit-300">当日中奖</span>
-                        <span className="text-profit-300 font-bold">
-                          +¥{points[active].winAmount.toFixed(2)}
-                        </span>
-                      </div>
-                      <div className="flex justify-between gap-2 mb-2">
-                        <span className="text-blue-200">累计</span>
-                        <span className="text-blue-200 font-bold">
-                          ¥{points[active].cumulative.toFixed(2)}
-                        </span>
-                      </div>
-                      <div className="border-t border-white/20 pt-2">
-                        <p className="text-neutral-300 mb-1.5">
-                          贡献者 ({points[active].contributors.length}人)
-                        </p>
-                        <div className="space-y-1 max-h-[120px] overflow-y-auto">
-                          {points[active].contributors.map((c: any, ci: number) => (
-                            <div
-                              key={c.userId}
-                              className="flex items-center justify-between gap-2"
-                            >
-                              <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                                <span className="text-[10px] text-primary-300 font-bold w-4 text-right">
-                                  {ci + 1}
-                                </span>
-                                <span className="truncate text-white/90">
-                                  {c.nickname}
-                                </span>
-                                {c.count > 1 && (
-                                  <span className="text-[9px] bg-profit-500 text-white px-1 rounded-full flex-shrink-0">
-                                    {c.count}次
+                {/* 悬浮信息卡（以贡献头像为基准向下弹出，智能贴边避免遮挡） */}
+                {active !== null && points[active] && (() => {
+                  const popupMinWidth = 180;
+                  const popupMaxWidth = 240;
+                  const p = points[active];
+                  const leftEdge = PAD_X;
+                  const rightEdge = width - PAD_X;
+                  const halfW = popupMaxWidth / 2;
+                  let align: 'center' | 'left' | 'right' = 'center';
+                  let leftPx = p.x;
+                  if (p.x - halfW < leftEdge) {
+                    align = 'left';
+                    leftPx = leftEdge;
+                  } else if (p.x + halfW > rightEdge) {
+                    align = 'right';
+                    leftPx = rightEdge;
+                  }
+                  const topPx = AVATAR_TOP + AVATAR_SIZE + 8;
+                  return (
+                    <div
+                      className="absolute z-30 pointer-events-none"
+                      style={{
+                        left: `${leftPx}px`,
+                        top: `${topPx}px`,
+                        ...(align === 'center' && { transform: 'translateX(-50%)' }),
+                        ...(align === 'right' && { transform: 'translateX(-100%)' }),
+                      }}
+                    >
+                      <div
+                        className="bg-primary-700/95 backdrop-blur-sm text-white text-xs rounded-xl shadow-2xl px-3 py-2.5 border border-primary-500/30"
+                        style={{ minWidth: popupMinWidth, maxWidth: popupMaxWidth }}
+                      >
+                        <p className="font-bold mb-2 text-sm">{formatDateFull(p.date)}</p>
+                        <div className="flex justify-between gap-2 mb-1">
+                          <span className="text-profit-300">当日中奖</span>
+                          <span className="text-profit-300 font-bold">
+                            +¥{p.winAmount.toFixed(2)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between gap-2 mb-2">
+                          <span className="text-blue-200">累计</span>
+                          <span className="text-blue-200 font-bold">
+                            ¥{p.cumulative.toFixed(2)}
+                          </span>
+                        </div>
+                        <div className="border-t border-white/20 pt-2">
+                          <p className="text-neutral-300 mb-1.5">
+                            贡献者 ({p.contributors.length}人)
+                          </p>
+                          <div className="space-y-1 max-h-[120px] overflow-y-auto">
+                            {p.contributors.map((c: any, ci: number) => (
+                              <div
+                                key={c.userId}
+                                className="flex items-center justify-between gap-2"
+                              >
+                                <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                                  <span className="text-[10px] text-primary-300 font-bold w-4 text-right">
+                                    {ci + 1}
                                   </span>
-                                )}
+                                  <span className="truncate text-white/90">
+                                    {c.nickname}
+                                  </span>
+                                  {c.count > 1 && (
+                                    <span className="text-[9px] bg-profit-500 text-white px-1 rounded-full flex-shrink-0">
+                                      {c.count}次
+                                    </span>
+                                  )}
+                                </div>
+                                <span className="text-profit-300 font-medium flex-shrink-0">
+                                  +¥{c.amount.toFixed(2)}
+                                </span>
                               </div>
-                              <span className="text-profit-300 font-medium flex-shrink-0">
-                                +¥{c.amount.toFixed(2)}
-                              </span>
-                            </div>
-                          ))}
+                            ))}
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                )}
+                  );
+                })()}
               </>
             )}
           </div>
