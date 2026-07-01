@@ -220,20 +220,22 @@ const TrendChart = ({ data }: TrendChartProps) => {
                     );
                   })}
 
-                  {/* Y轴标签 */}
+                  {/* Y轴标签（右侧） */}
                   <text
-                    x={PAD_X}
+                    x={width - PAD_X}
                     y={PAD_TOP - 6}
                     fill="#9aabd4"
                     fontSize={10}
+                    textAnchor="end"
                   >
                     ¥{maxVal.toFixed(0)}
                   </text>
                   <text
-                    x={PAD_X}
+                    x={width - PAD_X}
                     y={bottomY - 6}
                     fill="#9aabd4"
                     fontSize={10}
+                    textAnchor="end"
                   >
                     ¥0
                   </text>
