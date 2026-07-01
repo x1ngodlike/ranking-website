@@ -9,6 +9,7 @@ import { TrendingUp, Minus } from 'lucide-react';
 interface RankingPodiumProps {
   rankings: RankingItem[];
   dailyStarUserId?: string | null;
+  todayWinUsers?: Set<string>;
 }
 
 const podiumConfig = [
@@ -17,7 +18,7 @@ const podiumConfig = [
   { rank: 3, height: 'h-20', medal: '🥉', glow: 'from-amber-600 to-amber-800' },
 ];
 
-const RankingPodium = ({ rankings, dailyStarUserId }: RankingPodiumProps) => {
+const RankingPodium = ({ rankings, dailyStarUserId, todayWinUsers }: RankingPodiumProps) => {
   const top3 = rankings.slice(0, 3);
 
   if (top3.length === 0) return null;
@@ -51,7 +52,12 @@ const RankingPodium = ({ rankings, dailyStarUserId }: RankingPodiumProps) => {
               className="flex flex-col items-center group"
             >
               <div className="relative mb-3">
-                <div className={`w-14 h-14 md:w-20 md:h-20 rounded-full bg-gradient-to-br ${config.glow} shadow-lg group-hover:scale-110 transition-transform overflow-hidden flex items-center justify-center text-3xl md:text-4xl`}>
+                <div className={`w-14 h-14 md:w-20 md:h-20 rounded-full bg-gradient-to-br ${config.glow} shadow-lg group-hover:scale-110 transition-transform overflow-hidden flex items-center justify-center text-3xl md:text-4xl relative`}>
+                  {dailyStarUserId === item.userId && (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 text-2xl md:text-3xl animate-bounce z-10" title="今日之星">
+                      👑
+                    </div>
+                  )}
                   {isImageAvatar(item.avatar) ? (
                     <img
                       src={item.avatar}
@@ -64,11 +70,6 @@ const RankingPodium = ({ rankings, dailyStarUserId }: RankingPodiumProps) => {
                     item.avatar
                   )}
                 </div>
-                {dailyStarUserId === item.userId && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 text-2xl md:text-3xl animate-bounce z-10" title="今日之星">
-                    👑
-                  </div>
-                )}
               <div className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-white dark:bg-neutral-800 border-2 border-neutral-100 dark:border-neutral-700 flex items-center justify-center text-base font-bold">
                 <span className={config.rank === 1 ? 'text-gold-600' : config.rank === 2 ? 'text-neutral-500' : 'text-amber-700'}>
                   {config.rank}
@@ -80,7 +81,7 @@ const RankingPodium = ({ rankings, dailyStarUserId }: RankingPodiumProps) => {
                 <p className="font-display text-lg md:text-xl text-neutral-800 dark:text-neutral-200 text-center">
                   {item.nickname}
                 </p>
-                {item.winDays > 0 ? (
+                {todayWinUsers && todayWinUsers.has(item.userId) ? (
                   <TrendingUp size={14} className="text-loss-500 flex-shrink-0" />
                 ) : (
                   <Minus size={14} className="text-neutral-400 flex-shrink-0" />

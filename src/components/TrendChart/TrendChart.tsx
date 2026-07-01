@@ -6,7 +6,6 @@ import { isImageAvatar } from '@/components/Avatar';
 
 interface TrendChartProps {
   data: DailyTrendItem[];
-  dailyStarUserId?: string | null;
 }
 
 const formatDateShort = (dateStr: string): string => {
@@ -28,7 +27,7 @@ const PAD_X = 28;
 const AVATAR_TOP = 6;
 const AVATAR_SIZE = 30;
 
-const TrendChart = ({ data, dailyStarUserId }: TrendChartProps) => {
+const TrendChart = ({ data }: TrendChartProps) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const innerRef = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(0);
@@ -290,7 +289,8 @@ const TrendChart = ({ data, dailyStarUserId }: TrendChartProps) => {
                   const contributors = p.contributors || [];
                   const visible = contributors.slice(0, MAX_VISIBLE_AVATARS);
                   const rest = contributors.length - visible.length;
-                  const isDailyStar = dailyStarUserId && visible.length > 0 && visible[0].userId === dailyStarUserId;
+                  // 当天最高中奖金额的用户（contributors[0] 已经是降序第一）
+                  const dailyWinnerId = contributors.length > 0 ? contributors[0].userId : null;
                   return (
                     <div
                       key={`avatar-${i}`}
@@ -304,42 +304,56 @@ const TrendChart = ({ data, dailyStarUserId }: TrendChartProps) => {
                       onMouseLeave={() => setHovered(null)}
                       onClick={() => setPinned(pinned === i ? null : i)}
                     >
-                      {isDailyStar && (
-                        <div className="text-xl mb-0.5 animate-bounce" title="今日之星">
-                          👑
-                        </div>
-                      )}
                       <div className="flex -space-x-2">
-                        {visible.map((c, ci) => (
-                          <div
-                            key={c.userId}
-                            className="relative rounded-full border-2 border-white dark:border-neutral-800 bg-neutral-100 dark:bg-neutral-700 flex items-center justify-center overflow-hidden ring-1 ring-primary/15 transition-transform hover:scale-110"
-                            style={{
-                              width: AVATAR_SIZE,
-                              height: AVATAR_SIZE,
-                              zIndex: MAX_VISIBLE_AVATARS - ci,
-                            }}
-                          >
-                            {isImageAvatar(c.avatar) ? (
-                              <img
-                                src={c.avatar}
-                                alt={c.nickname}
-                                className="w-full h-full object-cover"
-                                loading="lazy"
-                              />
-                            ) : (
-                              <span className="text-sm">{c.avatar}</span>
-                            )}
-                            {c.count > 1 && (
-                              <span
-                                className="absolute -top-1 -left-1 min-w-[16px] h-[16px] px-1 bg-profit-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center border-2 border-white dark:border-neutral-800 shadow-sm"
-                                style={{ zIndex: MAX_VISIBLE_AVATARS - ci + 10 }}
+                        {visible.map((c, ci) => {
+                          const isFirst = ci === 0;
+                          const showCrown = isFirst && dailyWinnerId === c.userId;
+                          return (
+                            <div
+                              key={c.userId}
+                              className="relative rounded-full border-2 border-white dark:border-neutral-800 bg-neutral-100 dark:bg-neutral-700 flex items-center justify-center ring-1 ring-primary/15 transition-transform hover:scale-110"
+                              style={{
+                                width: AVATAR_SIZE,
+                                height: AVATAR_SIZE,
+                                zIndex: MAX_VISIBLE_AVATARS - ci,
+                                overflow: 'visible',
+                              }}
+                            >
+                              {showCrown && (
+                                <div
+                                  className="absolute text-lg"
+                                  style={{ top: -12, left: '50%', transform: 'translateX(-50%)' }}
+                                  title="当日之星"
+                                >
+                                  👑
+                                </div>
+                              )}
+                              <div
+                                className="rounded-full overflow-hidden flex items-center justify-center"
+                                style={{ width: AVATAR_SIZE - 4, height: AVATAR_SIZE - 4 }}
                               >
-                                {c.count}
-                              </span>
-                            )}
-                          </div>
-                        ))}
+                                {isImageAvatar(c.avatar) ? (
+                                  <img
+                                    src={c.avatar}
+                                    alt={c.nickname}
+                                    className="w-full h-full object-cover"
+                                    loading="lazy"
+                                  />
+                                ) : (
+                                  <span className="text-sm">{c.avatar}</span>
+                                )}
+                              </div>
+                              {c.count > 1 && (
+                                <span
+                                  className="absolute min-w-[14px] h-[14px] px-1 bg-profit-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center border-2 border-white dark:border-neutral-800 shadow-sm"
+                                  style={{ top: -5, left: -5, zIndex: MAX_VISIBLE_AVATARS - ci + 10 }}
+                                >
+                                  {c.count}
+                                </span>
+                              )}
+                            </div>
+                          );
+                        })}
                         {rest > 0 && (
                           <div
                             className="rounded-full border-2 border-white dark:border-neutral-800 bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center text-[9px] font-medium text-neutral-600 dark:text-neutral-300"

@@ -9,9 +9,10 @@ import { TrendingUp, Minus } from 'lucide-react';
 interface RankingListProps {
   rankings: RankingItem[];
   sortType: RankingSortType;
+  todayWinUsers?: Set<string>;
 }
 
-const RankingList = ({ rankings, sortType }: RankingListProps) => {
+const RankingList = ({ rankings, sortType, todayWinUsers }: RankingListProps) => {
   const getRankBadgeClass = (rank: number) => {
     if (rank === 1) return 'badge-rank-1';
     if (rank === 2) return 'badge-rank-2';
@@ -69,7 +70,7 @@ const RankingList = ({ rankings, sortType }: RankingListProps) => {
                         <p className="font-medium text-neutral-800 dark:text-neutral-200 group-hover:text-primary-500 transition-colors">
                           {item.nickname}
                         </p>
-                        {item.winDays > 0 ? (
+                        {todayWinUsers && todayWinUsers.has(item.userId) ? (
                           <TrendingUp size={13} className="text-loss-500 flex-shrink-0" />
                         ) : (
                           <Minus size={13} className="text-neutral-400 flex-shrink-0" />

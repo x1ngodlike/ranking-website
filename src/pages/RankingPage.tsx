@@ -56,6 +56,16 @@ const RankingPage = () => {
 
   const todayStr = getTodayStr();
 
+  const todayWinUsers = useMemo(() => {
+    const winSet = new Set<string>();
+    bets.forEach((b) => {
+      if (b.date === todayStr && (b.winAmount ?? 0) > 0) {
+        winSet.add(b.userId);
+      }
+    });
+    return winSet;
+  }, [bets, todayStr]);
+
   const finishedMatches = matches.filter((m) => m.status === 'finished').length;
   const totalMatches = matches.length;
   const remainingMatches = totalMatches - finishedMatches;
@@ -194,7 +204,7 @@ const RankingPage = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.2 }}
       >
-        <RankingPodium rankings={podiumRankings} dailyStarUserId={dailyStarUserId} />
+        <RankingPodium rankings={podiumRankings} dailyStarUserId={dailyStarUserId} todayWinUsers={todayWinUsers} />
       </motion.div>
 
       <motion.div
@@ -241,7 +251,7 @@ const RankingPage = () => {
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.3 }}
             >
-              <TrendChart data={dailyTrend} dailyStarUserId={dailyStarUserId} />
+              <TrendChart data={dailyTrend} />
             </motion.div>
           ) : (
             <motion.div
@@ -251,7 +261,7 @@ const RankingPage = () => {
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.3 }}
             >
-              <RankingList rankings={rankings} sortType={sortType} />
+              <RankingList rankings={rankings} sortType={sortType} todayWinUsers={todayWinUsers} />
             </motion.div>
           )}
         </AnimatePresence>
