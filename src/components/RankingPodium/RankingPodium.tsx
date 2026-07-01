@@ -78,10 +78,10 @@ const RankingPodium = ({ rankings }: RankingPodiumProps) => {
                   {item.topBadges.map((badge) => (
                     <div
                       key={badge.id}
-                      className={`flex items-center gap-1 px-2 py-0.5 rounded-full border ${RARITY_STYLES[badge.rarity as BadgeRarity].borderColor} ${RARITY_STYLES[badge.rarity as BadgeRarity].bgColor} ${RARITY_STYLES[badge.rarity as BadgeRarity].animation}`}
+                      className={`flex items-center justify-center w-6 h-6 sm:w-auto sm:h-auto sm:gap-1 sm:px-2 sm:py-0.5 rounded-full border ${RARITY_STYLES[badge.rarity as BadgeRarity].borderColor} ${RARITY_STYLES[badge.rarity as BadgeRarity].bgColor} ${RARITY_STYLES[badge.rarity as BadgeRarity].animation}`}
                       title={badge.name}
                     >
-                      <span className="text-sm">{badge.emoji}</span>
+                      <span className="text-xs sm:text-sm">{badge.emoji}</span>
                     </div>
                   ))}
                 </div>
