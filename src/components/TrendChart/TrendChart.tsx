@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState, useEffect } from 'react';
 import type { DailyTrendItem } from '@/types';
-import { TrendingUp, Users, TrendingDown } from 'lucide-react';
+import { TrendingUp, Users, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { isImageAvatar } from '@/components/Avatar';
 
@@ -19,21 +19,23 @@ const formatDateFull = (dateStr: string): string => {
 };
 
 const MAX_VISIBLE_AVATARS = 4;
-const POINT_WIDTH = 92; // 每个数据点最小占用宽度，数据多时触发横向滚动
-const CHART_HEIGHT = 340;
-const PAD_TOP = 64; // 顶部留给头像
-const PAD_BOTTOM = 34; // 底部留给日期
-const PAD_X = 24;
-const AVATAR_TOP = 10;
-const AVATAR_SIZE = 28;
+const POINT_WIDTH = 92;
+const CHART_HEIGHT = 380;
+const PAD_TOP = 80;
+const PAD_BOTTOM = 34;
+const PAD_X = 28;
+const AVATAR_TOP = 12;
+const AVATAR_SIZE = 30;
 
 const TrendChart = ({ data }: TrendChartProps) => {
+  const scrollRef = useRef<HTMLDivElement>(null);
   const innerRef = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(0);
   const [hovered, setHovered] = useState<number | null>(null);
   const [pinned, setPinned] = useState<number | null>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
 
-  // 测量容器实际宽度（含 minWidth 生效后的值）
   useEffect(() => {
     if (!innerRef.current) return;
     const el = innerRef.current;
@@ -43,6 +45,30 @@ const TrendChart = ({ data }: TrendChartProps) => {
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
+
+  const updateScrollButtons = useMemo(() => () => {
+    const el = scrollRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 2);
+    setCanScrollRight(
+      el.scrollLeft + el.clientWidth < el.scrollWidth - 2
+    );
+  }, []);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    updateScrollButtons();
+    el.addEventListener('scroll', updateScrollButtons, { passive: true });
+    return () => el.removeEventListener('scroll', updateScrollButtons);
+  }, [updateScrollButtons, data.length, width]);
+
+  const scrollBy = (dir: -1 | 1) => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const dist = el.clientWidth * 0.6;
+    el.scrollBy({ left: dir * dist, behavior: 'smooth' });
+  };
 
   const active = hovered !== null ? hovered : pinned;
 
@@ -121,227 +147,291 @@ const TrendChart = ({ data }: TrendChartProps) => {
         </div>
       </div>
 
-      <div
-        className="overflow-x-auto -mx-2 px-2 scrollbar-hide"
-        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-      >
-        <div
-          ref={innerRef}
-          className="relative"
-          style={{
-            minWidth: `${data.length * POINT_WIDTH}px`,
-            width: '100%',
-            height: CHART_HEIGHT,
-          }}
+      <div className="relative">
+        {/* 左侧按钮 - 桌面端 */}
+        <button
+          onClick={() => scrollBy(-1)}
+          className={`hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full items-center justify-center transition-all duration-200 ${
+            canScrollLeft
+              ? 'bg-white/80 dark:bg-neutral-800/80 text-primary-500 shadow-md hover:bg-white dark:hover:bg-neutral-800 backdrop-blur-sm'
+              : 'bg-white/30 dark:bg-neutral-800/30 text-neutral-400/50 cursor-default'
+          }`}
+          disabled={!canScrollLeft}
         >
-          {width > 0 && (
-            <>
-              <svg
-                width={width}
-                height={CHART_HEIGHT}
-                className="absolute inset-0"
-                style={{ pointerEvents: 'none' }}
-              >
-                <defs>
-                  <linearGradient id="trendArea" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="rgba(63,81,181,0.28)" />
-                    <stop offset="100%" stopColor="rgba(63,81,181,0)" />
-                  </linearGradient>
-                </defs>
+          <ChevronLeft size={18} />
+        </button>
 
-                {/* 横向网格线 */}
-                {[0, 0.5, 1].map((t) => {
-                  const y = PAD_TOP + t * innerH;
-                  return (
+        {/* 右侧按钮 - 桌面端 */}
+        <button
+          onClick={() => scrollBy(1)}
+          className={`hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full items-center justify-center transition-all duration-200 ${
+            canScrollRight
+              ? 'bg-white/80 dark:bg-neutral-800/80 text-primary-500 shadow-md hover:bg-white dark:hover:bg-neutral-800 backdrop-blur-sm'
+              : 'bg-white/30 dark:bg-neutral-800/30 text-neutral-400/50 cursor-default'
+          }`}
+          disabled={!canScrollRight}
+        >
+          <ChevronRight size={18} />
+        </button>
+
+        <div
+          ref={scrollRef}
+          className="overflow-x-auto -mx-2 px-2 scrollbar-hide md:px-8"
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        >
+          <div
+            ref={innerRef}
+            className="relative"
+            style={{
+              minWidth: `${data.length * POINT_WIDTH}px`,
+              width: '100%',
+              height: CHART_HEIGHT,
+            }}
+          >
+            {width > 0 && (
+              <>
+                <svg
+                  width={width}
+                  height={CHART_HEIGHT}
+                  className="absolute inset-0"
+                  style={{ pointerEvents: 'none' }}
+                >
+                  <defs>
+                    <linearGradient id="trendArea" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="rgba(63,81,181,0.28)" />
+                      <stop offset="100%" stopColor="rgba(63,81,181,0)" />
+                    </linearGradient>
+                  </defs>
+
+                  {/* 横向网格线 */}
+                  {[0, 0.5, 1].map((t) => {
+                    const y = PAD_TOP + t * innerH;
+                    return (
+                      <line
+                        key={t}
+                        x1={PAD_X}
+                        y1={y}
+                        x2={width - PAD_X}
+                        y2={y}
+                        stroke="rgba(63,81,181,0.1)"
+                        strokeWidth={1}
+                        strokeDasharray={t === 0 || t === 1 ? '0' : '4 4'}
+                      />
+                    );
+                  })}
+
+                  {/* Y轴标签 */}
+                  <text
+                    x={PAD_X}
+                    y={PAD_TOP - 6}
+                    fill="#9aabd4"
+                    fontSize={10}
+                  >
+                    ¥{maxVal.toFixed(0)}
+                  </text>
+                  <text
+                    x={PAD_X}
+                    y={bottomY - 6}
+                    fill="#9aabd4"
+                    fontSize={10}
+                  >
+                    ¥0
+                  </text>
+
+                  {/* 头像到数据点的连接线 */}
+                  {points.map((p, i) => (
                     <line
-                      key={t}
-                      x1={PAD_X}
-                      y1={y}
-                      x2={width - PAD_X}
-                      y2={y}
-                      stroke="rgba(63,81,181,0.1)"
-                      strokeWidth={1}
-                      strokeDasharray={t === 0 || t === 1 ? '0' : '4 4'}
+                      key={`conn-${i}`}
+                      x1={p.x}
+                      y1={AVATAR_TOP + AVATAR_SIZE + 2}
+                      x2={p.x}
+                      y2={p.y}
+                      stroke={active === i ? 'rgba(63,81,181,0.5)' : 'rgba(63,81,181,0.18)'}
+                      strokeWidth={active === i ? 1.5 : 1}
+                      strokeDasharray="2 3"
                     />
+                  ))}
+
+                  {/* 区域填充 */}
+                  <path d={areaD} fill="url(#trendArea)" />
+
+                  {/* 折线 */}
+                  <path
+                    d={pathD}
+                    fill="none"
+                    stroke="#3F51B5"
+                    strokeWidth={2.5}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+
+                  {/* 数据点 */}
+                  {points.map((p, i) => (
+                    <g key={`pt-${i}`}>
+                      {active === i && (
+                        <circle cx={p.x} cy={p.y} r={10} fill="rgba(63,81,181,0.15)" />
+                      )}
+                      <circle
+                        cx={p.x}
+                        cy={p.y}
+                        r={active === i ? 6 : 4}
+                        fill="#3F51B5"
+                        stroke="#fff"
+                        strokeWidth={2}
+                      />
+                    </g>
+                  ))}
+                </svg>
+
+                {/* 头像层（顶部） */}
+                {points.map((p, i) => {
+                  const leftPct = (p.x / width) * 100;
+                  const contributors = p.contributors || [];
+                  const visible = contributors.slice(0, MAX_VISIBLE_AVATARS);
+                  const rest = contributors.length - visible.length;
+                  return (
+                    <div
+                      key={`avatar-${i}`}
+                      className="absolute flex flex-col items-center cursor-pointer"
+                      style={{
+                        left: `${leftPct}%`,
+                        top: AVATAR_TOP,
+                        transform: 'translateX(-50%)',
+                      }}
+                      onMouseEnter={() => setHovered(i)}
+                      onMouseLeave={() => setHovered(null)}
+                      onClick={() => setPinned(pinned === i ? null : i)}
+                    >
+                      <div className="flex -space-x-2">
+                        {visible.map((c, ci) => (
+                          <div
+                            key={c.userId}
+                            className="relative rounded-full border-2 border-white dark:border-neutral-800 bg-neutral-100 dark:bg-neutral-700 flex items-center justify-center overflow-hidden ring-1 ring-primary/15 transition-transform hover:scale-110"
+                            style={{
+                              width: AVATAR_SIZE,
+                              height: AVATAR_SIZE,
+                              zIndex: MAX_VISIBLE_AVATARS - ci,
+                            }}
+                          >
+                            {isImageAvatar(c.avatar) ? (
+                              <img
+                                src={c.avatar}
+                                alt={c.nickname}
+                                className="w-full h-full object-cover"
+                                loading="lazy"
+                              />
+                            ) : (
+                              <span className="text-sm">{c.avatar}</span>
+                            )}
+                            {c.count > 1 && (
+                              <span
+                                className="absolute -top-1 -right-1 min-w-[16px] h-[16px] px-1 bg-profit-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center border-2 border-white dark:border-neutral-800 shadow-sm"
+                                style={{ zIndex: MAX_VISIBLE_AVATARS - ci + 10 }}
+                              >
+                                {c.count}
+                              </span>
+                            )}
+                          </div>
+                        ))}
+                        {rest > 0 && (
+                          <div
+                            className="rounded-full border-2 border-white dark:border-neutral-800 bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center text-[9px] font-medium text-neutral-600 dark:text-neutral-300"
+                            style={{ width: AVATAR_SIZE, height: AVATAR_SIZE, zIndex: 0 }}
+                          >
+                            +{rest}
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   );
                 })}
 
-                {/* Y轴最大值标签 */}
-                <text
-                  x={PAD_X}
-                  y={PAD_TOP - 6}
-                  fill="#9aabd4"
-                  fontSize={10}
-                >
-                  ¥{maxVal.toFixed(0)}
-                </text>
-                <text
-                  x={PAD_X}
-                  y={bottomY - 6}
-                  fill="#9aabd4"
-                  fontSize={10}
-                >
-                  ¥0
-                </text>
+                {/* 日期标签（底部） */}
+                {points.map((p, i) => {
+                  const leftPct = (p.x / width) * 100;
+                  return (
+                    <div
+                      key={`label-${i}`}
+                      className="absolute text-center"
+                      style={{
+                        left: `${leftPct}%`,
+                        bottom: 8,
+                        transform: 'translateX(-50%)',
+                      }}
+                    >
+                      <span
+                        className={`text-[10px] ${
+                          active === i
+                            ? 'text-primary-500 font-bold'
+                            : 'text-neutral-500 dark:text-neutral-500'
+                        }`}
+                      >
+                        {formatDateShort(p.date)}
+                      </span>
+                    </div>
+                  );
+                })}
 
-                {/* 头像到数据点的连接线 */}
-                {points.map((p, i) => (
-                  <line
-                    key={`conn-${i}`}
-                    x1={p.x}
-                    y1={AVATAR_TOP + AVATAR_SIZE + 4}
-                    x2={p.x}
-                    y2={p.y}
-                    stroke={active === i ? 'rgba(63,81,181,0.5)' : 'rgba(63,81,181,0.18)'}
-                    strokeWidth={active === i ? 1.5 : 1}
-                    strokeDasharray="2 3"
-                  />
-                ))}
-
-                {/* 区域填充 */}
-                <path d={areaD} fill="url(#trendArea)" />
-
-                {/* 折线 */}
-                <path
-                  d={pathD}
-                  fill="none"
-                  stroke="#3F51B5"
-                  strokeWidth={2.5}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-
-                {/* 数据点 */}
-                {points.map((p, i) => (
-                  <g key={`pt-${i}`}>
-                    {active === i && (
-                      <circle cx={p.x} cy={p.y} r={10} fill="rgba(63,81,181,0.15)" />
-                    )}
-                    <circle
-                      cx={p.x}
-                      cy={p.y}
-                      r={active === i ? 6 : 4}
-                      fill="#3F51B5"
-                      stroke="#fff"
-                      strokeWidth={2}
-                    />
-                  </g>
-                ))}
-              </svg>
-
-              {/* 头像层（顶部） */}
-              {points.map((p, i) => {
-                const leftPct = (p.x / width) * 100;
-                const contributors = p.contributors || [];
-                const visible = contributors.slice(0, MAX_VISIBLE_AVATARS);
-                const rest = contributors.length - visible.length;
-                return (
+                {/* 悬浮信息卡（放在数据点下方，避免被上边缘遮挡） */}
+                {active !== null && points[active] && (
                   <div
-                    key={`avatar-${i}`}
-                    className="absolute flex flex-col items-center cursor-pointer"
+                    className="absolute z-30 pointer-events-none"
                     style={{
-                      left: `${leftPct}%`,
-                      top: AVATAR_TOP,
+                      left: `${(points[active].x / width) * 100}%`,
+                      top: `${points[active].y + 16}px`,
                       transform: 'translateX(-50%)',
                     }}
-                    onMouseEnter={() => setHovered(i)}
-                    onMouseLeave={() => setHovered(null)}
-                    onClick={() => setPinned(pinned === i ? null : i)}
                   >
-                    <div className="flex -space-x-2">
-                      {visible.map((c, ci) => (
-                        <div
-                          key={c.userId}
-                          className="relative rounded-full border-2 border-white dark:border-neutral-800 bg-neutral-100 dark:bg-neutral-700 flex items-center justify-center overflow-hidden ring-1 ring-primary/15 transition-transform hover:scale-110 hover:z-10"
-                          style={{
-                            width: AVATAR_SIZE,
-                            height: AVATAR_SIZE,
-                            zIndex: MAX_VISIBLE_AVATARS - ci,
-                          }}
-                          title={`${c.nickname}: +¥${c.amount.toFixed(2)} (${c.count}次)`}
-                        >
-                          {isImageAvatar(c.avatar) ? (
-                            <img
-                              src={c.avatar}
-                              alt={c.nickname}
-                              className="w-full h-full object-cover"
-                              loading="lazy"
-                            />
-                          ) : (
-                            <span className="text-sm">{c.avatar}</span>
-                          )}
-                          {c.count > 1 && (
-                            <span className="absolute -bottom-0.5 -right-0.5 min-w-[14px] h-[14px] px-0.5 bg-profit-500 text-white text-[8px] font-bold rounded-full flex items-center justify-center border border-white dark:border-neutral-800">
-                              {c.count}
-                            </span>
-                          )}
+                    <div className="bg-primary-700/95 backdrop-blur-sm text-white text-xs rounded-xl shadow-2xl px-3 py-2.5 min-w-[170px] max-w-[220px] border border-primary-500/30">
+                      <p className="font-bold mb-2 text-sm">{formatDateFull(points[active].date)}</p>
+                      <div className="flex justify-between gap-2 mb-1">
+                        <span className="text-profit-300">当日中奖</span>
+                        <span className="text-profit-300 font-bold">
+                          +¥{points[active].winAmount.toFixed(2)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between gap-2 mb-2">
+                        <span className="text-blue-200">累计</span>
+                        <span className="text-blue-200 font-bold">
+                          ¥{points[active].cumulative.toFixed(2)}
+                        </span>
+                      </div>
+                      <div className="border-t border-white/20 pt-2">
+                        <p className="text-neutral-300 mb-1.5">
+                          贡献者 ({points[active].contributors.length}人)
+                        </p>
+                        <div className="space-y-1 max-h-[120px] overflow-y-auto">
+                          {points[active].contributors.map((c: any, ci: number) => (
+                            <div
+                              key={c.userId}
+                              className="flex items-center justify-between gap-2"
+                            >
+                              <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                                <span className="text-[10px] text-primary-300 font-bold w-4 text-right">
+                                  {ci + 1}
+                                </span>
+                                <span className="truncate text-white/90">
+                                  {c.nickname}
+                                </span>
+                                {c.count > 1 && (
+                                  <span className="text-[9px] bg-profit-500 text-white px-1 rounded-full flex-shrink-0">
+                                    {c.count}次
+                                  </span>
+                                )}
+                              </div>
+                              <span className="text-profit-300 font-medium flex-shrink-0">
+                                +¥{c.amount.toFixed(2)}
+                              </span>
+                            </div>
+                          ))}
                         </div>
-                      ))}
-                      {rest > 0 && (
-                        <div
-                          className="rounded-full border-2 border-white dark:border-neutral-800 bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center text-[9px] font-medium text-neutral-600 dark:text-neutral-300"
-                          style={{ width: AVATAR_SIZE, height: AVATAR_SIZE, zIndex: 0 }}
-                        >
-                          +{rest}
-                        </div>
-                      )}
+                      </div>
                     </div>
                   </div>
-                );
-              })}
-
-              {/* 日期标签（底部） */}
-              {points.map((p, i) => {
-                const leftPct = (p.x / width) * 100;
-                return (
-                  <div
-                    key={`label-${i}`}
-                    className="absolute text-center"
-                    style={{
-                      left: `${leftPct}%`,
-                      bottom: 8,
-                      transform: 'translateX(-50%)',
-                    }}
-                  >
-                    <span
-                      className={`text-[10px] ${
-                        active === i
-                          ? 'text-primary-500 font-bold'
-                          : 'text-neutral-500 dark:text-neutral-500'
-                      }`}
-                    >
-                      {formatDateShort(p.date)}
-                    </span>
-                  </div>
-                );
-              })}
-
-              {/* 悬浮信息卡 */}
-              {active !== null && points[active] && (
-                <div
-                  className="absolute z-20 pointer-events-none"
-                  style={{
-                    left: `${(points[active].x / width) * 100}%`,
-                    top: Math.max(points[active].y - 12, 8),
-                    transform: 'translate(-50%, -100%)',
-                  }}
-                >
-                  <div className="bg-primary-700/95 backdrop-blur-sm text-white text-xs rounded-lg shadow-xl px-3 py-2 min-w-[140px] max-w-[200px]">
-                    <p className="font-bold mb-1">{formatDateFull(points[active].date)}</p>
-                    <p className="text-profit-300">
-                      当日: +¥{points[active].winAmount.toFixed(2)}
-                    </p>
-                    <p className="text-blue-200">
-                      累计: ¥{points[active].cumulative.toFixed(2)}
-                    </p>
-                    <p className="text-neutral-300 mt-0.5">
-                      贡献: {points[active].contributors.length}人
-                    </p>
-                  </div>
-                </div>
-              )}
-            </>
-          )}
+                )}
+              </>
+            )}
+          </div>
         </div>
       </div>
 
@@ -351,8 +441,7 @@ const TrendChart = ({ data }: TrendChartProps) => {
           <span className="w-3 h-0.5 bg-primary-500 rounded" />
           累计中奖
         </span>
-        <span className="flex items-center gap-1">
-          <TrendingDown size={12} className="opacity-50" />
+        <span className="flex items-center gap-1 md:hidden">
           左右滑动查看更多
         </span>
       </div>
