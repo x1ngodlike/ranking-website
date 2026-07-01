@@ -236,7 +236,7 @@ const RankingPage = () => {
               >
                 <Icon size={16} />
                 <span className="hidden sm:inline">{tab.label}</span>
-                <span className="sm:hidden">{tab.label.replace('总额', '').replace('走势', '').replace('总数', '')}</span>
+                <span className="sm:hidden">{tab.label.replace('中奖', '')}</span>
               </button>
             );
           })}

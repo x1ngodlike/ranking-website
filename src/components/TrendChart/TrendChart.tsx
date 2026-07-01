@@ -63,6 +63,16 @@ const TrendChart = ({ data }: TrendChartProps) => {
     return () => el.removeEventListener('scroll', updateScrollButtons);
   }, [updateScrollButtons, data.length, width]);
 
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el || data.length === 0) return;
+    el.scrollLeft = el.scrollWidth;
+    if (points.length > 0) {
+      setPinned(points.length - 1);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data.length, width]);
+
   const scrollBy = (dir: -1 | 1) => {
     const el = scrollRef.current;
     if (!el) return;
