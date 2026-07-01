@@ -10,10 +10,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 type TabType = RankingSortType | 'trend';
 
-const tabs: { type: TabType; label: string; icon: typeof Trophy }[] = [
-  { type: 'totalWin', label: '中奖总额', icon: Trophy },
-  { type: 'trend', label: '中奖走势', icon: TrendingUp },
-  { type: 'totalBets', label: '记录总数', icon: Hash },
+const tabs = [
+  { type: 'totalWin' as TabType, label: '中奖总额', mobileLabel: '总额', icon: Trophy },
+  { type: 'trend' as TabType, label: '中奖走势', mobileLabel: '走势', icon: TrendingUp },
+  { type: 'totalBets' as TabType, label: '记录总数', mobileLabel: '总数', icon: Hash },
 ];
 
 const PULL_THRESHOLD = 60;
@@ -236,7 +236,7 @@ const RankingPage = () => {
               >
                 <Icon size={16} />
                 <span className="hidden sm:inline">{tab.label}</span>
-                <span className="sm:hidden">{tab.label.replace('中奖', '')}</span>
+                <span className="sm:hidden">{tab.mobileLabel}</span>
               </button>
             );
           })}

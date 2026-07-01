@@ -157,10 +157,10 @@ const TrendChart = ({ data }: TrendChartProps) => {
         </div>
       </div>
 
-      <div className="relative">
+      <div className="relative" onClick={() => setPinned(null)}>
         {/* 左侧按钮 - 桌面端 */}
         <button
-          onClick={() => scrollBy(-1)}
+          onClick={(e) => { e.stopPropagation(); scrollBy(-1); }}
           className={`hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full items-center justify-center transition-all duration-200 ${
             canScrollLeft
               ? 'bg-white/80 dark:bg-neutral-800/80 text-primary-500 shadow-md hover:bg-white dark:hover:bg-neutral-800 backdrop-blur-sm'
@@ -173,7 +173,7 @@ const TrendChart = ({ data }: TrendChartProps) => {
 
         {/* 右侧按钮 - 桌面端 */}
         <button
-          onClick={() => scrollBy(1)}
+          onClick={(e) => { e.stopPropagation(); scrollBy(1); }}
           className={`hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full items-center justify-center transition-all duration-200 ${
             canScrollRight
               ? 'bg-white/80 dark:bg-neutral-800/80 text-primary-500 shadow-md hover:bg-white dark:hover:bg-neutral-800 backdrop-blur-sm'
@@ -314,7 +314,7 @@ const TrendChart = ({ data }: TrendChartProps) => {
                       }}
                       onMouseEnter={() => setHovered(i)}
                       onMouseLeave={() => setHovered(null)}
-                      onClick={() => setPinned(pinned === i ? null : i)}
+                      onClick={(e) => { e.stopPropagation(); setPinned(pinned === i ? null : i); }}
                     >
                       <div className="flex -space-x-2">
                         {visible.map((c, ci) => {
