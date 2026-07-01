@@ -71,7 +71,7 @@ const RankingList = ({ rankings, sortType, todayWinUsers }: RankingListProps) =>
                           {item.nickname}
                         </p>
                         {todayWinUsers && todayWinUsers.has(item.userId) ? (
-                          <TrendingUp size={13} className="text-loss-500 flex-shrink-0" />
+                          <TrendingUp size={13} className="text-profit-500 flex-shrink-0" />
                         ) : (
                           <Minus size={13} className="text-neutral-400 flex-shrink-0" />
                         )}

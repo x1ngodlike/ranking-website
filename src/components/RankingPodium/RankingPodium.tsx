@@ -52,29 +52,35 @@ const RankingPodium = ({ rankings, dailyStarUserId, todayWinUsers }: RankingPodi
               className="flex flex-col items-center group"
             >
               <div className="relative mb-3">
-                <div className={`w-14 h-14 md:w-20 md:h-20 rounded-full bg-gradient-to-br ${config.glow} shadow-lg group-hover:scale-110 transition-transform overflow-hidden flex items-center justify-center text-3xl md:text-4xl relative`}>
+                <div className="relative w-14 h-14 md:w-20 md:h-20">
+                  <div className={`w-full h-full rounded-full bg-gradient-to-br ${config.glow} shadow-lg group-hover:scale-110 transition-transform overflow-hidden flex items-center justify-center text-3xl md:text-4xl`}>
+                    {isImageAvatar(item.avatar) ? (
+                      <img
+                        src={item.avatar}
+                        alt={item.nickname}
+                        loading="lazy"
+                        decoding="async"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      item.avatar
+                    )}
+                  </div>
                   {dailyStarUserId === item.userId && (
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 text-2xl md:text-3xl animate-bounce z-10" title="今日之星">
+                    <div
+                      className="absolute left-1/2 -translate-x-1/2 text-2xl md:text-3xl animate-bounce z-10"
+                      style={{ top: -14 }}
+                      title="今日之星"
+                    >
                       👑
                     </div>
                   )}
-                  {isImageAvatar(item.avatar) ? (
-                    <img
-                      src={item.avatar}
-                      alt={item.nickname}
-                      loading="lazy"
-                      decoding="async"
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    item.avatar
-                  )}
                 </div>
-              <div className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-white dark:bg-neutral-800 border-2 border-neutral-100 dark:border-neutral-700 flex items-center justify-center text-base font-bold">
-                <span className={config.rank === 1 ? 'text-gold-600' : config.rank === 2 ? 'text-neutral-500' : 'text-amber-700'}>
-                  {config.rank}
-                </span>
-              </div>
+                <div className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-white dark:bg-neutral-800 border-2 border-neutral-100 dark:border-neutral-700 flex items-center justify-center text-base font-bold">
+                  <span className={config.rank === 1 ? 'text-gold-600' : config.rank === 2 ? 'text-neutral-500' : 'text-amber-700'}>
+                    {config.rank}
+                  </span>
+                </div>
               </div>
 
               <div className="flex items-center gap-1 mb-1">
@@ -82,7 +88,7 @@ const RankingPodium = ({ rankings, dailyStarUserId, todayWinUsers }: RankingPodi
                   {item.nickname}
                 </p>
                 {todayWinUsers && todayWinUsers.has(item.userId) ? (
-                  <TrendingUp size={14} className="text-loss-500 flex-shrink-0" />
+                  <TrendingUp size={14} className="text-profit-500 flex-shrink-0" />
                 ) : (
                   <Minus size={14} className="text-neutral-400 flex-shrink-0" />
                 )}

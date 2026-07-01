@@ -321,8 +321,8 @@ const TrendChart = ({ data }: TrendChartProps) => {
                             >
                               {showCrown && (
                                 <div
-                                  className="absolute text-lg"
-                                  style={{ top: -12, left: '50%', transform: 'translateX(-50%)' }}
+                                  className="absolute"
+                                  style={{ top: -16, left: '50%', transform: 'translateX(-50%)', fontSize: 16 }}
                                   title="当日之星"
                                 >
                                   👑
