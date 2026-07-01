@@ -68,11 +68,11 @@ const RankingPodium = ({ rankings, dailyStarUserId, todayWinUsers }: RankingPodi
                   </div>
                   {dailyStarUserId === item.userId && (
                     <div
-                      className="absolute left-1/2 -translate-x-1/2 text-2xl md:text-3xl animate-bounce z-10"
+                      className="absolute left-0 right-0 flex justify-center z-10 pointer-events-none"
                       style={{ top: -14 }}
                       title="今日之星"
                     >
-                      👑
+                      <span className="text-2xl md:text-3xl animate-bounce leading-none">👑</span>
                     </div>
                   )}
                 </div>
