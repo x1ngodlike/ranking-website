@@ -56,49 +56,79 @@ const TEAM_ALIASES: Record<string, string[]> = {
   '科威特': ['科威特', '科威特队'],
 };
 
-const normalizeTeamName = (name: string | null | undefined): string => {
-  if (!name) return '';
-  const strName = String(name);
-  let normalized = strName.trim().replace(/[\s\-_队国]/g, '');
-  for (const [standard, aliases] of Object.entries(TEAM_ALIASES)) {
-    if (aliases.some(alias => strName.includes(alias) || alias.includes(strName))) {
-      return standard;
-    }
+const safeIncludes = (str: string | null | undefined, search: string | null | undefined): boolean => {
+  if (!str || !search) return false;
+  try {
+    return str.includes(search);
+  } catch {
+    return false;
   }
-  return normalized;
 };
 
-const findBestMatch = (matches: Match[], homeTeam: string | null | undefined, awayTeam: string | null | undefined): Match | undefined => {
-  if (!homeTeam || !awayTeam) return undefined;
-  
-  const normalizedHome = normalizeTeamName(homeTeam);
-  const normalizedAway = normalizeTeamName(awayTeam);
+const normalizeTeamName = (name: string | null | undefined): string => {
+  try {
+    if (!name) return '';
+    const strName = String(name).trim();
+    if (!strName) return '';
+    const normalized = strName.replace(/[\s\-_队国]/g, '');
+    for (const [standard, aliases] of Object.entries(TEAM_ALIASES)) {
+      if (!aliases || !Array.isArray(aliases)) continue;
+      for (const alias of aliases) {
+        if (!alias) continue;
+        if (safeIncludes(strName, alias) || safeIncludes(alias, strName)) {
+          return standard;
+        }
+      }
+    }
+    return normalized;
+  } catch (e) {
+    console.warn('normalizeTeamName error:', e);
+    return '';
+  }
+};
 
-  if (!normalizedHome || !normalizedAway) return undefined;
+const findBestMatch = (matches: Match[] | null | undefined, homeTeam: string | null | undefined, awayTeam: string | null | undefined): Match | undefined => {
+  try {
+    if (!homeTeam || !awayTeam) return undefined;
+    if (!matches || !Array.isArray(matches) || matches.length === 0) return undefined;
+    
+    const normalizedHome = normalizeTeamName(homeTeam);
+    const normalizedAway = normalizeTeamName(awayTeam);
 
-  const scoredMatches = matches.map(match => {
-    const matchHome = normalizeTeamName(match.homeTeam);
-    const matchAway = normalizeTeamName(match.awayTeam);
-
-    let score = 0;
-
-    if (matchHome && normalizedHome && (matchHome.includes(normalizedHome) || normalizedHome.includes(matchHome))) score += 2;
-    if (matchAway && normalizedAway && (matchAway.includes(normalizedAway) || normalizedAway.includes(matchAway))) score += 2;
+    if (!normalizedHome || !normalizedAway) return undefined;
 
     const strHomeTeam = String(homeTeam || '');
     const strAwayTeam = String(awayTeam || '');
-    const strMatchHome = String(match.homeTeam || '');
-    const strMatchAway = String(match.awayTeam || '');
 
-    if (strMatchHome && strHomeTeam && (strMatchHome.includes(strHomeTeam) || strHomeTeam.includes(strMatchHome))) score += 1;
-    if (strMatchAway && strAwayTeam && (strMatchAway.includes(strAwayTeam) || strAwayTeam.includes(strMatchAway))) score += 1;
+    const scoredMatches = matches.map(match => {
+      try {
+        const matchHome = normalizeTeamName(match.homeTeam);
+        const matchAway = normalizeTeamName(match.awayTeam);
+        const strMatchHome = String(match.homeTeam || '');
+        const strMatchAway = String(match.awayTeam || '');
 
-    return { match, score };
-  }).filter(m => m.score > 0);
+        let score = 0;
 
-  scoredMatches.sort((a, b) => b.score - a.score);
+        if (safeIncludes(matchHome, normalizedHome) || safeIncludes(normalizedHome, matchHome)) score += 2;
+        if (safeIncludes(matchAway, normalizedAway) || safeIncludes(normalizedAway, matchAway)) score += 2;
 
-  return scoredMatches.length > 0 ? scoredMatches[0].match : undefined;
+        if (safeIncludes(strMatchHome, strHomeTeam) || safeIncludes(strHomeTeam, strMatchHome)) score += 1;
+        if (safeIncludes(strMatchAway, strAwayTeam) || safeIncludes(strAwayTeam, strMatchAway)) score += 1;
+
+        return { match, score };
+      } catch (e) {
+        console.warn('match scoring error:', e);
+        return { match, score: 0 };
+      }
+    }).filter(m => m.score > 0);
+
+    scoredMatches.sort((a, b) => b.score - a.score);
+
+    return scoredMatches.length > 0 ? scoredMatches[0].match : undefined;
+  } catch (e) {
+    console.error('findBestMatch error:', e);
+    return undefined;
+  }
 };
 
 const BetList = ({ bets, showUser = false, canDelete = false }: BetListProps) => {
@@ -144,15 +174,33 @@ const BetList = ({ bets, showUser = false, canDelete = false }: BetListProps) =>
       if (res.success && res.result) {
         setRecognitionStatus('识别成功！正在匹配比赛数据...');
         
-        const matched = findBestMatch(matches, res.result.homeTeam, res.result.awayTeam);
+        const homeTeam = res.result.homeTeam || '';
+        const awayTeam = res.result.awayTeam || '';
+        
+        if (!homeTeam || !awayTeam) {
+          setRecognitionError('识别结果缺少球队信息');
+          setRecognitionStatus('');
+          return;
+        }
+        
+        let matched: Match | undefined;
+        try {
+          matched = findBestMatch(matches, homeTeam, awayTeam);
+        } catch (e) {
+          console.error('匹配比赛时出错:', e);
+        }
 
         if (matched) {
           setRecognitionStatus('已匹配到比赛，正在更新记录...');
-          await updateBet(bet.id, {
-            matchId: matched.id,
-            predictedHomeScore: res.result.predictedHomeScore,
-            predictedAwayScore: res.result.predictedAwayScore,
-          });
+          try {
+            await updateBet(bet.id, {
+              matchId: matched.id,
+              predictedHomeScore: res.result.predictedHomeScore ?? 0,
+              predictedAwayScore: res.result.predictedAwayScore ?? 0,
+            });
+          } catch (e) {
+            console.error('更新记录时出错:', e);
+          }
         }
 
         setRecognitionResult({ betId: bet.id, result: res.result, matched });
@@ -252,9 +300,9 @@ const BetList = ({ bets, showUser = false, canDelete = false }: BetListProps) =>
                     </div>
                     <div className="text-xs text-neutral-700 dark:text-neutral-300">
                       <p>
-                        {recognitionResult.result.homeTeam} vs {recognitionResult.result.awayTeam}
+                        {recognitionResult.result.homeTeam || '未知'} vs {recognitionResult.result.awayTeam || '未知'}
                         <span className="font-display font-medium ml-1">
-                          {recognitionResult.result.predictedHomeScore}-{recognitionResult.result.predictedAwayScore}
+                          {recognitionResult.result.predictedHomeScore ?? 0}-{recognitionResult.result.predictedAwayScore ?? 0}
                         </span>
                       </p>
                       {recognitionResult.matched && (
