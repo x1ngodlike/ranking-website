@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import MatchCard from '@/components/MatchCard/MatchCard';
+import KnockoutBracket from '@/components/KnockoutBracket/KnockoutBracket';
 import ApiSettingsModal from '@/components/ApiSettingsModal/ApiSettingsModal';
 import {
   Calendar,
@@ -12,8 +13,11 @@ import {
   ChevronLeft,
   ChevronRight,
   CalendarDays,
+  GitBranch,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+
+type ViewMode = 'timeline' | 'bracket';
 
 type TabType = 'upcoming' | 'finished' | 'all';
 
@@ -43,6 +47,7 @@ const MatchesPage = () => {
   const [activeTab, setActiveTab] = useState<TabType>('all');
   const [showApiSettings, setShowApiSettings] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string>(formatDateKey(new Date()));
+  const [viewMode, setViewMode] = useState<ViewMode>('bracket');
   const dateScrollRef = useRef<HTMLDivElement>(null);
   const todayItemRef = useRef<HTMLButtonElement>(null);
 
@@ -197,6 +202,38 @@ const MatchesPage = () => {
             </span>
           )}
         </p>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.05 }}
+        className="flex items-center justify-center gap-3 mb-6"
+      >
+        <div className="flex items-center gap-2 p-1.5 bg-neutral-100 dark:bg-neutral-800/50 rounded-full">
+          <button
+            onClick={() => setViewMode('timeline')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
+              viewMode === 'timeline'
+                ? 'bg-white dark:bg-neutral-700 text-primary-500 shadow-md'
+                : 'text-neutral-600 dark:text-neutral-400 hover:text-primary-500'
+            }`}
+          >
+            <CalendarDays size={16} />
+            时间轴
+          </button>
+          <button
+            onClick={() => setViewMode('bracket')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
+              viewMode === 'bracket'
+                ? 'bg-white dark:bg-neutral-700 text-primary-500 shadow-md'
+                : 'text-neutral-600 dark:text-neutral-400 hover:text-primary-500'
+            }`}
+          >
+            <GitBranch size={16} />
+            淘汰赛对阵
+          </button>
+        </div>
       </motion.div>
 
       <motion.div
@@ -453,35 +490,47 @@ const MatchesPage = () => {
       )}
 
       <AnimatePresence mode="wait">
-        {filteredMatches.length > 0 ? (
-          <motion.div
-            key="matches"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
-            className="space-y-4"
-          >
-            {filteredMatches.map((match) => (
-              <MatchCard key={match.id} match={match} isAdmin={isAdmin} />
-            ))}
-          </motion.div>
-        ) : (
-          <motion.div
-            key="empty"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
-            className="card text-center py-16"
-          >
-            <div className="w-16 h-16 rounded-full bg-white dark:bg-neutral-800 flex items-center justify-center mx-auto mb-4">
+        {viewMode === 'timeline' ? (
+          filteredMatches.length > 0 ? (
+            <motion.div
+              key="matches"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+              className="space-y-4"
+            >
+              {filteredMatches.map((match) => (
+                <MatchCard key={match.id} match={match} isAdmin={isAdmin} />
+              ))}
+            </motion.div>
+          ) : (
+            <motion.div
+              key="empty"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+              className="card text-center py-16"
+            >
+              <div className="w-16 h-16 rounded-full bg-white dark:bg-neutral-800 flex items-center justify-center mx-auto mb-4">
                 <Calendar size={32} className="text-neutral-600 dark:text-neutral-400" />
               </div>
               <p className="text-neutral-500 dark:text-neutral-500 mb-2">当日暂无比赛</p>
               <p className="text-sm text-neutral-600 dark:text-neutral-400">
-              左右滑动日期栏查看其他比赛日
-            </p>
+                左右滑动日期栏查看其他比赛日
+              </p>
+            </motion.div>
+          )
+        ) : (
+          <motion.div
+            key="bracket"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            <KnockoutBracket matches={matches} />
           </motion.div>
         )}
       </AnimatePresence>

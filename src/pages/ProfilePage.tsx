@@ -6,7 +6,7 @@ import { ProfitChart } from '@/components/Charts/ProfitChart';
 import BetList from '@/components/BetList/BetList';
 import BetForm from '@/components/BetForm/BetForm';
 import BadgeDisplay from '@/components/BadgeDisplay/BadgeDisplay';
-import { ArrowLeft, TrendingUp, Trophy, DollarSign, Calendar, Plus, Award } from 'lucide-react';
+import { ArrowLeft, TrendingUp, Trophy, DollarSign, Calendar, Plus, Award, Flame, Heart } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Avatar from '@/components/Avatar';
 
@@ -136,22 +136,29 @@ const ProfilePage = () => {
           </p>
         </div>
         <div className="card p-4">
-          <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400 mb-2">
-            <Calendar size={20} />
-            <span className="text-sm">记录总数</span>
+          <div className="flex items-center gap-2 text-orange-500 dark:text-orange-400 mb-2">
+            <Flame size={20} />
+            <span className="text-sm">连胜天数</span>
           </div>
           <p className="font-display text-2xl text-neutral-800 dark:text-neutral-200">
-            {ranking.totalBets}
+            {ranking.maxStreak}
           </p>
         </div>
         <div className="card p-4">
-          <div className="flex items-center gap-2 text-neutral-500 dark:text-neutral-400 mb-2">
-            <DollarSign size={20} />
-            <span className="text-sm">平均中奖</span>
+          <div className="flex items-center gap-2 text-rose-500 dark:text-rose-400 mb-2">
+            <Heart size={20} />
+            <span className="text-sm">最佳CP</span>
           </div>
-          <p className="font-display text-2xl text-blue-600 dark:text-blue-400">
-            ¥{ranking.avgWin.toFixed(2)}
-          </p>
+          {ranking.bestCP ? (
+            <div className="flex items-center gap-2">
+              <Avatar src={ranking.bestCP.avatar} alt={ranking.bestCP.nickname} size="sm" />
+              <span className="font-display text-xl text-neutral-800 dark:text-neutral-200">
+                {ranking.bestCP.nickname}
+              </span>
+            </div>
+          ) : (
+            <p className="font-display text-xl text-neutral-400">暂无</p>
+          )}
         </div>
       </motion.div>
 

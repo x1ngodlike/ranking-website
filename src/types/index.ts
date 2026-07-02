@@ -41,6 +41,13 @@ export interface UserBadge {
   emoji: string;
 }
 
+export interface BestCP {
+  userId: string;
+  nickname: string;
+  avatar: string;
+  commonWinDays: number;
+}
+
 export interface RankingItem {
   userId: string;
   nickname: string;
@@ -50,6 +57,8 @@ export interface RankingItem {
   winDays: number;
   biggestWin: number;
   avgWin: number;
+  maxStreak: number;
+  bestCP?: BestCP;
   topBadges?: UserBadge[];
 }
 

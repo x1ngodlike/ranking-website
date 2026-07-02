@@ -177,19 +177,70 @@ export const calculateRankings = (
   bets: Bet[],
   sortBy: RankingSortType = 'totalWin'
 ): RankingItem[] => {
+  const userWinDaysMap = new Map<string, Set<string>>();
+  users.forEach((user) => {
+    const userBets = bets.filter((b) => b.userId === user.id);
+    const winBets = userBets.filter((b) => (b.winAmount ?? 0) > 0);
+    const winDaysSet = new Set(winBets.map((b) => b.date));
+    userWinDaysMap.set(user.id, winDaysSet);
+  });
+
   const rankings: RankingItem[] = users.map((user) => {
     const userBets = bets.filter((b) => b.userId === user.id);
     const settledBets = userBets.filter((b) => b.winAmount !== undefined);
     const winBets = settledBets.filter((b) => (b.winAmount ?? 0) > 0);
     
     const totalWinAmount = winBets.reduce((sum, b) => sum + (b.winAmount ?? 0), 0);
-    const winDaysSet = new Set(winBets.map((b) => b.date));
+    const winDaysSet = userWinDaysMap.get(user.id)!;
     const winDays = winDaysSet.size;
     const biggestWin = winBets.length > 0
       ? Math.max(...winBets.map((b) => b.winAmount ?? 0))
       : 0;
     const avgWin = settledBets.length > 0 ? totalWinAmount / settledBets.length : 0;
     const topBadges = calculateUserTopBadges(user.id, bets);
+
+    // 计算连胜记录：最长连续中奖天数
+    const winDates = Array.from(winDaysSet).sort();
+    let maxStreak = 0;
+    let currentStreak = 0;
+    for (let i = 0; i < winDates.length; i++) {
+      if (i === 0) {
+        currentStreak = 1;
+      } else {
+        const prevDate = new Date(winDates[i - 1]);
+        const currDate = new Date(winDates[i]);
+        const diffDays = Math.floor((currDate.getTime() - prevDate.getTime()) / (1000 * 60 * 60 * 24));
+        if (diffDays === 1) {
+          currentStreak++;
+        } else {
+          currentStreak = 1;
+        }
+      }
+      maxStreak = Math.max(maxStreak, currentStreak);
+    }
+
+    // 计算最佳CP：同时中奖天数最多的用户
+    let bestCP: RankingItem['bestCP'] = undefined;
+    let maxCommonDays = 0;
+    users.forEach((otherUser) => {
+      if (otherUser.id === user.id) return;
+      const otherWinDaysSet = userWinDaysMap.get(otherUser.id)!;
+      let commonDays = 0;
+      winDaysSet.forEach((date) => {
+        if (otherWinDaysSet.has(date)) {
+          commonDays++;
+        }
+      });
+      if (commonDays > maxCommonDays) {
+        maxCommonDays = commonDays;
+        bestCP = {
+          userId: otherUser.id,
+          nickname: otherUser.nickname,
+          avatar: otherUser.avatar,
+          commonWinDays: commonDays,
+        };
+      }
+    });
 
     return {
       userId: user.id,
@@ -200,6 +251,8 @@ export const calculateRankings = (
       winDays,
       biggestWin,
       avgWin,
+      maxStreak,
+      bestCP,
       topBadges,
     };
   });
