@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { formatDateShort } from '@/utils/helpers';
-import { Trash2, Calendar, Edit2, AlertTriangle, Sparkles, Loader2, Check } from 'lucide-react';
+import { Trash2, Calendar, Edit2, AlertTriangle, Sparkles, Loader2, Check, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '@/utils/api';
 import type { Bet, User, Match } from '@/types';
@@ -103,6 +103,7 @@ const BetList = ({ bets, showUser = false, canDelete = false }: BetListProps) =>
   const [viewerImage, setViewerImage] = useState<string | null>(null);
 
   const [recognizingId, setRecognizingId] = useState<string | null>(null);
+  const [recognitionStatus, setRecognitionStatus] = useState<string>('');
   const [recognitionResult, setRecognitionResult] = useState<{ betId: string; result: AIRecognitionResult; matched?: Match } | null>(null);
   const [recognitionError, setRecognitionError] = useState<string>('');
 
@@ -123,14 +124,20 @@ const BetList = ({ bets, showUser = false, canDelete = false }: BetListProps) =>
     setRecognizingId(bet.id);
     setRecognitionError('');
     setRecognitionResult(null);
+    setRecognitionStatus('正在检查AI配置...');
 
     try {
+      setRecognitionStatus('正在调用服务器AI识别接口...');
+      
       const res = await api.recognizeBetImage(bet.imageUrl);
 
       if (res.success && res.result) {
+        setRecognitionStatus('识别成功！正在匹配比赛数据...');
+        
         const matched = findBestMatch(matches, res.result.homeTeam, res.result.awayTeam);
 
         if (matched) {
+          setRecognitionStatus('已匹配到比赛，正在更新记录...');
           await updateBet(bet.id, {
             matchId: matched.id,
             predictedHomeScore: res.result.predictedHomeScore,
@@ -139,14 +146,17 @@ const BetList = ({ bets, showUser = false, canDelete = false }: BetListProps) =>
         }
 
         setRecognitionResult({ betId: bet.id, result: res.result, matched });
+        setRecognitionStatus('');
       } else {
         setRecognitionError(res.message || '未能识别出比赛信息');
+        setRecognitionStatus('');
       }
     } catch (error) {
       console.error('AI识别失败:', error);
       setRecognitionError(error instanceof Error ? error.message : 'AI识别失败');
+      setRecognitionStatus('');
     } finally {
-      setRecognizingId(null);
+      setTimeout(() => setRecognizingId(null), 500);
     }
   };
 
@@ -213,12 +223,21 @@ const BetList = ({ bets, showUser = false, canDelete = false }: BetListProps) =>
                   </div>
                 )}
 
+                {isRecognizing && (
+                  <div className="mt-2 p-2 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 flex items-center gap-2">
+                    <Loader2 size={14} className="animate-spin text-blue-500" />
+                    <span className="text-xs text-blue-700 dark:text-blue-300">
+                      {recognitionStatus || 'AI识别中...'}
+                    </span>
+                  </div>
+                )}
+
                 {hasResult && recognitionResult && (
                   <div className="mt-2 p-2 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800">
                     <div className="flex items-center gap-1.5 mb-1">
                       <Check size={14} className="text-green-500" />
                       <span className="text-xs font-medium text-green-700 dark:text-green-300">
-                        AI识别结果
+                        AI识别成功
                       </span>
                     </div>
                     <div className="text-xs text-neutral-700 dark:text-neutral-300">
@@ -229,14 +248,18 @@ const BetList = ({ bets, showUser = false, canDelete = false }: BetListProps) =>
                         </span>
                       </p>
                       {recognitionResult.matched && (
-                        <p className="text-green-600 dark:text-green-400 text-[11px]">✓ 已匹配</p>
+                        <p className="text-green-600 dark:text-green-400 text-[11px]">✓ 已匹配比赛并更新记录</p>
+                      )}
+                      {!recognitionResult.matched && (
+                        <p className="text-amber-600 dark:text-amber-400 text-[11px]">⚠️ 未匹配到赛程数据，请手动选择</p>
                       )}
                     </div>
                   </div>
                 )}
 
-                {recognitionError && recognizingId === bet.id && (
-                  <div className="mt-2 p-2 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
+                {recognitionError && (
+                  <div className="mt-2 p-2 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 flex items-start gap-1.5">
+                    <AlertCircle size={14} className="text-red-500 flex-shrink-0 mt-0.5" />
                     <p className="text-xs text-red-600 dark:text-red-400">
                       {recognitionError}
                     </p>
@@ -255,7 +278,11 @@ const BetList = ({ bets, showUser = false, canDelete = false }: BetListProps) =>
                       <button
                         onClick={() => handleAIRecognize(bet)}
                         disabled={isRecognizing}
-                        className="p-1.5 rounded-lg hover:bg-primary-50 dark:hover:bg-primary-900/20 text-neutral-400 hover:text-primary-500 transition-colors disabled:opacity-50"
+                        className={`p-1.5 rounded-lg transition-all ${
+                          isRecognizing
+                            ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-500'
+                            : 'hover:bg-primary-50 dark:hover:bg-primary-900/20 text-neutral-400 hover:text-primary-500'
+                        } disabled:cursor-not-allowed`}
                         title="AI识别比赛"
                       >
                         {isRecognizing ? (

@@ -610,11 +610,12 @@ app.get('/api/ai-config', requireAuth, (req, res) => {
 });
 
 app.post('/api/ai-config', requireAuth, (req, res) => {
-  const { apiEndpoint, apiKey, model } = req.body;
+  const { apiEndpoint, apiKey, model, siteUrl } = req.body;
   const config = saveAIConfig({
     apiEndpoint: apiEndpoint || 'https://api.deepseek.com/v1/chat/completions',
     apiKey: apiKey || '',
     model: model || 'deepseek-v4-flash',
+    siteUrl: siteUrl || '',
   });
   res.json({ success: true, config });
 });
