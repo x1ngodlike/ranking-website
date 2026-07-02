@@ -4,9 +4,9 @@ import { generateId } from '@/utils/helpers';
 import { X, Calendar, Image as ImageIcon, Plus, Sparkles, Loader2, Check } from 'lucide-react';
 import Avatar from '@/components/Avatar';
 import ImageUploader from '@/components/ImageUploader/ImageUploader';
-import { recognizeBetImage, getAIConfig } from '@/utils/aiRecognition';
+import { api } from '@/utils/api';
 import type { Bet, User, Match } from '@/types';
-import type { AIRecognitionResult } from '@/utils/aiRecognition';
+import type { AIRecognitionResult } from '@/utils/api';
 
 interface BetFormProps {
   onClose?: () => void;
@@ -94,44 +94,26 @@ const BetForm = ({ onClose, preSelectedUserId, bet }: BetFormProps) => {
 
   const handleAIRecognize = async () => {
     if (!imageUrl) return;
-    
-    const config = getAIConfig();
-    if (!config.apiKey) {
-      setRecognitionError('请先在设置中配置AI API密钥');
-      return;
-    }
 
     setIsRecognizing(true);
     setRecognitionError('');
-    
+
     try {
-      // 将图片URL转为base64
-      const response = await fetch(imageUrl);
-      const blob = await response.blob();
-      const reader = new FileReader();
-      
-      const base64Promise = new Promise<string>((resolve) => {
-        reader.onloadend = () => resolve(reader.result as string);
-        reader.readAsDataURL(blob);
-      });
-      
-      const base64 = await base64Promise;
-      const result = await recognizeBetImage(base64);
-      
-      if (result) {
-        setRecognitionResult(result);
-        
-        // 尝试匹配已知的比赛
-        const matched = matches.find((m) => 
-          (m.homeTeam.includes(result.homeTeam) || result.homeTeam.includes(m.homeTeam)) &&
-          (m.awayTeam.includes(result.awayTeam) || result.awayTeam.includes(m.awayTeam))
+      const res = await api.recognizeBetImage(imageUrl);
+
+      if (res.success && res.result) {
+        setRecognitionResult(res.result);
+
+        const matched = matches.find((m) =>
+          (m.homeTeam.includes(res.result!.homeTeam) || res.result!.homeTeam.includes(m.homeTeam)) &&
+          (m.awayTeam.includes(res.result!.awayTeam) || res.result!.awayTeam.includes(m.awayTeam))
         );
-        
+
         if (matched) {
           setMatchedMatch(matched);
         }
       } else {
-        setRecognitionError('未能识别出比赛信息，请手动填写');
+        setRecognitionError(res.message || '未能识别出比赛信息，请手动填写');
       }
     } catch (error) {
       console.error('AI识别失败:', error);

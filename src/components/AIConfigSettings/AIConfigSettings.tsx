@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { X, Brain, Key, Globe, Cpu, Save, Sparkles } from 'lucide-react';
-import { getAIConfig, saveAIConfig } from '@/utils/aiRecognition';
+import { api } from '@/utils/api';
 import type { AIConfig } from '@/types';
 
 interface AIConfigSettingsProps {
@@ -13,29 +13,60 @@ const AIConfigSettings = ({ onClose }: AIConfigSettingsProps) => {
     apiKey: '',
     model: 'deepseek-v4-flash',
   });
+  const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
 
   useEffect(() => {
-    const stored = getAIConfig();
-    setConfig(stored);
+    const loadConfig = async () => {
+      try {
+        const res = await api.getAIConfig();
+        if (res.success && res.config) {
+          setConfig(res.config);
+        }
+      } catch (error) {
+        console.error('加载AI配置失败:', error);
+        setSaveMessage('加载配置失败');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadConfig();
   }, []);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setIsSaving(true);
+    setSaveMessage('');
     try {
-      saveAIConfig(config);
-      setSaveMessage('保存成功！');
-      setTimeout(() => {
-        setSaveMessage('');
-        onClose();
-      }, 1500);
-    } catch {
-      setSaveMessage('保存失败');
+      const res = await api.saveAIConfig(config);
+      if (res.success) {
+        setConfig(res.config);
+        setSaveMessage('保存成功！');
+        setTimeout(() => {
+          setSaveMessage('');
+          onClose();
+        }, 1500);
+      } else {
+        setSaveMessage('保存失败');
+      }
+    } catch (error) {
+      console.error('保存AI配置失败:', error);
+      setSaveMessage(error instanceof Error ? error.message : '保存失败');
     } finally {
       setIsSaving(false);
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="card p-6 max-w-lg w-full">
+        <div className="text-center py-8">
+          <div className="animate-spin w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full mx-auto mb-4" />
+          <p className="text-neutral-500">加载中...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="card p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto">

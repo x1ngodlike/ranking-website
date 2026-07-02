@@ -166,6 +166,21 @@ export const api = {
       `/api/admin/backups/download?environment=${encodeURIComponent(environment)}&filename=${encodeURIComponent(filename)}`,
       {}, true
     ),
+
+  getAIConfig: () =>
+    request<{ success: boolean; config: AIConfigResponse }>('/api/ai-config', {}, true),
+
+  saveAIConfig: (config: AIConfigResponse) =>
+    request<{ success: boolean; config: AIConfigResponse }>('/api/ai-config', {
+      method: 'POST',
+      body: JSON.stringify(config),
+    }, true),
+
+  recognizeBetImage: (imageUrl: string) =>
+    request<{ success: boolean; result: AIRecognitionResult | null; message?: string }>('/api/ai/recognize', {
+      method: 'POST',
+      body: JSON.stringify({ imageUrl }),
+    }, false),
 };
 
 export interface BackupContent {
@@ -186,4 +201,18 @@ export interface BackupInfo {
   size: number;
   createdAt: string;
   label: string;
+}
+
+export interface AIConfigResponse {
+  apiEndpoint: string;
+  apiKey: string;
+  model: string;
+}
+
+export interface AIRecognitionResult {
+  homeTeam: string;
+  awayTeam: string;
+  predictedHomeScore: number;
+  predictedAwayScore: number;
+  confidence: number;
 }

@@ -6,6 +6,8 @@ const crypto = require('crypto');
 const path = require('path');
 const fs = require('fs');
 const { syncMatches, hasLiveMatches } = require('./matchSync');
+const { initAIConfig, getAIConfig, saveAIConfig } = require('./aiConfig');
+const { recognizeBetImage } = require('./aiRecognition');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -133,6 +135,8 @@ const migrateDataFiles = () => {
   });
 };
 migrateDataFiles();
+
+initAIConfig(DATA_DIR);
 
 const createMulterStorage = (destination) => multer.diskStorage({
   destination: (req, file, cb) => cb(null, destination),
@@ -600,6 +604,21 @@ app.post('/api/admin/logout', requireAuth, (req, res) => {
   res.json({ success: true });
 });
 
+app.get('/api/ai-config', requireAuth, (req, res) => {
+  const config = getAIConfig();
+  res.json({ success: true, config });
+});
+
+app.post('/api/ai-config', requireAuth, (req, res) => {
+  const { apiEndpoint, apiKey, model } = req.body;
+  const config = saveAIConfig({
+    apiEndpoint: apiEndpoint || 'https://api.deepseek.com/v1/chat/completions',
+    apiKey: apiKey || '',
+    model: model || 'deepseek-v4-flash',
+  });
+  res.json({ success: true, config });
+});
+
 app.post('/api/admin/password', requireAuth, (req, res) => {
   const { oldPassword, newPassword } = req.body;
   const auth = readAuth();
@@ -626,6 +645,35 @@ app.post('/api/upload/bet', uploadBet.single('file'), (req, res) => {
   }
   const url = `/uploads/bets/${req.file.filename}`;
   res.json({ success: true, url });
+});
+
+app.post('/api/ai/recognize', async (req, res) => {
+  try {
+    const { imageUrl } = req.body;
+    if (!imageUrl) {
+      return res.status(400).json({ success: false, message: '缺少图片URL' });
+    }
+
+    const aiConfig = getAIConfig();
+    if (!aiConfig.apiKey) {
+      return res.status(400).json({ success: false, message: 'AI API密钥未配置' });
+    }
+
+    const imagePath = path.join(UPLOAD_DIR, imageUrl.replace(/^\/uploads\//, ''));
+    if (!fs.existsSync(imagePath)) {
+      return res.status(400).json({ success: false, message: '图片文件不存在' });
+    }
+
+    const result = await recognizeBetImage(imagePath, aiConfig);
+    if (!result) {
+      return res.json({ success: true, result: null, message: '未能识别出比赛信息' });
+    }
+
+    res.json({ success: true, result });
+  } catch (error) {
+    console.error('AI识别错误:', error);
+    res.status(500).json({ success: false, message: error.message || 'AI识别失败' });
+  }
 });
 
 const deleteUploadedFile = (filePath) => {

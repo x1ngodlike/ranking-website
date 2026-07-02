@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { formatDateShort } from '@/utils/helpers';
-import { Trash2, Calendar, Edit2, AlertTriangle } from 'lucide-react';
+import { Trash2, Calendar, Edit2, AlertTriangle, Sparkles, Loader2, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import type { Bet, User } from '@/types';
+import { api } from '@/utils/api';
+import type { Bet, User, Match } from '@/types';
+import type { AIRecognitionResult } from '@/utils/api';
 import Avatar from '@/components/Avatar';
 import ImageViewer from '@/components/ImageViewer/ImageViewer';
 import BetForm from '@/components/BetForm/BetForm';
@@ -16,12 +18,18 @@ interface BetListProps {
 
 const BetList = ({ bets, showUser = false, canDelete = false }: BetListProps) => {
   const users = useAppStore((state) => state.users);
+  const matches = useAppStore((state) => state.matches);
   const removeBet = useAppStore((state) => state.removeBet);
+  const updateBet = useAppStore((state) => state.updateBet);
   const isAdminLoggedIn = useAppStore((state) => state.isAdminLoggedIn);
 
   const [editingBet, setEditingBet] = useState<Bet | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [viewerImage, setViewerImage] = useState<string | null>(null);
+
+  const [recognizingId, setRecognizingId] = useState<string | null>(null);
+  const [recognitionResult, setRecognitionResult] = useState<{ betId: string; result: AIRecognitionResult; matched?: Match } | null>(null);
+  const [recognitionError, setRecognitionError] = useState<string>('');
 
   const canManage = canDelete && isAdminLoggedIn;
 
@@ -32,6 +40,42 @@ const BetList = ({ bets, showUser = false, canDelete = false }: BetListProps) =>
   const handleDelete = (id: string) => {
     removeBet(id);
     setDeleteConfirmId(null);
+  };
+
+  const handleAIRecognize = async (bet: Bet) => {
+    if (!bet.imageUrl) return;
+
+    setRecognizingId(bet.id);
+    setRecognitionError('');
+    setRecognitionResult(null);
+
+    try {
+      const res = await api.recognizeBetImage(bet.imageUrl);
+
+      if (res.success && res.result) {
+        const matched = matches.find((m) =>
+          (m.homeTeam.includes(res.result!.homeTeam) || res.result!.homeTeam.includes(m.homeTeam)) &&
+          (m.awayTeam.includes(res.result!.awayTeam) || res.result!.awayTeam.includes(m.awayTeam))
+        );
+
+        if (matched) {
+          await updateBet(bet.id, {
+            matchId: matched.id,
+            predictedHomeScore: res.result.predictedHomeScore,
+            predictedAwayScore: res.result.predictedAwayScore,
+          });
+        }
+
+        setRecognitionResult({ betId: bet.id, result: res.result, matched });
+      } else {
+        setRecognitionError(res.message || '未能识别出比赛信息');
+      }
+    } catch (error) {
+      console.error('AI识别失败:', error);
+      setRecognitionError(error instanceof Error ? error.message : 'AI识别失败');
+    } finally {
+      setRecognizingId(null);
+    }
   };
 
   if (bets.length === 0) {
@@ -48,6 +92,8 @@ const BetList = ({ bets, showUser = false, canDelete = false }: BetListProps) =>
     <div className="space-y-3">
       {bets.map((bet, index) => {
         const user = bet.user || getUser(bet.userId);
+        const isRecognizing = recognizingId === bet.id;
+        const hasResult = recognitionResult?.betId === bet.id;
 
         return (
           <motion.div
@@ -94,32 +140,76 @@ const BetList = ({ bets, showUser = false, canDelete = false }: BetListProps) =>
                     />
                   </div>
                 )}
+
+                {hasResult && recognitionResult && (
+                  <div className="mt-2 p-2 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800">
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <Check size={14} className="text-green-500" />
+                      <span className="text-xs font-medium text-green-700 dark:text-green-300">
+                        AI识别结果
+                      </span>
+                    </div>
+                    <div className="text-xs text-neutral-700 dark:text-neutral-300">
+                      <p>
+                        {recognitionResult.result.homeTeam} vs {recognitionResult.result.awayTeam}
+                        <span className="font-display font-medium ml-1">
+                          {recognitionResult.result.predictedHomeScore}-{recognitionResult.result.predictedAwayScore}
+                        </span>
+                      </p>
+                      {recognitionResult.matched && (
+                        <p className="text-green-600 dark:text-green-400 text-[11px]">✓ 已匹配</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {recognitionError && recognizingId === bet.id && (
+                  <div className="mt-2 p-2 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
+                    <p className="text-xs text-red-600 dark:text-red-400">
+                      {recognitionError}
+                    </p>
+                  </div>
+                )}
               </div>
 
               <div className="text-right flex-shrink-0 min-w-[80px]">
                 <div className="font-display text-xl text-amber-600 dark:text-gold-400">
                   ¥{(bet.winAmount ?? 0).toFixed(2)}
                 </div>
-              </div>
 
-              {canManage && (
-                <div className="flex items-center gap-1 flex-shrink-0">
-                  <button
-                    onClick={() => setEditingBet(bet)}
-                    className="p-2 rounded-lg hover:bg-primary-50 dark:hover:bg-primary-900/20 text-neutral-400 hover:text-primary-500 transition-colors"
-                    title="编辑"
-                  >
-                    <Edit2 size={18} />
-                  </button>
-                  <button
-                    onClick={() => setDeleteConfirmId(bet.id)}
-                    className="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-neutral-400 hover:text-red-500 transition-colors"
-                    title="删除记录"
-                  >
-                    <Trash2 size={18} />
-                  </button>
-                </div>
-              )}
+                {canManage && (
+                  <div className="flex items-center justify-end gap-1 mt-2">
+                    {bet.imageUrl && (
+                      <button
+                        onClick={() => handleAIRecognize(bet)}
+                        disabled={isRecognizing}
+                        className="p-1.5 rounded-lg hover:bg-primary-50 dark:hover:bg-primary-900/20 text-neutral-400 hover:text-primary-500 transition-colors disabled:opacity-50"
+                        title="AI识别比赛"
+                      >
+                        {isRecognizing ? (
+                          <Loader2 size={16} className="animate-spin" />
+                        ) : (
+                          <Sparkles size={16} />
+                        )}
+                      </button>
+                    )}
+                    <button
+                      onClick={() => setEditingBet(bet)}
+                      className="p-1.5 rounded-lg hover:bg-primary-50 dark:hover:bg-primary-900/20 text-neutral-400 hover:text-primary-500 transition-colors"
+                      title="编辑"
+                    >
+                      <Edit2 size={16} />
+                    </button>
+                    <button
+                      onClick={() => setDeleteConfirmId(bet.id)}
+                      className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-neutral-400 hover:text-red-500 transition-colors"
+                      title="删除记录"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </motion.div>
         );
