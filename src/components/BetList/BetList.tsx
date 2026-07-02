@@ -56,11 +56,12 @@ const TEAM_ALIASES: Record<string, string[]> = {
   '科威特': ['科威特', '科威特队'],
 };
 
-const normalizeTeamName = (name: string): string => {
+const normalizeTeamName = (name: string | null | undefined): string => {
   if (!name) return '';
-  let normalized = name.trim().replace(/[\s\-_队国]/g, '');
+  const strName = String(name);
+  let normalized = strName.trim().replace(/[\s\-_队国]/g, '');
   for (const [standard, aliases] of Object.entries(TEAM_ALIASES)) {
-    if (aliases.some(alias => name.includes(alias) || alias.includes(name))) {
+    if (aliases.some(alias => strName.includes(alias) || alias.includes(strName))) {
       return standard;
     }
   }
