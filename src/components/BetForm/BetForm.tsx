@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { generateId } from '@/utils/helpers';
-import { X, Calendar, Image as ImageIcon, Plus, Sparkles, Loader2, Check, Brain } from 'lucide-react';
+import { X, Calendar, Image as ImageIcon, Plus, Sparkles, Loader2, Check } from 'lucide-react';
 import Avatar from '@/components/Avatar';
 import ImageUploader from '@/components/ImageUploader/ImageUploader';
-import AIConfigSettings from '@/components/AIConfigSettings/AIConfigSettings';
 import { recognizeBetImage, getAIConfig } from '@/utils/aiRecognition';
 import type { Bet, User, Match } from '@/types';
 import type { AIRecognitionResult } from '@/utils/aiRecognition';
@@ -33,7 +32,6 @@ const BetForm = ({ onClose, preSelectedUserId, bet }: BetFormProps) => {
   const [isRecognizing, setIsRecognizing] = useState(false);
   const [recognitionResult, setRecognitionResult] = useState<AIRecognitionResult | null>(null);
   const [matchedMatch, setMatchedMatch] = useState<Match | null>(null);
-  const [showAIConfig, setShowAIConfig] = useState(false);
   const [recognitionError, setRecognitionError] = useState('');
 
   useEffect(() => {
@@ -99,7 +97,7 @@ const BetForm = ({ onClose, preSelectedUserId, bet }: BetFormProps) => {
     
     const config = getAIConfig();
     if (!config.apiKey) {
-      setShowAIConfig(true);
+      setRecognitionError('请先在设置中配置AI API密钥');
       return;
     }
 
@@ -254,7 +252,7 @@ const BetForm = ({ onClose, preSelectedUserId, bet }: BetFormProps) => {
           <ImageUploader value={imageUrl} onChange={handleImageChange} />
           
           {imageUrl && (
-            <div className="mt-3 flex items-center gap-2">
+            <div className="mt-3">
               <button
                 type="button"
                 onClick={handleAIRecognize}
@@ -272,14 +270,6 @@ const BetForm = ({ onClose, preSelectedUserId, bet }: BetFormProps) => {
                     AI识别比赛
                   </>
                 )}
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowAIConfig(true)}
-                className="flex items-center gap-1 px-3 py-2 rounded-lg text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200 transition-colors text-sm"
-              >
-                <Brain size={14} />
-                配置
               </button>
             </div>
           )}
@@ -335,15 +325,6 @@ const BetForm = ({ onClose, preSelectedUserId, bet }: BetFormProps) => {
           {isEditMode ? '保存修改' : '确认记录'}
         </button>
       </form>
-
-      {/* AI配置弹窗 */}
-      {showAIConfig && (
-        <div className="fixed inset-0 z-[200] bg-black/50 flex items-center justify-center p-4" onClick={() => setShowAIConfig(false)}>
-          <div onClick={(e) => e.stopPropagation()}>
-            <AIConfigSettings onClose={() => setShowAIConfig(false)} />
-          </div>
-        </div>
-      )}
     </div>
   );
 };

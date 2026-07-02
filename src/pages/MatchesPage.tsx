@@ -50,6 +50,7 @@ const MatchesPage = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('bracket');
   const dateScrollRef = useRef<HTMLDivElement>(null);
   const todayItemRef = useRef<HTMLButtonElement>(null);
+  const selectedItemRef = useRef<HTMLButtonElement>(null);
 
   const matches = useAppStore((state) => state.matches);
   const currentUserId = useAppStore((state) => state.currentUserId);
@@ -106,15 +107,16 @@ const MatchesPage = () => {
   const today = formatDateKey(new Date());
 
   useEffect(() => {
-    if (todayItemRef.current && dateScrollRef.current) {
+    if (viewMode !== 'timeline') return;
+    if (selectedItemRef.current && dateScrollRef.current) {
       const container = dateScrollRef.current;
-      const item = todayItemRef.current;
+      const item = selectedItemRef.current;
       const containerWidth = container.clientWidth;
       const itemLeft = item.offsetLeft;
       const itemWidth = item.offsetWidth;
       container.scrollLeft = itemLeft - containerWidth / 2 + itemWidth / 2;
     }
-  }, [matchDates.length]);
+  }, [selectedDate, viewMode]);
 
   const scrollDates = useCallback((direction: 'left' | 'right') => {
     if (dateScrollRef.current) {
@@ -273,7 +275,7 @@ const MatchesPage = () => {
               return (
                 <button
                   key={dateKey}
-                  ref={isToday ? todayItemRef : null}
+                  ref={isSelected ? selectedItemRef : isToday ? todayItemRef : null}
                   onClick={() => setSelectedDate(dateKey)}
                   className={`flex-shrink-0 flex flex-col items-center px-4 py-3 rounded-2xl min-w-[72px] transition-all duration-300 relative ${
                     isSelected

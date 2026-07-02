@@ -75,18 +75,6 @@ const MatchCard = ({ match, bets, users }: { match: Match; bets?: Bet[]; users?:
     return getCorrectPredictUsers(match, bets || [], users || []);
   }, [match, bets, users]);
 
-  if (!isFinished && !match.homeScore) {
-    return (
-      <div className="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg p-3 shadow-sm">
-        <div className="flex items-center justify-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-neutral-300 dark:bg-neutral-600" />
-          <span className="text-neutral-400 text-sm">待定</span>
-          <div className="w-2 h-2 rounded-full bg-neutral-300 dark:bg-neutral-600" />
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg p-2.5 shadow-sm hover:shadow-md transition-shadow">
       <div className="flex items-center justify-between gap-1 mb-1">
@@ -100,9 +88,9 @@ const MatchCard = ({ match, bets, users }: { match: Match; bets?: Bet[]; users?:
 
       {/* 主队 - 上方 */}
       <div className={`flex items-center gap-2 p-1.5 rounded ${homeWon ? 'bg-red-50 dark:bg-red-900/10' : ''}`}>
-        <span className="text-base flex-shrink-0">{match.homeFlag}</span>
+        <span className="text-base flex-shrink-0">{match.homeFlag || '⚪'}</span>
         <span className={`text-sm truncate flex-1 ${homeWon ? 'text-red-600 dark:text-red-400 font-bold' : 'text-neutral-800 dark:text-neutral-200'}`}>
-          {match.homeTeam}
+          {match.homeTeam || '待定'}
         </span>
         {match.homeScore !== null && match.awayScore !== null && (
           <span className={`font-display text-sm flex-shrink-0 ${homeWon ? 'text-red-600 dark:text-red-400 font-bold' : 'text-neutral-800 dark:text-neutral-200'}`}>
@@ -113,9 +101,9 @@ const MatchCard = ({ match, bets, users }: { match: Match; bets?: Bet[]; users?:
 
       {/* 客队 - 下方 */}
       <div className={`flex items-center gap-2 p-1.5 rounded ${awayWon ? 'bg-red-50 dark:bg-red-900/10' : ''}`}>
-        <span className="text-base flex-shrink-0">{match.awayFlag}</span>
+        <span className="text-base flex-shrink-0">{match.awayFlag || '⚪'}</span>
         <span className={`text-sm truncate flex-1 ${awayWon ? 'text-red-600 dark:text-red-400 font-bold' : 'text-neutral-800 dark:text-neutral-200'}`}>
-          {match.awayTeam}
+          {match.awayTeam || '待定'}
         </span>
         {match.homeScore !== null && match.awayScore !== null && (
           <span className={`font-display text-sm flex-shrink-0 ${awayWon ? 'text-red-600 dark:text-red-400 font-bold' : 'text-neutral-800 dark:text-neutral-200'}`}>
@@ -124,10 +112,7 @@ const MatchCard = ({ match, bets, users }: { match: Match; bets?: Bet[]; users?:
         )}
       </div>
 
-      {/* 未开赛时显示 VS */}
-      {!isFinished && (match.homeScore === null || match.awayScore === null) && (
-        <div className="text-center text-xs text-neutral-400 mt-1">VS</div>
-      )}
+
 
       {/* 猜对用户的头像展示 */}
       {correctUsers.length > 0 && (
@@ -162,14 +147,25 @@ const MatchCard = ({ match, bets, users }: { match: Match; bets?: Bet[]; users?:
 };
 
 const EmptyMatchCard = () => (
-  <div className="bg-white dark:bg-neutral-800 border border-dashed border-neutral-300 dark:border-neutral-600 rounded-lg p-4 flex flex-col items-center justify-center min-h-[70px]">
-    <div className="flex items-center gap-2">
-      <div className="w-2 h-2 rounded-full bg-neutral-300 dark:bg-neutral-600" />
-      <span className="text-neutral-400 text-sm">待定</span>
-      <div className="w-2 h-2 rounded-full bg-neutral-300 dark:bg-neutral-600" />
+  <div className="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg p-2.5 shadow-sm hover:shadow-md transition-shadow">
+    <div className="flex items-center justify-between gap-1 mb-1">
+      <span className="text-xs text-neutral-500 dark:text-neutral-400">--/-- --:--</span>
+      <span className="text-xs text-neutral-400">未开赛</span>
+    </div>
+
+    <div className="flex items-center gap-2 p-1.5 rounded">
+      <span className="text-base flex-shrink-0">⚪</span>
+      <span className="text-sm truncate flex-1 text-neutral-800 dark:text-neutral-200">待定</span>
+    </div>
+
+    <div className="flex items-center gap-2 p-1.5 rounded">
+      <span className="text-base flex-shrink-0">⚪</span>
+      <span className="text-sm truncate flex-1 text-neutral-800 dark:text-neutral-200">待定</span>
     </div>
   </div>
 );
+
+
 
 const KnockoutBracket = ({ matches, bets = [], users = [] }: KnockoutBracketProps) => {
   const knockoutMatches = useMemo(() => {
@@ -178,7 +174,9 @@ const KnockoutBracket = ({ matches, bets = [], users = [] }: KnockoutBracketProp
 
   const bracketRounds = useMemo(() => {
     return KNOCKOUT_ROUNDS.map((round) => ({
+      key: round.key,
       name: round.name,
+      count: round.count,
       matches: getRoundMatches(knockoutMatches, round.key),
     }));
   }, [knockoutMatches]);
@@ -221,21 +219,24 @@ const KnockoutBracket = ({ matches, bets = [], users = [] }: KnockoutBracketProp
               </h3>
             </div>
 
-            {/* 比赛列表 - 使用 justify-around 让卡片均匀分布，自动对齐到上一轮两场的中间 */}
+            {/* 比赛列表 - 显示固定数量的卡片，有数据显示MatchCard，无数据显示占位 */}
             <div className="flex flex-col justify-around flex-1 gap-3">
-              {round.matches.length > 0 ? (
-                round.matches.map((match) => (
-                  <MatchCard key={match.id} match={match} bets={bets} users={users} />
-                ))
-              ) : (
-                <EmptyMatchCard />
-              )}
+              {Array.from({ length: round.count }).map((_, index) => {
+                const matchIndex = index;
+                const match = round.matches[matchIndex];
+                
+                if (match) {
+                  return <MatchCard key={match.id} match={match} bets={bets} users={users} />;
+                } else {
+                  return <EmptyMatchCard key={`${round.key}-${index}`} />;
+                }
+              })}
             </div>
           </div>
         ))}
 
         {/* 季军赛作为独立列放在决赛后面 */}
-        {thirdPlaceRound && thirdPlaceRound.matches.length > 0 && (
+        {thirdPlaceRound && (
           <div className="flex flex-col w-[180px] sm:w-[200px] flex-shrink-0">
             <div className="mb-4 text-center">
               <h3 className="font-display text-base text-amber-600 dark:text-amber-400 font-bold">
@@ -243,9 +244,14 @@ const KnockoutBracket = ({ matches, bets = [], users = [] }: KnockoutBracketProp
               </h3>
             </div>
             <div className="flex flex-col justify-around flex-1 gap-3">
-              {thirdPlaceRound.matches.map((match) => (
-                <MatchCard key={match.id} match={match} bets={bets} users={users} />
-              ))}
+              {Array.from({ length: thirdPlaceRound.count }).map((_, index) => {
+                const match = thirdPlaceRound.matches[index];
+                if (match) {
+                  return <MatchCard key={match.id} match={match} bets={bets} users={users} />;
+                } else {
+                  return <EmptyMatchCard key={`${thirdPlaceRound.key}-${index}`} />;
+                }
+              })}
             </div>
           </div>
         )}

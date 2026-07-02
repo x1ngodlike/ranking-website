@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useAppStore } from '@/store/useAppStore';
-import { X, Settings, Lock, LogOut, RefreshCw, Check, Eye, EyeOff, Trash2, Database } from 'lucide-react';
+import { X, Settings, Lock, LogOut, RefreshCw, Check, Eye, EyeOff, Trash2, Database, Brain } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import BackupModal from '../BackupModal/BackupModal';
+import AIConfigModal from '../AIConfigModal/AIConfigModal';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -31,6 +32,7 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
   const [isSwitchingEnv, setIsSwitchingEnv] = useState(false);
   const [isClearingData, setIsClearingData] = useState(false);
   const [showBackupModal, setShowBackupModal] = useState(false);
+  const [showAIConfigModal, setShowAIConfigModal] = useState(false);
 
   const handleLogin = async () => {
     setIsLoggingIn(true);
@@ -229,6 +231,26 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                     <div className="flex items-center justify-between">
                       <div>
                         <span className="text-sm text-neutral-600 dark:text-neutral-400">
+                          AI 识别配置
+                        </span>
+                        <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-1">
+                          上传投注截图时自动识别比赛信息
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => setShowAIConfigModal(true)}
+                        className="text-sm text-primary-500 hover:text-primary-600 flex items-center gap-1"
+                      >
+                        <Brain size={16} />
+                        配置
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="pt-4 border-t border-neutral-200 dark:border-neutral-700">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="text-sm text-neutral-600 dark:text-neutral-400">
                           备份与还原
                         </span>
                         <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-1">
@@ -350,6 +372,7 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
           </motion.div>
         </motion.div>
       )}
+      <AIConfigModal isOpen={showAIConfigModal} onClose={() => setShowAIConfigModal(false)} />
       <BackupModal isOpen={showBackupModal} onClose={() => setShowBackupModal(false)} />
     </AnimatePresence>
   );
