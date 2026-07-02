@@ -5,10 +5,11 @@ interface AvatarProps {
   src: string;
   alt: string;
   className?: string;
-  size?: 'sm' | 'md' | 'lg' | 'xl';
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 }
 
 const sizeClasses = {
+  xs: 'w-5 h-5 text-sm',
   sm: 'w-8 h-8 text-lg',
   md: 'w-10 h-10 text-xl',
   lg: 'w-14 h-14 text-3xl',

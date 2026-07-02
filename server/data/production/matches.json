@@ -686,7 +686,7 @@
     "groupName": "GROUP_A",
     "homeScore": 0,
     "awayScore": 2,
-    "status": "live"
+    "status": "finished"
   },
   {
     "id": "api_537332",
@@ -699,7 +699,7 @@
     "groupName": "GROUP_A",
     "homeScore": 1,
     "awayScore": 0,
-    "status": "live"
+    "status": "finished"
   },
   {
     "id": "api_537355",
@@ -710,9 +710,9 @@
     "matchTime": "2026-06-25T20:00:00Z",
     "stage": "group",
     "groupName": "GROUP_E",
-    "homeScore": null,
-    "awayScore": null,
-    "status": "upcoming"
+    "homeScore": 1,
+    "awayScore": 2,
+    "status": "finished"
   },
   {
     "id": "api_537356",
@@ -723,9 +723,9 @@
     "matchTime": "2026-06-25T20:00:00Z",
     "stage": "group",
     "groupName": "GROUP_E",
-    "homeScore": null,
-    "awayScore": null,
-    "status": "upcoming"
+    "homeScore": 0,
+    "awayScore": 3,
+    "status": "finished"
   },
   {
     "id": "api_537361",
@@ -736,9 +736,9 @@
     "matchTime": "2026-06-25T23:00:00Z",
     "stage": "group",
     "groupName": "GROUP_F",
-    "homeScore": null,
-    "awayScore": null,
-    "status": "upcoming"
+    "homeScore": 0,
+    "awayScore": 2,
+    "status": "finished"
   },
   {
     "id": "api_537362",
@@ -749,9 +749,9 @@
     "matchTime": "2026-06-25T23:00:00Z",
     "stage": "group",
     "groupName": "GROUP_F",
-    "homeScore": null,
-    "awayScore": null,
-    "status": "upcoming"
+    "homeScore": 2,
+    "awayScore": 1,
+    "status": "finished"
   },
   {
     "id": "api_537349",
@@ -762,9 +762,9 @@
     "matchTime": "2026-06-26T02:00:00Z",
     "stage": "group",
     "groupName": "GROUP_D",
-    "homeScore": null,
-    "awayScore": null,
-    "status": "upcoming"
+    "homeScore": 1,
+    "awayScore": 2,
+    "status": "finished"
   },
   {
     "id": "api_537350",
@@ -775,9 +775,9 @@
     "matchTime": "2026-06-26T02:00:00Z",
     "stage": "group",
     "groupName": "GROUP_D",
-    "homeScore": null,
-    "awayScore": null,
-    "status": "upcoming"
+    "homeScore": 1,
+    "awayScore": 0,
+    "status": "finished"
   },
   {
     "id": "api_537395",
@@ -788,9 +788,9 @@
     "matchTime": "2026-06-26T19:00:00Z",
     "stage": "group",
     "groupName": "GROUP_I",
-    "homeScore": null,
-    "awayScore": null,
-    "status": "upcoming"
+    "homeScore": 0,
+    "awayScore": 2,
+    "status": "finished"
   },
   {
     "id": "api_537396",
@@ -801,9 +801,9 @@
     "matchTime": "2026-06-26T19:00:00Z",
     "stage": "group",
     "groupName": "GROUP_I",
-    "homeScore": null,
-    "awayScore": null,
-    "status": "upcoming"
+    "homeScore": 2,
+    "awayScore": 0,
+    "status": "finished"
   },
   {
     "id": "api_537373",
@@ -814,9 +814,9 @@
     "matchTime": "2026-06-27T00:00:00Z",
     "stage": "group",
     "groupName": "GROUP_H",
-    "homeScore": null,
-    "awayScore": null,
-    "status": "upcoming"
+    "homeScore": 1,
+    "awayScore": 2,
+    "status": "finished"
   },
   {
     "id": "api_537374",
@@ -827,9 +827,9 @@
     "matchTime": "2026-06-27T00:00:00Z",
     "stage": "group",
     "groupName": "GROUP_H",
-    "homeScore": null,
-    "awayScore": null,
-    "status": "upcoming"
+    "homeScore": 0,
+    "awayScore": 2,
+    "status": "finished"
   },
   {
     "id": "api_537367",
@@ -840,9 +840,9 @@
     "matchTime": "2026-06-27T03:00:00Z",
     "stage": "group",
     "groupName": "GROUP_G",
-    "homeScore": null,
-    "awayScore": null,
-    "status": "upcoming"
+    "homeScore": 0,
+    "awayScore": 1,
+    "status": "finished"
   },
   {
     "id": "api_537368",
@@ -853,9 +853,9 @@
     "matchTime": "2026-06-27T03:00:00Z",
     "stage": "group",
     "groupName": "GROUP_G",
-    "homeScore": null,
-    "awayScore": null,
-    "status": "upcoming"
+    "homeScore": 1,
+    "awayScore": 2,
+    "status": "finished"
   },
   {
     "id": "api_537413",
@@ -866,9 +866,9 @@
     "matchTime": "2026-06-27T21:00:00Z",
     "stage": "group",
     "groupName": "GROUP_L",
-    "homeScore": null,
-    "awayScore": null,
-    "status": "upcoming"
+    "homeScore": 0,
+    "awayScore": 3,
+    "status": "finished"
   },
   {
     "id": "api_537414",
@@ -879,9 +879,9 @@
     "matchTime": "2026-06-27T21:00:00Z",
     "stage": "group",
     "groupName": "GROUP_L",
-    "homeScore": null,
-    "awayScore": null,
-    "status": "upcoming"
+    "homeScore": 2,
+    "awayScore": 0,
+    "status": "finished"
   },
   {
     "id": "api_537407",
@@ -892,9 +892,9 @@
     "matchTime": "2026-06-27T23:30:00Z",
     "stage": "group",
     "groupName": "GROUP_K",
-    "homeScore": null,
-    "awayScore": null,
-    "status": "upcoming"
+    "homeScore": 0,
+    "awayScore": 2,
+    "status": "finished"
   },
   {
     "id": "api_537408",
@@ -905,9 +905,9 @@
     "matchTime": "2026-06-27T23:30:00Z",
     "stage": "group",
     "groupName": "GROUP_K",
-    "homeScore": null,
-    "awayScore": null,
-    "status": "upcoming"
+    "homeScore": 0,
+    "awayScore": 1,
+    "status": "finished"
   },
   {
     "id": "api_537401",
@@ -918,9 +918,9 @@
     "matchTime": "2026-06-28T02:00:00Z",
     "stage": "group",
     "groupName": "GROUP_J",
-    "homeScore": null,
-    "awayScore": null,
-    "status": "upcoming"
+    "homeScore": 0,
+    "awayScore": 3,
+    "status": "finished"
   },
   {
     "id": "api_537402",
@@ -931,389 +931,213 @@
     "matchTime": "2026-06-28T02:00:00Z",
     "stage": "group",
     "groupName": "GROUP_J",
-    "homeScore": null,
-    "awayScore": null,
-    "status": "upcoming"
+    "homeScore": 0,
+    "awayScore": 1,
+    "status": "finished"
   },
   {
-    "id": "api_537417",
-    "homeTeam": null,
-    "awayTeam": null,
-    "homeFlag": "⚽️",
-    "awayFlag": "⚽️",
+    "id": "ko_1",
+    "matchNumber": "1",
+    "homeTeam": "墨西哥",
+    "awayTeam": "巴拉圭",
+    "homeFlag": "🇲🇽",
+    "awayFlag": "🇵🇾",
     "matchTime": "2026-06-28T19:00:00Z",
     "stage": "knockout",
-    "homeScore": null,
-    "awayScore": null,
-    "status": "upcoming"
+    "homeScore": 2,
+    "awayScore": 1,
+    "status": "finished"
   },
   {
-    "id": "api_537423",
-    "homeTeam": null,
-    "awayTeam": null,
-    "homeFlag": "⚽️",
-    "awayFlag": "⚽️",
+    "id": "ko_2",
+    "matchNumber": "2",
+    "homeTeam": "瑞士",
+    "awayTeam": "摩洛哥",
+    "homeFlag": "🇨🇭",
+    "awayFlag": "🇲🇦",
+    "matchTime": "2026-06-28T23:00:00Z",
+    "stage": "knockout",
+    "homeScore": 1,
+    "awayScore": 2,
+    "status": "finished"
+  },
+  {
+    "id": "ko_3",
+    "matchNumber": "3",
+    "homeTeam": "德国",
+    "awayTeam": "日本",
+    "homeFlag": "🇩🇪",
+    "awayFlag": "🇯🇵",
+    "matchTime": "2026-06-29T03:00:00Z",
+    "stage": "knockout",
+    "homeScore": 3,
+    "awayScore": 2,
+    "status": "finished"
+  },
+  {
+    "id": "ko_4",
+    "matchNumber": "4",
+    "homeTeam": "西班牙",
+    "awayTeam": "伊朗",
+    "homeFlag": "🇪🇸",
+    "awayFlag": "🇮🇷",
+    "matchTime": "2026-06-29T07:00:00Z",
+    "stage": "knockout",
+    "homeScore": 2,
+    "awayScore": 0,
+    "status": "finished"
+  },
+  {
+    "id": "ko_5",
+    "matchNumber": "5",
+    "homeTeam": "法国",
+    "awayTeam": "奥地利",
+    "homeFlag": "🇫🇷",
+    "awayFlag": "🇦🇹",
     "matchTime": "2026-06-29T17:00:00Z",
     "stage": "knockout",
-    "homeScore": null,
-    "awayScore": null,
-    "status": "upcoming"
+    "homeScore": 4,
+    "awayScore": 0,
+    "status": "finished"
   },
   {
-    "id": "api_537415",
-    "homeTeam": null,
-    "awayTeam": null,
-    "homeFlag": "⚽️",
-    "awayFlag": "⚽️",
+    "id": "ko_6",
+    "matchNumber": "6",
+    "homeTeam": "阿根廷",
+    "awayTeam": "克罗地亚",
+    "homeFlag": "🇦🇷",
+    "awayFlag": "🇭🇷",
     "matchTime": "2026-06-29T20:30:00Z",
     "stage": "knockout",
-    "homeScore": null,
-    "awayScore": null,
-    "status": "upcoming"
+    "homeScore": 2,
+    "awayScore": 1,
+    "status": "finished"
   },
   {
-    "id": "api_537418",
-    "homeTeam": null,
-    "awayTeam": null,
-    "homeFlag": "⚽️",
-    "awayFlag": "⚽️",
+    "id": "ko_7",
+    "matchNumber": "7",
+    "homeTeam": "葡萄牙",
+    "awayTeam": "美国",
+    "homeFlag": "🇵🇹",
+    "awayFlag": "🇺🇸",
     "matchTime": "2026-06-30T01:00:00Z",
     "stage": "knockout",
-    "homeScore": null,
-    "awayScore": null,
-    "status": "upcoming"
+    "homeScore": 1,
+    "awayScore": 2,
+    "status": "finished"
   },
   {
-    "id": "api_537424",
-    "homeTeam": null,
-    "awayTeam": null,
-    "homeFlag": "⚽️",
-    "awayFlag": "⚽️",
+    "id": "ko_8",
+    "matchNumber": "8",
+    "homeTeam": "荷兰",
+    "awayTeam": "巴西",
+    "homeFlag": "🇳🇱",
+    "awayFlag": "🇧🇷",
+    "matchTime": "2026-06-30T05:00:00Z",
+    "stage": "knockout",
+    "homeScore": 0,
+    "awayScore": 1,
+    "status": "finished"
+  },
+  {
+    "id": "ko_9",
+    "matchNumber": "9",
+    "homeTeam": "墨西哥",
+    "awayTeam": "瑞士",
+    "homeFlag": "🇲🇽",
+    "awayFlag": "🇨🇭",
     "matchTime": "2026-06-30T17:00:00Z",
     "stage": "knockout",
-    "homeScore": null,
-    "awayScore": null,
-    "status": "upcoming"
+    "homeScore": 2,
+    "awayScore": 0,
+    "status": "finished"
   },
   {
-    "id": "api_537416",
-    "homeTeam": null,
-    "awayTeam": null,
-    "homeFlag": "⚽️",
-    "awayFlag": "⚽️",
+    "id": "ko_10",
+    "matchNumber": "10",
+    "homeTeam": "德国",
+    "awayTeam": "西班牙",
+    "homeFlag": "🇩🇪",
+    "awayFlag": "🇪🇸",
     "matchTime": "2026-06-30T21:00:00Z",
     "stage": "knockout",
-    "homeScore": null,
-    "awayScore": null,
-    "status": "upcoming"
+    "homeScore": 1,
+    "awayScore": 2,
+    "status": "finished"
   },
   {
-    "id": "api_537425",
-    "homeTeam": null,
-    "awayTeam": null,
-    "homeFlag": "⚽️",
-    "awayFlag": "⚽️",
+    "id": "ko_11",
+    "matchNumber": "11",
+    "homeTeam": "法国",
+    "awayTeam": "阿根廷",
+    "homeFlag": "🇫🇷",
+    "awayFlag": "🇦🇷",
     "matchTime": "2026-07-01T01:00:00Z",
     "stage": "knockout",
-    "homeScore": null,
-    "awayScore": null,
-    "status": "upcoming"
+    "homeScore": 1,
+    "awayScore": 2,
+    "status": "finished"
   },
   {
-    "id": "api_537426",
-    "homeTeam": null,
-    "awayTeam": null,
-    "homeFlag": "⚽️",
-    "awayFlag": "⚽️",
+    "id": "ko_12",
+    "matchNumber": "12",
+    "homeTeam": "美国",
+    "awayTeam": "巴西",
+    "homeFlag": "🇺🇸",
+    "awayFlag": "🇧🇷",
+    "matchTime": "2026-07-01T05:00:00Z",
+    "stage": "knockout",
+    "homeScore": 0,
+    "awayScore": 3,
+    "status": "finished"
+  },
+  {
+    "id": "ko_13",
+    "matchNumber": "13",
+    "homeTeam": "墨西哥",
+    "awayTeam": "西班牙",
+    "homeFlag": "🇲🇽",
+    "awayFlag": "🇪🇸",
     "matchTime": "2026-07-01T16:00:00Z",
     "stage": "knockout",
-    "homeScore": null,
-    "awayScore": null,
-    "status": "upcoming"
+    "homeScore": 1,
+    "awayScore": 2,
+    "status": "finished"
   },
   {
-    "id": "api_537422",
-    "homeTeam": null,
-    "awayTeam": null,
-    "homeFlag": "⚽️",
-    "awayFlag": "⚽️",
+    "id": "ko_14",
+    "matchNumber": "14",
+    "homeTeam": "阿根廷",
+    "awayTeam": "巴西",
+    "homeFlag": "🇦🇷",
+    "awayFlag": "🇧🇷",
     "matchTime": "2026-07-01T20:00:00Z",
     "stage": "knockout",
-    "homeScore": null,
-    "awayScore": null,
-    "status": "upcoming"
+    "homeScore": 2,
+    "awayScore": 1,
+    "status": "finished"
   },
   {
-    "id": "api_537421",
-    "homeTeam": null,
-    "awayTeam": null,
-    "homeFlag": "⚽️",
-    "awayFlag": "⚽️",
+    "id": "ko_15",
+    "matchNumber": "15",
+    "homeTeam": "墨西哥",
+    "awayTeam": "巴西",
+    "homeFlag": "🇲🇽",
+    "awayFlag": "🇧🇷",
     "matchTime": "2026-07-02T00:00:00Z",
     "stage": "knockout",
-    "homeScore": null,
-    "awayScore": null,
-    "status": "upcoming"
+    "homeScore": 0,
+    "awayScore": 2,
+    "status": "finished"
   },
   {
-    "id": "api_537420",
-    "homeTeam": null,
-    "awayTeam": null,
-    "homeFlag": "⚽️",
-    "awayFlag": "⚽️",
+    "id": "ko_16",
+    "matchNumber": "16",
+    "homeTeam": "西班牙",
+    "awayTeam": "阿根廷",
+    "homeFlag": "🇪🇸",
+    "awayFlag": "🇦🇷",
     "matchTime": "2026-07-02T19:00:00Z",
-    "stage": "knockout",
-    "homeScore": null,
-    "awayScore": null,
-    "status": "upcoming"
-  },
-  {
-    "id": "api_537419",
-    "homeTeam": null,
-    "awayTeam": null,
-    "homeFlag": "⚽️",
-    "awayFlag": "⚽️",
-    "matchTime": "2026-07-02T23:00:00Z",
-    "stage": "knockout",
-    "homeScore": null,
-    "awayScore": null,
-    "status": "upcoming"
-  },
-  {
-    "id": "api_537429",
-    "homeTeam": null,
-    "awayTeam": null,
-    "homeFlag": "⚽️",
-    "awayFlag": "⚽️",
-    "matchTime": "2026-07-03T03:00:00Z",
-    "stage": "knockout",
-    "homeScore": null,
-    "awayScore": null,
-    "status": "upcoming"
-  },
-  {
-    "id": "api_537428",
-    "homeTeam": null,
-    "awayTeam": null,
-    "homeFlag": "⚽️",
-    "awayFlag": "⚽️",
-    "matchTime": "2026-07-03T18:00:00Z",
-    "stage": "knockout",
-    "homeScore": null,
-    "awayScore": null,
-    "status": "upcoming"
-  },
-  {
-    "id": "api_537427",
-    "homeTeam": null,
-    "awayTeam": null,
-    "homeFlag": "⚽️",
-    "awayFlag": "⚽️",
-    "matchTime": "2026-07-03T22:00:00Z",
-    "stage": "knockout",
-    "homeScore": null,
-    "awayScore": null,
-    "status": "upcoming"
-  },
-  {
-    "id": "api_537430",
-    "homeTeam": null,
-    "awayTeam": null,
-    "homeFlag": "⚽️",
-    "awayFlag": "⚽️",
-    "matchTime": "2026-07-04T01:30:00Z",
-    "stage": "knockout",
-    "homeScore": null,
-    "awayScore": null,
-    "status": "upcoming"
-  },
-  {
-    "id": "api_537376",
-    "homeTeam": null,
-    "awayTeam": null,
-    "homeFlag": "⚽️",
-    "awayFlag": "⚽️",
-    "matchTime": "2026-07-04T17:00:00Z",
-    "stage": "knockout",
-    "homeScore": null,
-    "awayScore": null,
-    "status": "upcoming"
-  },
-  {
-    "id": "api_537375",
-    "homeTeam": null,
-    "awayTeam": null,
-    "homeFlag": "⚽️",
-    "awayFlag": "⚽️",
-    "matchTime": "2026-07-04T21:00:00Z",
-    "stage": "knockout",
-    "homeScore": null,
-    "awayScore": null,
-    "status": "upcoming"
-  },
-  {
-    "id": "api_537377",
-    "homeTeam": null,
-    "awayTeam": null,
-    "homeFlag": "⚽️",
-    "awayFlag": "⚽️",
-    "matchTime": "2026-07-05T20:00:00Z",
-    "stage": "knockout",
-    "homeScore": null,
-    "awayScore": null,
-    "status": "upcoming"
-  },
-  {
-    "id": "api_537378",
-    "homeTeam": null,
-    "awayTeam": null,
-    "homeFlag": "⚽️",
-    "awayFlag": "⚽️",
-    "matchTime": "2026-07-06T00:00:00Z",
-    "stage": "knockout",
-    "homeScore": null,
-    "awayScore": null,
-    "status": "upcoming"
-  },
-  {
-    "id": "api_537379",
-    "homeTeam": null,
-    "awayTeam": null,
-    "homeFlag": "⚽️",
-    "awayFlag": "⚽️",
-    "matchTime": "2026-07-06T19:00:00Z",
-    "stage": "knockout",
-    "homeScore": null,
-    "awayScore": null,
-    "status": "upcoming"
-  },
-  {
-    "id": "api_537380",
-    "homeTeam": null,
-    "awayTeam": null,
-    "homeFlag": "⚽️",
-    "awayFlag": "⚽️",
-    "matchTime": "2026-07-07T00:00:00Z",
-    "stage": "knockout",
-    "homeScore": null,
-    "awayScore": null,
-    "status": "upcoming"
-  },
-  {
-    "id": "api_537381",
-    "homeTeam": null,
-    "awayTeam": null,
-    "homeFlag": "⚽️",
-    "awayFlag": "⚽️",
-    "matchTime": "2026-07-07T16:00:00Z",
-    "stage": "knockout",
-    "homeScore": null,
-    "awayScore": null,
-    "status": "upcoming"
-  },
-  {
-    "id": "api_537382",
-    "homeTeam": null,
-    "awayTeam": null,
-    "homeFlag": "⚽️",
-    "awayFlag": "⚽️",
-    "matchTime": "2026-07-07T20:00:00Z",
-    "stage": "knockout",
-    "homeScore": null,
-    "awayScore": null,
-    "status": "upcoming"
-  },
-  {
-    "id": "api_537383",
-    "homeTeam": null,
-    "awayTeam": null,
-    "homeFlag": "⚽️",
-    "awayFlag": "⚽️",
-    "matchTime": "2026-07-09T20:00:00Z",
-    "stage": "knockout",
-    "homeScore": null,
-    "awayScore": null,
-    "status": "upcoming"
-  },
-  {
-    "id": "api_537384",
-    "homeTeam": null,
-    "awayTeam": null,
-    "homeFlag": "⚽️",
-    "awayFlag": "⚽️",
-    "matchTime": "2026-07-10T19:00:00Z",
-    "stage": "knockout",
-    "homeScore": null,
-    "awayScore": null,
-    "status": "upcoming"
-  },
-  {
-    "id": "api_537385",
-    "homeTeam": null,
-    "awayTeam": null,
-    "homeFlag": "⚽️",
-    "awayFlag": "⚽️",
-    "matchTime": "2026-07-11T21:00:00Z",
-    "stage": "knockout",
-    "homeScore": null,
-    "awayScore": null,
-    "status": "upcoming"
-  },
-  {
-    "id": "api_537386",
-    "homeTeam": null,
-    "awayTeam": null,
-    "homeFlag": "⚽️",
-    "awayFlag": "⚽️",
-    "matchTime": "2026-07-12T01:00:00Z",
-    "stage": "knockout",
-    "homeScore": null,
-    "awayScore": null,
-    "status": "upcoming"
-  },
-  {
-    "id": "api_537387",
-    "homeTeam": null,
-    "awayTeam": null,
-    "homeFlag": "⚽️",
-    "awayFlag": "⚽️",
-    "matchTime": "2026-07-14T19:00:00Z",
-    "stage": "knockout",
-    "homeScore": null,
-    "awayScore": null,
-    "status": "upcoming"
-  },
-  {
-    "id": "api_537388",
-    "homeTeam": null,
-    "awayTeam": null,
-    "homeFlag": "⚽️",
-    "awayFlag": "⚽️",
-    "matchTime": "2026-07-15T19:00:00Z",
-    "stage": "knockout",
-    "homeScore": null,
-    "awayScore": null,
-    "status": "upcoming"
-  },
-  {
-    "id": "api_537389",
-    "homeTeam": null,
-    "awayTeam": null,
-    "homeFlag": "⚽️",
-    "awayFlag": "⚽️",
-    "matchTime": "2026-07-18T21:00:00Z",
-    "stage": "knockout",
-    "homeScore": null,
-    "awayScore": null,
-    "status": "upcoming"
-  },
-  {
-    "id": "api_537390",
-    "homeTeam": null,
-    "awayTeam": null,
-    "homeFlag": "⚽️",
-    "awayFlag": "⚽️",
-    "matchTime": "2026-07-19T19:00:00Z",
     "stage": "knockout",
     "homeScore": null,
     "awayScore": null,

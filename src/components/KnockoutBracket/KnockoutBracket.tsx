@@ -1,29 +1,20 @@
 import { useMemo } from 'react';
-import type { Match } from '@/types';
+import type { Match, Bet, User } from '@/types';
 import { formatDate } from '@/utils/helpers';
-import { Clock, PlayCircle, Trophy } from 'lucide-react';
+import Avatar from '@/components/Avatar';
 
 interface KnockoutBracketProps {
   matches: Match[];
-}
-
-interface BracketMatch {
-  match: Match;
-  winner?: string;
-  loser?: string;
-}
-
-interface BracketRound {
-  name: string;
-  matches: BracketMatch[];
+  bets?: Bet[];
+  users?: User[];
 }
 
 const KNOCKOUT_ROUNDS = [
   { key: 'round_of_16', name: '1/8决赛', count: 8 },
   { key: 'quarter_final', name: '1/4决赛', count: 4 },
   { key: 'semi_final', name: '半决赛', count: 2 },
-  { key: 'third_place', name: '季军赛', count: 1 },
   { key: 'final', name: '决赛', count: 1 },
+  { key: 'third_place', name: '季军赛', count: 1 },
 ];
 
 const getRoundKey = (matchNumber?: string): string => {
@@ -37,18 +28,6 @@ const getRoundKey = (matchNumber?: string): string => {
   return 'round_of_16';
 };
 
-const getStatusIcon = (status: Match['status']) => {
-  if (status === 'finished') return <Trophy size={14} className="text-amber-600 dark:text-gold-400" />;
-  if (status === 'live') return <PlayCircle size={14} className="text-profit-500 animate-pulse" />;
-  return <Clock size={14} className="text-neutral-400" />;
-};
-
-const getStatusText = (status: Match['status']) => {
-  if (status === 'finished') return '已结束';
-  if (status === 'live') return '进行中';
-  return '未开始';
-};
-
 const getRoundMatches = (matches: Match[], roundKey: string): Match[] => {
   return matches
     .filter((m) => m.stage === 'knockout')
@@ -60,95 +39,147 @@ const getRoundMatches = (matches: Match[], roundKey: string): Match[] => {
     });
 };
 
-const MatchNode = ({ match }: { match: Match }) => {
+// 判断预测是否正确（胜负方向正确即可）
+const isPredictionCorrect = (match: Match, bet: Bet): boolean => {
+  if (!match.homeScore || !match.awayScore || !bet.predictedHomeScore || !bet.predictedAwayScore) {
+    return false;
+  }
+  const actualWinner = match.homeScore > match.awayScore ? 'home' : 'away';
+  const predictedWinner = bet.predictedHomeScore > bet.predictedAwayScore ? 'home' : 'away';
+  return actualWinner === predictedWinner;
+};
+
+// 获取猜对比赛的用户列表
+const getCorrectPredictUsers = (match: Match, bets: Bet[], users: User[]): User[] => {
+  if (!bets || !users || match.status !== 'finished') return [];
+  
+  const correctBets = bets.filter((bet) => 
+    bet.matchId === match.id && isPredictionCorrect(match, bet)
+  );
+  
+  const userMap = new Map(users.map((u) => [u.id, u]));
+  return correctBets
+    .map((bet) => userMap.get(bet.userId))
+    .filter((u): u is User => u !== undefined);
+};
+
+const MatchCard = ({ match, bets, users }: { match: Match; bets?: Bet[]; users?: User[] }) => {
   const isFinished = match.status === 'finished';
-  const isLive = match.status === 'live';
-  const homeWon = isFinished && match.homeScore !== null && match.awayScore !== null && match.homeScore > match.awayScore;
-  const awayWon = isFinished && match.homeScore !== null && match.awayScore !== null && match.awayScore > match.homeScore;
+  const winner = isFinished && match.homeScore !== null && match.awayScore !== null
+    ? (match.homeScore > match.awayScore ? 'home' : 'away')
+    : null;
+  const homeWon = winner === 'home';
+  const awayWon = winner === 'away';
 
-  return (
-    <div className="relative">
-      <div
-        className={`p-3 rounded-xl border-2 transition-all duration-300 ${
-          isFinished
-            ? 'bg-amber-500/10 border-amber-500/30'
-            : isLive
-            ? 'bg-profit-500/10 border-profit-500/30'
-            : 'bg-neutral-50 dark:bg-neutral-800/50 border-neutral-200 dark:border-neutral-700'
-        }`}
-      >
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2 flex-1 min-w-0">
-            <span className="text-xl flex-shrink-0">{match.homeFlag}</span>
-            <span
-              className={`font-medium text-sm truncate ${
-                homeWon ? 'text-amber-600 dark:text-gold-400 font-bold' : 'text-neutral-800 dark:text-neutral-200'
-              }`}
-            >
-              {match.homeTeam}
-            </span>
-          </div>
+  const correctUsers = useMemo(() => {
+    return getCorrectPredictUsers(match, bets || [], users || []);
+  }, [match, bets, users]);
 
-          <div className="flex-shrink-0 text-center">
-            {match.homeScore !== null && match.awayScore !== null ? (
-              <span
-                className={`font-display text-lg ${
-                  isLive ? 'text-profit-500' : 'text-neutral-800 dark:text-neutral-200'
-                }`}
-              >
-                {match.homeScore}
-                <span className="text-neutral-400 mx-0.5">:</span>
-                {match.awayScore}
-              </span>
-            ) : (
-              <span className="text-sm text-neutral-400">VS</span>
-            )}
-          </div>
-
-          <div className="flex items-center gap-2 flex-1 min-w-0 justify-end">
-            <span
-              className={`font-medium text-sm truncate text-right ${
-                awayWon ? 'text-amber-600 dark:text-gold-400 font-bold' : 'text-neutral-800 dark:text-neutral-200'
-              }`}
-            >
-              {match.awayTeam}
-            </span>
-            <span className="text-xl flex-shrink-0">{match.awayFlag}</span>
-          </div>
-        </div>
-
-        <div className="flex items-center justify-center gap-2 mt-2">
-          {getStatusIcon(match.status)}
-          <span className={`text-xs ${isLive ? 'text-profit-500' : 'text-neutral-500 dark:text-neutral-400'}`}>
-            {getStatusText(match.status)}
-          </span>
-          <span className="text-neutral-300 dark:text-neutral-600">•</span>
-          <span className="text-xs text-neutral-500 dark:text-neutral-400">
-            {formatDate(match.matchTime)}
-          </span>
+  if (!isFinished && !match.homeScore) {
+    return (
+      <div className="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg p-3 shadow-sm">
+        <div className="flex items-center justify-center gap-2">
+          <div className="w-2 h-2 rounded-full bg-neutral-300 dark:bg-neutral-600" />
+          <span className="text-neutral-400 text-sm">待定</span>
+          <div className="w-2 h-2 rounded-full bg-neutral-300 dark:bg-neutral-600" />
         </div>
       </div>
+    );
+  }
 
-      {isFinished && (match.homeScore !== null && match.awayScore !== null) && (
-        <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-0 h-0">
-          <div className="border-l-8 border-r-8 border-t-8 border-transparent border-t-amber-500/50" />
+  return (
+    <div className="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg p-2.5 shadow-sm hover:shadow-md transition-shadow">
+      <div className="flex items-center justify-between gap-1 mb-1">
+        <span className="text-xs text-neutral-500 dark:text-neutral-400">
+          {formatDate(match.matchTime)}
+        </span>
+        <span className={`text-xs ${isFinished ? 'text-green-500' : 'text-neutral-400'}`}>
+          {isFinished ? '已结束' : '未开赛'}
+        </span>
+      </div>
+
+      {/* 主队 - 上方 */}
+      <div className={`flex items-center gap-2 p-1.5 rounded ${homeWon ? 'bg-red-50 dark:bg-red-900/10' : ''}`}>
+        <span className="text-base flex-shrink-0">{match.homeFlag}</span>
+        <span className={`text-sm truncate flex-1 ${homeWon ? 'text-red-600 dark:text-red-400 font-bold' : 'text-neutral-800 dark:text-neutral-200'}`}>
+          {match.homeTeam}
+        </span>
+        {match.homeScore !== null && match.awayScore !== null && (
+          <span className={`font-display text-sm flex-shrink-0 ${homeWon ? 'text-red-600 dark:text-red-400 font-bold' : 'text-neutral-800 dark:text-neutral-200'}`}>
+            {match.homeScore}
+          </span>
+        )}
+      </div>
+
+      {/* 客队 - 下方 */}
+      <div className={`flex items-center gap-2 p-1.5 rounded ${awayWon ? 'bg-red-50 dark:bg-red-900/10' : ''}`}>
+        <span className="text-base flex-shrink-0">{match.awayFlag}</span>
+        <span className={`text-sm truncate flex-1 ${awayWon ? 'text-red-600 dark:text-red-400 font-bold' : 'text-neutral-800 dark:text-neutral-200'}`}>
+          {match.awayTeam}
+        </span>
+        {match.homeScore !== null && match.awayScore !== null && (
+          <span className={`font-display text-sm flex-shrink-0 ${awayWon ? 'text-red-600 dark:text-red-400 font-bold' : 'text-neutral-800 dark:text-neutral-200'}`}>
+            {match.awayScore}
+          </span>
+        )}
+      </div>
+
+      {/* 未开赛时显示 VS */}
+      {!isFinished && (match.homeScore === null || match.awayScore === null) && (
+        <div className="text-center text-xs text-neutral-400 mt-1">VS</div>
+      )}
+
+      {/* 猜对用户的头像展示 */}
+      {correctUsers.length > 0 && (
+        <div className="mt-2 pt-2 border-t border-neutral-100 dark:border-neutral-700">
+          <div className="flex items-center gap-1">
+            <span className="text-[10px] text-neutral-400 mr-1">猜对:</span>
+            <div className="flex -space-x-1.5">
+              {correctUsers.slice(0, 5).map((user) => (
+                <div key={user.id} className="relative group">
+                  <Avatar 
+                    src={user.avatar} 
+                    alt={user.nickname} 
+                    size="xs" 
+                    className="w-5 h-5 ring-1 ring-white dark:ring-neutral-800"
+                  />
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-neutral-800 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
+                    {user.nickname}
+                  </div>
+                </div>
+              ))}
+              {correctUsers.length > 5 && (
+                <div className="w-5 h-5 rounded-full bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center ring-1 ring-white dark:ring-neutral-800">
+                  <span className="text-[8px] text-neutral-600 dark:text-neutral-400">+{correctUsers.length - 5}</span>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
     </div>
   );
 };
 
-const KnockoutBracket = ({ matches }: KnockoutBracketProps) => {
+const EmptyMatchCard = () => (
+  <div className="bg-white dark:bg-neutral-800 border border-dashed border-neutral-300 dark:border-neutral-600 rounded-lg p-4 flex flex-col items-center justify-center min-h-[70px]">
+    <div className="flex items-center gap-2">
+      <div className="w-2 h-2 rounded-full bg-neutral-300 dark:bg-neutral-600" />
+      <span className="text-neutral-400 text-sm">待定</span>
+      <div className="w-2 h-2 rounded-full bg-neutral-300 dark:bg-neutral-600" />
+    </div>
+  </div>
+);
+
+const KnockoutBracket = ({ matches, bets = [], users = [] }: KnockoutBracketProps) => {
   const knockoutMatches = useMemo(() => {
     return matches.filter((m) => m.stage === 'knockout');
   }, [matches]);
 
-  const bracketRounds: BracketRound[] = useMemo(() => {
+  const bracketRounds = useMemo(() => {
     return KNOCKOUT_ROUNDS.map((round) => ({
       name: round.name,
-      matches: getRoundMatches(knockoutMatches, round.key).map((match) => ({
-        match,
-      })),
+      matches: getRoundMatches(knockoutMatches, round.key),
     }));
   }, [knockoutMatches]);
 
@@ -158,7 +189,14 @@ const KnockoutBracket = ({ matches }: KnockoutBracketProps) => {
     return (
       <div className="card text-center py-16">
         <div className="w-16 h-16 rounded-full bg-white dark:bg-neutral-800 flex items-center justify-center mx-auto mb-4">
-          <Trophy size={32} className="text-neutral-600 dark:text-neutral-400" />
+          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-neutral-400">
+            <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+            <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+            <path d="M4 22h16" />
+            <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
+            <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
+            <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+          </svg>
         </div>
         <p className="text-neutral-500 dark:text-neutral-500 mb-2">暂无淘汰赛数据</p>
         <p className="text-sm text-neutral-600 dark:text-neutral-400">
@@ -168,43 +206,49 @@ const KnockoutBracket = ({ matches }: KnockoutBracketProps) => {
     );
   }
 
+  // 决赛和季军赛单独处理，放在最后两列
+  const mainRounds = bracketRounds.filter((r) => r.name !== '季军赛');
+  const thirdPlaceRound = bracketRounds.find((r) => r.name === '季军赛');
+
   return (
-    <div className="overflow-x-auto pb-4">
-      <div className="flex gap-4 min-w-max px-4">
-        {bracketRounds.map((round, roundIndex) => (
-          <div key={round.name} className="flex flex-col items-center">
+    <div className="overflow-x-auto pb-4 -mx-4 px-4">
+      <div className="flex gap-4 min-w-max items-stretch">
+        {mainRounds.map((round) => (
+          <div key={round.name} className="flex flex-col w-[180px] sm:w-[200px] flex-shrink-0">
             <div className="mb-4 text-center">
-              <h3 className="font-display text-lg text-blue-600 dark:text-blue-400">
+              <h3 className={`font-display text-base font-bold ${round.name === '决赛' ? 'text-amber-600 dark:text-amber-400' : 'text-blue-600 dark:text-blue-400'}`}>
                 {round.name}
               </h3>
-              <p className="text-xs text-neutral-500 dark:text-neutral-400">
-                {round.matches.length} 场比赛
-              </p>
             </div>
 
-            <div className="flex flex-col gap-3">
-              {round.matches.map((bracketMatch, matchIndex) => (
-                <div key={`${round.name}-${matchIndex}`}>
-                  <MatchNode match={bracketMatch.match} />
-
-                  {roundIndex < bracketRounds.length - 1 && round.name !== 'third_place' && (
-                    <div className="flex flex-col items-center mt-2">
-                      <div className="w-px h-4 bg-gradient-to-b from-amber-500/30 to-transparent" />
-                      <div className="w-8 h-px bg-gradient-to-r from-transparent via-amber-500/30 to-transparent" />
-                    </div>
-                  )}
-                </div>
-              ))}
+            {/* 比赛列表 - 使用 justify-around 让卡片均匀分布，自动对齐到上一轮两场的中间 */}
+            <div className="flex flex-col justify-around flex-1 gap-3">
+              {round.matches.length > 0 ? (
+                round.matches.map((match) => (
+                  <MatchCard key={match.id} match={match} bets={bets} users={users} />
+                ))
+              ) : (
+                <EmptyMatchCard />
+              )}
             </div>
-
-            {roundIndex < bracketRounds.length - 1 && (
-              <div className="flex flex-col items-center mt-2">
-                <div className="w-px h-6 bg-gradient-to-b from-amber-500/30 to-transparent" />
-                <div className="w-16 h-px bg-gradient-to-r from-transparent via-amber-500/30 to-transparent" />
-              </div>
-            )}
           </div>
         ))}
+
+        {/* 季军赛作为独立列放在决赛后面 */}
+        {thirdPlaceRound && thirdPlaceRound.matches.length > 0 && (
+          <div className="flex flex-col w-[180px] sm:w-[200px] flex-shrink-0">
+            <div className="mb-4 text-center">
+              <h3 className="font-display text-base text-amber-600 dark:text-amber-400 font-bold">
+                {thirdPlaceRound.name}
+              </h3>
+            </div>
+            <div className="flex flex-col justify-around flex-1 gap-3">
+              {thirdPlaceRound.matches.map((match) => (
+                <MatchCard key={match.id} match={match} bets={bets} users={users} />
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

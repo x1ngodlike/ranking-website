@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { generateId } from '@/utils/helpers';
-import { X, Calendar, Image as ImageIcon, Plus } from 'lucide-react';
+import { X, Calendar, Image as ImageIcon, Plus, Sparkles, Loader2, Check, Brain } from 'lucide-react';
 import Avatar from '@/components/Avatar';
 import ImageUploader from '@/components/ImageUploader/ImageUploader';
-import type { Bet, User } from '@/types';
+import AIConfigSettings from '@/components/AIConfigSettings/AIConfigSettings';
+import { recognizeBetImage, getAIConfig } from '@/utils/aiRecognition';
+import type { Bet, User, Match } from '@/types';
+import type { AIRecognitionResult } from '@/utils/aiRecognition';
 
 interface BetFormProps {
   onClose?: () => void;
@@ -14,6 +17,7 @@ interface BetFormProps {
 
 const BetForm = ({ onClose, preSelectedUserId, bet }: BetFormProps) => {
   const users = useAppStore((state) => state.users);
+  const matches = useAppStore((state) => state.matches);
   const addBet = useAppStore((state) => state.addBet);
   const updateBet = useAppStore((state) => state.updateBet);
 
@@ -24,6 +28,13 @@ const BetForm = ({ onClose, preSelectedUserId, bet }: BetFormProps) => {
   const [winAmount, setWinAmount] = useState(bet?.winAmount?.toString() || '');
   const [note, setNote] = useState(bet?.note || '');
   const [imageUrl, setImageUrl] = useState<string | undefined>(bet?.imageUrl);
+  
+  // AI识别相关状态
+  const [isRecognizing, setIsRecognizing] = useState(false);
+  const [recognitionResult, setRecognitionResult] = useState<AIRecognitionResult | null>(null);
+  const [matchedMatch, setMatchedMatch] = useState<Match | null>(null);
+  const [showAIConfig, setShowAIConfig] = useState(false);
+  const [recognitionError, setRecognitionError] = useState('');
 
   useEffect(() => {
     if (isEditMode && bet) return;
@@ -47,9 +58,12 @@ const BetForm = ({ onClose, preSelectedUserId, bet }: BetFormProps) => {
         winAmount: winNum,
         note: note || undefined,
         imageUrl: imageUrl || undefined,
+        matchId: matchedMatch?.id || bet.matchId,
+        predictedHomeScore: recognitionResult?.predictedHomeScore || bet.predictedHomeScore,
+        predictedAwayScore: recognitionResult?.predictedAwayScore || bet.predictedAwayScore,
       });
     } else {
-      const newBet = {
+      const newBet: Bet = {
         id: generateId(),
         userId: selectedUserId,
         date,
@@ -57,6 +71,9 @@ const BetForm = ({ onClose, preSelectedUserId, bet }: BetFormProps) => {
         note: note || undefined,
         imageUrl: imageUrl || undefined,
         createdAt: new Date().toISOString(),
+        matchId: matchedMatch?.id,
+        predictedHomeScore: recognitionResult?.predictedHomeScore,
+        predictedAwayScore: recognitionResult?.predictedAwayScore,
       };
       addBet(newBet);
     }
@@ -64,7 +81,66 @@ const BetForm = ({ onClose, preSelectedUserId, bet }: BetFormProps) => {
     setWinAmount('');
     setNote('');
     setImageUrl(undefined);
+    setRecognitionResult(null);
+    setMatchedMatch(null);
+    setRecognitionError('');
     onClose?.();
+  };
+
+  const handleImageChange = (url: string | undefined) => {
+    setImageUrl(url);
+    setRecognitionResult(null);
+    setMatchedMatch(null);
+    setRecognitionError('');
+  };
+
+  const handleAIRecognize = async () => {
+    if (!imageUrl) return;
+    
+    const config = getAIConfig();
+    if (!config.apiKey) {
+      setShowAIConfig(true);
+      return;
+    }
+
+    setIsRecognizing(true);
+    setRecognitionError('');
+    
+    try {
+      // 将图片URL转为base64
+      const response = await fetch(imageUrl);
+      const blob = await response.blob();
+      const reader = new FileReader();
+      
+      const base64Promise = new Promise<string>((resolve) => {
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.readAsDataURL(blob);
+      });
+      
+      const base64 = await base64Promise;
+      const result = await recognizeBetImage(base64);
+      
+      if (result) {
+        setRecognitionResult(result);
+        
+        // 尝试匹配已知的比赛
+        const matched = matches.find((m) => 
+          (m.homeTeam.includes(result.homeTeam) || result.homeTeam.includes(m.homeTeam)) &&
+          (m.awayTeam.includes(result.awayTeam) || result.awayTeam.includes(m.awayTeam))
+        );
+        
+        if (matched) {
+          setMatchedMatch(matched);
+        }
+      } else {
+        setRecognitionError('未能识别出比赛信息，请手动填写');
+      }
+    } catch (error) {
+      console.error('AI识别失败:', error);
+      setRecognitionError(error instanceof Error ? error.message : 'AI识别失败，请检查配置');
+    } finally {
+      setIsRecognizing(false);
+    }
   };
 
   const selectedUser = users.find((u) => u.id === selectedUserId);
@@ -175,7 +251,80 @@ const BetForm = ({ onClose, preSelectedUserId, bet }: BetFormProps) => {
           <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
             上传图片 <span className="text-neutral-400 font-normal">(可选)</span>
           </label>
-          <ImageUploader value={imageUrl} onChange={setImageUrl} />
+          <ImageUploader value={imageUrl} onChange={handleImageChange} />
+          
+          {imageUrl && (
+            <div className="mt-3 flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleAIRecognize}
+                disabled={isRecognizing}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-500/10 text-primary-600 dark:text-primary-400 hover:bg-primary-500/20 transition-colors text-sm font-medium disabled:opacity-50"
+              >
+                {isRecognizing ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" />
+                    AI识别中...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles size={16} />
+                    AI识别比赛
+                  </>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowAIConfig(true)}
+                className="flex items-center gap-1 px-3 py-2 rounded-lg text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200 transition-colors text-sm"
+              >
+                <Brain size={14} />
+                配置
+              </button>
+            </div>
+          )}
+
+          {/* AI识别结果展示 */}
+          {recognitionResult && (
+            <div className="mt-3 p-3 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800">
+              <div className="flex items-center gap-2 mb-2">
+                <Check size={16} className="text-green-500" />
+                <span className="text-sm font-medium text-green-700 dark:text-green-300">
+                  AI识别结果
+                </span>
+              </div>
+              <div className="text-sm text-neutral-700 dark:text-neutral-300 space-y-1">
+                <p>
+                  <span className="text-neutral-500">比赛：</span>
+                  {recognitionResult.homeTeam} vs {recognitionResult.awayTeam}
+                </p>
+                <p>
+                  <span className="text-neutral-500">预测比分：</span>
+                  <span className="font-display font-medium">
+                    {recognitionResult.predictedHomeScore} - {recognitionResult.predictedAwayScore}
+                  </span>
+                </p>
+                {matchedMatch && (
+                  <p className="text-green-600 dark:text-green-400">
+                    ✓ 已匹配到系统比赛
+                  </p>
+                )}
+                {!matchedMatch && (
+                  <p className="text-amber-600 dark:text-amber-400">
+                    ⚠ 未匹配到系统比赛，请手动选择
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {recognitionError && (
+            <div className="mt-3 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
+              <p className="text-sm text-red-600 dark:text-red-400">
+                {recognitionError}
+              </p>
+            </div>
+          )}
         </div>
 
         <button
@@ -186,6 +335,15 @@ const BetForm = ({ onClose, preSelectedUserId, bet }: BetFormProps) => {
           {isEditMode ? '保存修改' : '确认记录'}
         </button>
       </form>
+
+      {/* AI配置弹窗 */}
+      {showAIConfig && (
+        <div className="fixed inset-0 z-[200] bg-black/50 flex items-center justify-center p-4" onClick={() => setShowAIConfig(false)}>
+          <div onClick={(e) => e.stopPropagation()}>
+            <AIConfigSettings onClose={() => setShowAIConfig(false)} />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

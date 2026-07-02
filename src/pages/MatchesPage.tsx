@@ -54,6 +54,7 @@ const MatchesPage = () => {
   const matches = useAppStore((state) => state.matches);
   const currentUserId = useAppStore((state) => state.currentUserId);
   const users = useAppStore((state) => state.users);
+  const bets = useAppStore((state) => state.bets);
   const apiConfig = useAppStore((state) => state.apiConfig);
   const isRefreshing = useAppStore((state) => state.isRefreshing);
   const lastRefreshTime = useAppStore((state) => state.lastRefreshTime);
@@ -236,12 +237,16 @@ const MatchesPage = () => {
         </div>
       </motion.div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.1 }}
-        className="mb-6"
-      >
+      <AnimatePresence mode="wait">
+        {viewMode === 'timeline' && (
+          <motion.div
+            key="date-selector"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20, height: 0 }}
+            transition={{ duration: 0.3 }}
+            className="mb-6"
+          >
         <div className="relative">
           <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-neutral-50 dark:from-neutral-950 to-transparent z-10 pointer-events-none" />
           <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-neutral-50 dark:from-neutral-950 to-transparent z-10 pointer-events-none" />
@@ -363,62 +368,70 @@ const MatchesPage = () => {
             回到今日
           </button>
         </div>
-      </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.15 }}
-        className="flex flex-wrap items-center justify-center gap-3 mb-6"
-      >
-        <div className="flex items-center gap-2">
-          {tabs.map((tab) => {
-            const Icon = tab.icon;
-            const isActive = activeTab === tab.key;
-            return (
-              <button
-                key={tab.key}
-                onClick={() => setActiveTab(tab.key as TabType)}
-                className={`flex items-center gap-2 px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
-                  isActive
-                    ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/30'
-                    : 'bg-neutral-50 dark:bg-neutral-800/50 text-neutral-600 dark:text-neutral-400 hover:text-primary-500 hover:bg-neutral-100 dark:hover:bg-neutral-700/50'
-                }`}
-              >
-                <Icon size={16} />
-                {tab.label}
-              </button>
-            );
-          })}
-        </div>
+      <AnimatePresence mode="wait">
+        {viewMode === 'timeline' && (
+          <motion.div
+            key="filter-tabs"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20, height: 0 }}
+            transition={{ duration: 0.3 }}
+            className="flex flex-wrap items-center justify-center gap-3 mb-6"
+          >
+            <div className="flex items-center gap-2">
+              {tabs.map((tab) => {
+                const Icon = tab.icon;
+                const isActive = activeTab === tab.key;
+                return (
+                  <button
+                    key={tab.key}
+                    onClick={() => setActiveTab(tab.key as TabType)}
+                    className={`flex items-center gap-2 px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
+                      isActive
+                        ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/30'
+                        : 'bg-neutral-50 dark:bg-neutral-800/50 text-neutral-600 dark:text-neutral-400 hover:text-primary-500 hover:bg-neutral-100 dark:hover:bg-neutral-700/50'
+                    }`}
+                  >
+                    <Icon size={16} />
+                    {tab.label}
+                  </button>
+                );
+              })}
+            </div>
 
-        <div className="w-px h-6 bg-primary/20" />
+            <div className="w-px h-6 bg-primary/20" />
 
-        <div className="flex items-center gap-2">
-          {canManageApi && (
-            <button
-              onClick={handleFullSync}
-              disabled={isRefreshing}
-              className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 bg-neutral-50 dark:bg-neutral-800/50 text-neutral-600 dark:text-neutral-400 hover:text-primary-500 hover:bg-neutral-100 dark:hover:bg-neutral-700/50 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <RefreshCw
-                size={16}
-                className={isRefreshing ? 'animate-spin' : ''}
-              />
-              全量同步
-            </button>
-          )}
-          {canManageApi && (
-            <button
-              onClick={() => setShowApiSettings(true)}
-              className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 bg-neutral-50 dark:bg-neutral-800/50 text-neutral-600 dark:text-neutral-400 hover:text-primary-500 hover:bg-neutral-100 dark:hover:bg-neutral-700/50"
-            >
-              <Settings size={16} />
-              <span className="hidden sm:inline">API设置</span>
-            </button>
-          )}
-        </div>
-      </motion.div>
+            <div className="flex items-center gap-2">
+              {canManageApi && (
+                <button
+                  onClick={handleFullSync}
+                  disabled={isRefreshing}
+                  className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 bg-neutral-50 dark:bg-neutral-800/50 text-neutral-600 dark:text-neutral-400 hover:text-primary-500 hover:bg-neutral-100 dark:hover:bg-neutral-700/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <RefreshCw
+                    size={16}
+                    className={isRefreshing ? 'animate-spin' : ''}
+                  />
+                  全量同步
+                </button>
+              )}
+              {canManageApi && (
+                <button
+                  onClick={() => setShowApiSettings(true)}
+                  className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 bg-neutral-50 dark:bg-neutral-800/50 text-neutral-600 dark:text-neutral-400 hover:text-primary-500 hover:bg-neutral-100 dark:hover:bg-neutral-700/50"
+                >
+                  <Settings size={16} />
+                  <span className="hidden sm:inline">API设置</span>
+                </button>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {apiConfig.apiKey && (
@@ -530,7 +543,7 @@ const MatchesPage = () => {
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3 }}
           >
-            <KnockoutBracket matches={matches} />
+            <KnockoutBracket matches={matches} bets={bets} users={users} />
           </motion.div>
         )}
       </AnimatePresence>
