@@ -461,7 +461,17 @@ export const fetchMatchesFromApi = async (
   const data = await fetchFootballApi<ApiMatchesResponse>(
     `competitions/${competitionId}/matches`
   );
-  return data.matches.map(apiMatchToLocal);
+  const matches = data.matches.map(apiMatchToLocal);
+  
+  const knockoutMatches = matches
+    .filter((m) => m.stage === 'knockout')
+    .sort((a, b) => new Date(a.matchTime).getTime() - new Date(b.matchTime).getTime());
+  
+  knockoutMatches.forEach((match, index) => {
+    match.matchNumber = String(index + 1);
+  });
+  
+  return matches;
 };
 
 export const fetchLiveMatches = async (): Promise<Match[]> => {

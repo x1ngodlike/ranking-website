@@ -10,6 +10,7 @@ interface KnockoutBracketProps {
 }
 
 const KNOCKOUT_ROUNDS = [
+  { key: 'round_of_32', name: '1/16决赛', count: 16 },
   { key: 'round_of_16', name: '1/8决赛', count: 8 },
   { key: 'quarter_final', name: '1/4决赛', count: 4 },
   { key: 'semi_final', name: '半决赛', count: 2 },
@@ -18,14 +19,15 @@ const KNOCKOUT_ROUNDS = [
 ];
 
 const getRoundKey = (matchNumber?: string): string => {
-  if (!matchNumber) return 'round_of_16';
+  if (!matchNumber) return 'round_of_32';
   const num = parseInt(matchNumber, 10);
-  if (num >= 1 && num <= 8) return 'round_of_16';
-  if (num >= 9 && num <= 12) return 'quarter_final';
-  if (num >= 13 && num <= 14) return 'semi_final';
-  if (num === 15) return 'third_place';
-  if (num === 16) return 'final';
-  return 'round_of_16';
+  if (num >= 1 && num <= 16) return 'round_of_32';
+  if (num >= 17 && num <= 24) return 'round_of_16';
+  if (num >= 25 && num <= 28) return 'quarter_final';
+  if (num >= 29 && num <= 30) return 'semi_final';
+  if (num === 31) return 'third_place';
+  if (num === 32) return 'final';
+  return 'round_of_32';
 };
 
 const getRoundMatches = (matches: Match[], roundKey: string): Match[] => {
@@ -169,7 +171,22 @@ const EmptyMatchCard = () => (
 
 const KnockoutBracket = ({ matches, bets = [], users = [] }: KnockoutBracketProps) => {
   const knockoutMatches = useMemo(() => {
-    return matches.filter((m) => m.stage === 'knockout');
+    const filtered = matches.filter((m) => m.stage === 'knockout');
+    
+    const hasMatchNumbers = filtered.some((m) => m.matchNumber);
+    
+    if (hasMatchNumbers) {
+      return filtered;
+    }
+    
+    const sorted = [...filtered].sort(
+      (a, b) => new Date(a.matchTime).getTime() - new Date(b.matchTime).getTime()
+    );
+    
+    return sorted.map((match, index) => ({
+      ...match,
+      matchNumber: String(index + 1),
+    }));
   }, [matches]);
 
   const bracketRounds = useMemo(() => {
