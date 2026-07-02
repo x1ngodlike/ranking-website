@@ -2,36 +2,28 @@ const fs = require('fs');
 const path = require('path');
 
 const buildPrompt = () => {
-  return `这是一张体育彩票/投注截图，请仔细分析图片内容。
+  return `分析这张体育彩票截图，识别以下信息并以JSON格式返回：
 
-任务：识别截图中投注的足球比赛信息。
+要求：
+1. 必须识别主队名称和客队名称（中文）
+2. 必须判断投注结果：胜=主队赢，负=客队赢，平=平局
+3. 根据投注结果预测比分（主队在前）
 
-体育彩票截图通常包含以下内容：
-- 比赛编号、日期、时间
-- 主队名称和客队名称（可能有国旗图标）
-- 投注选项：胜、负、平（或让球胜/负）
-- 赔率数值
+示例：
+- 如果投注"胜"，预测主队>客队（如1-0, 2-1）
+- 如果投注"负"，预测主队<客队（如0-1, 1-2）
+- 如果投注"平"，预测主队=客队（如1-1, 2-2）
 
-请识别以下信息并以JSON格式返回：
+返回格式：
 {
-  "homeTeam": "主队中文名称",
-  "awayTeam": "客队中文名称",
-  "predictedHomeScore": 预测主队得分(整数),
-  "predictedAwayScore": 预测客队得分(整数),
-  "confidence": 置信度(0-1之间的小数)
+  "homeTeam": "中文主队名",
+  "awayTeam": "中文客队名",
+  "betType": "胜/负/平",
+  "predictedHomeScore": 整数,
+  "predictedAwayScore": 整数
 }
 
-识别规则：
-1. 主队在前，客队在后，按照截图中的顺序
-2. 如果投注的是"胜"，说明用户预测主队赢，预测比分为主队>客队（如1-0, 2-1）
-3. 如果投注的是"负"，说明用户预测客队赢，预测比分为主队<客队（如0-1, 1-2）
-4. 如果投注的是"平"，说明用户预测平局，预测比分为主队=客队（如1-1, 2-2）
-5. 比分预测值可以根据赔率或直觉估算，只要胜负方向正确即可
-6. 球队名称必须用中文，如果截图中只有英文，翻译成中文
-7. 如果图片中没有明显的比分信息，可以根据投注选项推断
-8. 如果无法识别任何比赛信息，返回空对象 {}
-
-只返回JSON，不要包含任何解释或其他文字。`;
+只返回JSON，不要其他内容。`;
 };
 
 const recognizeBetImage = async (imagePath, aiConfig) => {
@@ -61,12 +53,15 @@ const recognizeBetImage = async (imagePath, aiConfig) => {
               type: 'image_url',
               image_url: {
                 url: base64Image,
+                detail: 'high',
               },
             },
           ],
         },
       ],
-      max_tokens: 500,
+      max_tokens: 1000,
+      temperature: 0.1,
+      response_format: { type: 'json_object' },
     }),
   });
 
@@ -78,18 +73,41 @@ const recognizeBetImage = async (imagePath, aiConfig) => {
   const data = await response.json();
   const content = data.choices?.[0]?.message?.content || '';
 
-  const jsonMatch = content.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) return null;
+  if (!content) return null;
 
-  const result = JSON.parse(jsonMatch[0]);
+  let result;
+  try {
+    result = JSON.parse(content);
+  } catch {
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) return null;
+    result = JSON.parse(jsonMatch[0]);
+  }
+
   if (!result.homeTeam || !result.awayTeam) return null;
 
+  let { predictedHomeScore, predictedAwayScore } = result;
+
+  if (!predictedHomeScore || !predictedAwayScore) {
+    const betType = result.betType || '';
+    if (betType === '胜') {
+      predictedHomeScore = 2;
+      predictedAwayScore = 1;
+    } else if (betType === '负') {
+      predictedHomeScore = 1;
+      predictedAwayScore = 2;
+    } else {
+      predictedHomeScore = 1;
+      predictedAwayScore = 1;
+    }
+  }
+
   return {
-    homeTeam: result.homeTeam,
-    awayTeam: result.awayTeam,
-    predictedHomeScore: Number(result.predictedHomeScore) || 0,
-    predictedAwayScore: Number(result.predictedAwayScore) || 0,
-    confidence: Number(result.confidence) || 0.5,
+    homeTeam: result.homeTeam.trim(),
+    awayTeam: result.awayTeam.trim(),
+    predictedHomeScore: Number(predictedHomeScore) || 0,
+    predictedAwayScore: Number(predictedAwayScore) || 0,
+    confidence: Number(result.confidence) || 0.7,
   };
 };
 

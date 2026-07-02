@@ -16,6 +16,81 @@ interface BetListProps {
   canDelete?: boolean;
 }
 
+const TEAM_ALIASES: Record<string, string[]> = {
+  '中国': ['中国', '中国队', '中国男足'],
+  '韩国': ['韩国', '韩国队', '南韩'],
+  '日本': ['日本', '日本队', '东瀛'],
+  '巴西': ['巴西', '巴西队'],
+  '阿根廷': ['阿根廷', '阿根廷队'],
+  '德国': ['德国', '德国队', '日耳曼'],
+  '法国': ['法国', '法国队', '高卢雄鸡'],
+  '西班牙': ['西班牙', '西班牙队'],
+  '英格兰': ['英格兰', '英格兰队', '三狮军团'],
+  '葡萄牙': ['葡萄牙', '葡萄牙队'],
+  '意大利': ['意大利', '意大利队', '蓝衣军团'],
+  '荷兰': ['荷兰', '荷兰队', '橙衣军团'],
+  '比利时': ['比利时', '比利时队'],
+  '瑞士': ['瑞士', '瑞士队'],
+  '墨西哥': ['墨西哥', '墨西哥队'],
+  '喀麦隆': ['喀麦隆', '喀麦隆队'],
+  '美国': ['美国', '美国队', '美利坚'],
+  '加拿大': ['加拿大', '加拿大队'],
+  '澳大利亚': ['澳大利亚', '澳大利亚队', '澳洲'],
+  '克罗地亚': ['克罗地亚', '克罗地亚队'],
+  '摩洛哥': ['摩洛哥', '摩洛哥队'],
+  '沙特': ['沙特', '沙特阿拉伯', '沙特队'],
+  '卡塔尔': ['卡塔尔', '卡塔尔队'],
+  '厄瓜多尔': ['厄瓜多尔', '厄瓜多尔队'],
+  '塞内加尔': ['塞内加尔', '塞内加尔队'],
+  '波兰': ['波兰', '波兰队'],
+  '突尼斯': ['突尼斯', '突尼斯队'],
+  '丹麦': ['丹麦', '丹麦队'],
+  '乌拉圭': ['乌拉圭', '乌拉圭队'],
+  '加纳': ['加纳', '加纳队'],
+  '哥斯达黎加': ['哥斯达黎加', '哥斯达黎加队'],
+  '塞尔维亚': ['塞尔维亚', '塞尔维亚队'],
+  '威尔士': ['威尔士', '威尔士队'],
+  '伊朗': ['伊朗', '伊朗队'],
+  '伊拉克': ['伊拉克', '伊拉克队'],
+  '阿联酋': ['阿联酋', '阿联酋队'],
+  '科威特': ['科威特', '科威特队'],
+};
+
+const normalizeTeamName = (name: string): string => {
+  if (!name) return '';
+  let normalized = name.trim().replace(/[\s\-_队国]/g, '');
+  for (const [standard, aliases] of Object.entries(TEAM_ALIASES)) {
+    if (aliases.some(alias => name.includes(alias) || alias.includes(name))) {
+      return standard;
+    }
+  }
+  return normalized;
+};
+
+const findBestMatch = (matches: Match[], homeTeam: string, awayTeam: string): Match | undefined => {
+  const normalizedHome = normalizeTeamName(homeTeam);
+  const normalizedAway = normalizeTeamName(awayTeam);
+
+  const scoredMatches = matches.map(match => {
+    const matchHome = normalizeTeamName(match.homeTeam);
+    const matchAway = normalizeTeamName(match.awayTeam);
+
+    let score = 0;
+
+    if (matchHome.includes(normalizedHome) || normalizedHome.includes(matchHome)) score += 2;
+    if (matchAway.includes(normalizedAway) || normalizedAway.includes(matchAway)) score += 2;
+
+    if (match.homeTeam.includes(homeTeam) || homeTeam.includes(match.homeTeam)) score += 1;
+    if (match.awayTeam.includes(awayTeam) || awayTeam.includes(match.awayTeam)) score += 1;
+
+    return { match, score };
+  }).filter(m => m.score > 0);
+
+  scoredMatches.sort((a, b) => b.score - a.score);
+
+  return scoredMatches.length > 0 ? scoredMatches[0].match : undefined;
+};
+
 const BetList = ({ bets, showUser = false, canDelete = false }: BetListProps) => {
   const users = useAppStore((state) => state.users);
   const matches = useAppStore((state) => state.matches);
@@ -53,10 +128,7 @@ const BetList = ({ bets, showUser = false, canDelete = false }: BetListProps) =>
       const res = await api.recognizeBetImage(bet.imageUrl);
 
       if (res.success && res.result) {
-        const matched = matches.find((m) =>
-          (m.homeTeam.includes(res.result!.homeTeam) || res.result!.homeTeam.includes(m.homeTeam)) &&
-          (m.awayTeam.includes(res.result!.awayTeam) || res.result!.awayTeam.includes(m.awayTeam))
-        );
+        const matched = findBestMatch(matches, res.result.homeTeam, res.result.awayTeam);
 
         if (matched) {
           await updateBet(bet.id, {
