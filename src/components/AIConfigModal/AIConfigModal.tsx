@@ -14,6 +14,7 @@ const AIConfigModal = ({ isOpen, onClose }: AIConfigModalProps) => {
     apiEndpoint: '',
     apiKey: '',
     model: 'deepseek-v4-flash',
+    siteUrl: '',
   });
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -170,6 +171,25 @@ const AIConfigModal = ({ isOpen, onClose }: AIConfigModalProps) => {
                     />
                     <p className="text-xs text-neutral-500 mt-1">
                       例如：deepseek-v4-flash、gpt-4o、claude-3-sonnet 等
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                      <div className="flex items-center gap-1.5">
+                        <Globe size={14} />
+                        官网地址 <span className="text-neutral-400 font-normal">(可选)</span>
+                      </div>
+                    </label>
+                    <input
+                      type="text"
+                      value={config.siteUrl}
+                      onChange={(e) => setConfig({ ...config, siteUrl: e.target.value })}
+                      placeholder="https://your-domain.com"
+                      className="w-full px-4 py-3 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-neutral-800 dark:text-neutral-200 focus:outline-none focus:border-primary-500/50 transition-colors text-sm"
+                    />
+                    <p className="text-xs text-neutral-500 mt-1">
+                      配置后AI识别将直接通过URL访问图片（无需转base64），速度更快、清晰度更高
                     </p>
                   </div>
 

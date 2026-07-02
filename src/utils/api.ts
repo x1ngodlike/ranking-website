@@ -207,6 +207,7 @@ export interface AIConfigResponse {
   apiEndpoint: string;
   apiKey: string;
   model: string;
+  siteUrl: string;
 }
 
 export interface AIRecognitionResult {

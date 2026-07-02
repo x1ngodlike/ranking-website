@@ -26,13 +26,21 @@ const buildPrompt = () => {
 只返回JSON，不要其他内容。`;
 };
 
-const recognizeBetImage = async (imagePath, aiConfig) => {
+const recognizeBetImage = async (imagePath, imageUrl, aiConfig) => {
   if (!aiConfig || !aiConfig.apiKey) {
     throw new Error('AI API密钥未配置');
   }
 
-  const imageBuffer = fs.readFileSync(imagePath);
-  const base64Image = `data:image/jpeg;base64,${imageBuffer.toString('base64')}`;
+  // 优先使用官网URL方式（更高效，请求体更小）
+  let imageSource;
+  if (aiConfig.siteUrl && imageUrl) {
+    const baseUrl = aiConfig.siteUrl.replace(/\/+$/, '');
+    imageSource = { url: `${baseUrl}${imageUrl}` };
+  } else {
+    // fallback: 读取文件转base64
+    const imageBuffer = fs.readFileSync(imagePath);
+    imageSource = { url: `data:image/jpeg;base64,${imageBuffer.toString('base64')}` };
+  }
 
   const prompt = buildPrompt();
 
@@ -52,7 +60,7 @@ const recognizeBetImage = async (imagePath, aiConfig) => {
             {
               type: 'image_url',
               image_url: {
-                url: base64Image,
+                ...imageSource,
                 detail: 'high',
               },
             },

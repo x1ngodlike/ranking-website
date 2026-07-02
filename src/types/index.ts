@@ -42,6 +42,7 @@ export interface AIConfig {
   apiEndpoint: string;
   apiKey: string;
   model: string;
+  siteUrl: string;
 }
 
 export interface UserBadge {

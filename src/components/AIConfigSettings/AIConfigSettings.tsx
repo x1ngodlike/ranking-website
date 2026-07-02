@@ -12,6 +12,7 @@ const AIConfigSettings = ({ onClose }: AIConfigSettingsProps) => {
     apiEndpoint: '',
     apiKey: '',
     model: 'deepseek-v4-flash',
+    siteUrl: '',
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);

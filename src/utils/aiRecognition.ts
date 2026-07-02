@@ -12,6 +12,7 @@ const DEFAULT_CONFIG: AIConfig = {
   apiEndpoint: 'https://api.deepseek.com/v1/chat/completions',
   apiKey: '',
   model: 'deepseek-v4-flash',
+  siteUrl: '',
 };
 
 function getStoredConfig(): AIConfig {

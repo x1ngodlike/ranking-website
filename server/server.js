@@ -664,7 +664,7 @@ app.post('/api/ai/recognize', async (req, res) => {
       return res.status(400).json({ success: false, message: '图片文件不存在' });
     }
 
-    const result = await recognizeBetImage(imagePath, aiConfig);
+    const result = await recognizeBetImage(imagePath, imageUrl, aiConfig);
     if (!result) {
       return res.json({ success: true, result: null, message: '未能识别出比赛信息' });
     }
