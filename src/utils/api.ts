@@ -211,9 +211,5 @@ export interface AIConfigResponse {
 }
 
 export interface AIRecognitionResult {
-  homeTeam: string;
-  awayTeam: string;
-  predictedHomeScore: number;
-  predictedAwayScore: number;
-  confidence: number;
+  comment: string;
 }

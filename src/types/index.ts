@@ -36,6 +36,8 @@ export interface Bet {
   matchId?: string;
   predictedHomeScore?: number;
   predictedAwayScore?: number;
+  // AI简评
+  aiComment?: string;
 }
 
 export interface AIConfig {
