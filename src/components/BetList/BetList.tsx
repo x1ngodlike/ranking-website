@@ -68,9 +68,13 @@ const normalizeTeamName = (name: string | null | undefined): string => {
   return normalized;
 };
 
-const findBestMatch = (matches: Match[], homeTeam: string, awayTeam: string): Match | undefined => {
+const findBestMatch = (matches: Match[], homeTeam: string | null | undefined, awayTeam: string | null | undefined): Match | undefined => {
+  if (!homeTeam || !awayTeam) return undefined;
+  
   const normalizedHome = normalizeTeamName(homeTeam);
   const normalizedAway = normalizeTeamName(awayTeam);
+
+  if (!normalizedHome || !normalizedAway) return undefined;
 
   const scoredMatches = matches.map(match => {
     const matchHome = normalizeTeamName(match.homeTeam);
@@ -78,11 +82,16 @@ const findBestMatch = (matches: Match[], homeTeam: string, awayTeam: string): Ma
 
     let score = 0;
 
-    if (matchHome.includes(normalizedHome) || normalizedHome.includes(matchHome)) score += 2;
-    if (matchAway.includes(normalizedAway) || normalizedAway.includes(matchAway)) score += 2;
+    if (matchHome && normalizedHome && (matchHome.includes(normalizedHome) || normalizedHome.includes(matchHome))) score += 2;
+    if (matchAway && normalizedAway && (matchAway.includes(normalizedAway) || normalizedAway.includes(matchAway))) score += 2;
 
-    if (match.homeTeam.includes(homeTeam) || homeTeam.includes(match.homeTeam)) score += 1;
-    if (match.awayTeam.includes(awayTeam) || awayTeam.includes(match.awayTeam)) score += 1;
+    const strHomeTeam = String(homeTeam || '');
+    const strAwayTeam = String(awayTeam || '');
+    const strMatchHome = String(match.homeTeam || '');
+    const strMatchAway = String(match.awayTeam || '');
+
+    if (strMatchHome && strHomeTeam && (strMatchHome.includes(strHomeTeam) || strHomeTeam.includes(strMatchHome))) score += 1;
+    if (strMatchAway && strAwayTeam && (strMatchAway.includes(strAwayTeam) || strAwayTeam.includes(strMatchAway))) score += 1;
 
     return { match, score };
   }).filter(m => m.score > 0);
