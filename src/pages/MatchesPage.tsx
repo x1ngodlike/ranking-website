@@ -234,7 +234,7 @@ const MatchesPage = () => {
             }`}
           >
             <GitBranch size={16} />
-            淘汰赛对阵
+            淘汰赛
           </button>
         </div>
       </motion.div>
@@ -537,7 +537,11 @@ const MatchesPage = () => {
               </p>
             </motion.div>
           )
-        ) : (
+        ) : null}
+      </AnimatePresence>
+
+      <AnimatePresence mode="wait">
+        {viewMode === 'bracket' && (
           <motion.div
             key="bracket"
             initial={{ opacity: 0, y: 20 }}
@@ -545,7 +549,7 @@ const MatchesPage = () => {
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3 }}
           >
-            <KnockoutBracket matches={matches} bets={bets} users={users} />
+            <KnockoutBracket />
           </motion.div>
         )}
       </AnimatePresence>

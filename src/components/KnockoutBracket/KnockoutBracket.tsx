@@ -1,13 +1,10 @@
 import { useMemo } from 'react';
+import { useAppStore } from '@/store/useAppStore';
 import type { Match, Bet, User } from '@/types';
 import { formatDate } from '@/utils/helpers';
 import Avatar from '@/components/Avatar';
 
-interface KnockoutBracketProps {
-  matches: Match[];
-  bets?: Bet[];
-  users?: User[];
-}
+interface KnockoutBracketProps {}
 
 const KNOCKOUT_ROUNDS = [
   { key: 'round_of_32', name: '1/16决赛', count: 16 },
@@ -41,7 +38,6 @@ const getRoundMatches = (matches: Match[], roundKey: string): Match[] => {
     });
 };
 
-// 判断预测是否正确（胜负方向正确即可）
 const isPredictionCorrect = (match: Match, bet: Bet): boolean => {
   if (!match.homeScore || !match.awayScore || !bet.predictedHomeScore || !bet.predictedAwayScore) {
     return false;
@@ -51,14 +47,13 @@ const isPredictionCorrect = (match: Match, bet: Bet): boolean => {
   return actualWinner === predictedWinner;
 };
 
-// 获取猜对比赛的用户列表
 const getCorrectPredictUsers = (match: Match, bets: Bet[], users: User[]): User[] => {
   if (!bets || !users || match.status !== 'finished') return [];
-  
-  const correctBets = bets.filter((bet) => 
+
+  const correctBets = bets.filter((bet) =>
     bet.matchId === match.id && isPredictionCorrect(match, bet)
   );
-  
+
   const userMap = new Map(users.map((u) => [u.id, u]));
   return correctBets
     .map((bet) => userMap.get(bet.userId))
@@ -78,66 +73,61 @@ const MatchCard = ({ match, bets, users }: { match: Match; bets?: Bet[]; users?:
   }, [match, bets, users]);
 
   return (
-    <div className="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg p-2.5 shadow-sm hover:shadow-md transition-shadow">
-      <div className="flex items-center justify-between gap-1 mb-1">
-        <span className="text-xs text-neutral-500 dark:text-neutral-400">
+    <div className="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-md p-1.5 shadow-sm hover:shadow-md transition-shadow">
+      <div className="flex items-center justify-between gap-1 mb-0.5">
+        <span className="text-[9px] text-neutral-500 dark:text-neutral-400">
           {formatDate(match.matchTime)}
         </span>
-        <span className={`text-xs ${isFinished ? 'text-green-500' : 'text-neutral-400'}`}>
+        <span className={`text-[9px] ${isFinished ? 'text-green-500' : 'text-neutral-400'}`}>
           {isFinished ? '已结束' : '未开赛'}
         </span>
       </div>
 
-      {/* 主队 - 上方 */}
-      <div className={`flex items-center gap-2 p-1.5 rounded ${homeWon ? 'bg-red-50 dark:bg-red-900/10' : ''}`}>
-        <span className="text-base flex-shrink-0">{match.homeFlag || '⚪'}</span>
-        <span className={`text-sm truncate flex-1 ${homeWon ? 'text-red-600 dark:text-red-400 font-bold' : 'text-neutral-800 dark:text-neutral-200'}`}>
+      <div className={`flex items-center gap-1 px-1 py-0.5 rounded ${homeWon ? 'bg-red-50 dark:bg-red-900/10' : ''}`}>
+        <span className="text-xs flex-shrink-0">{match.homeFlag || '⚪'}</span>
+        <span className={`text-[11px] truncate flex-1 ${homeWon ? 'text-red-600 dark:text-red-400 font-bold' : 'text-neutral-800 dark:text-neutral-200'}`}>
           {match.homeTeam || '待定'}
         </span>
         {match.homeScore !== null && match.awayScore !== null && (
-          <span className={`font-display text-sm flex-shrink-0 ${homeWon ? 'text-red-600 dark:text-red-400 font-bold' : 'text-neutral-800 dark:text-neutral-200'}`}>
+          <span className={`font-display text-[11px] flex-shrink-0 ${homeWon ? 'text-red-600 dark:text-red-400 font-bold' : 'text-neutral-800 dark:text-neutral-200'}`}>
             {match.homeScore}
           </span>
         )}
       </div>
 
-      {/* 客队 - 下方 */}
-      <div className={`flex items-center gap-2 p-1.5 rounded ${awayWon ? 'bg-red-50 dark:bg-red-900/10' : ''}`}>
-        <span className="text-base flex-shrink-0">{match.awayFlag || '⚪'}</span>
-        <span className={`text-sm truncate flex-1 ${awayWon ? 'text-red-600 dark:text-red-400 font-bold' : 'text-neutral-800 dark:text-neutral-200'}`}>
+      <div className={`flex items-center gap-1 px-1 py-0.5 rounded ${awayWon ? 'bg-red-50 dark:bg-red-900/10' : ''}`}>
+        <span className="text-xs flex-shrink-0">{match.awayFlag || '⚪'}</span>
+        <span className={`text-[11px] truncate flex-1 ${awayWon ? 'text-red-600 dark:text-red-400 font-bold' : 'text-neutral-800 dark:text-neutral-200'}`}>
           {match.awayTeam || '待定'}
         </span>
         {match.homeScore !== null && match.awayScore !== null && (
-          <span className={`font-display text-sm flex-shrink-0 ${awayWon ? 'text-red-600 dark:text-red-400 font-bold' : 'text-neutral-800 dark:text-neutral-200'}`}>
+          <span className={`font-display text-[11px] flex-shrink-0 ${awayWon ? 'text-red-600 dark:text-red-400 font-bold' : 'text-neutral-800 dark:text-neutral-200'}`}>
             {match.awayScore}
           </span>
         )}
       </div>
 
-
-
-      {/* 猜对用户的头像展示 */}
       {correctUsers.length > 0 && (
-        <div className="mt-2 pt-2 border-t border-neutral-100 dark:border-neutral-700">
-          <div className="flex items-center gap-1">
-            <span className="text-[10px] text-neutral-400 mr-1">猜对:</span>
-            <div className="flex -space-x-1.5">
+        <div className="mt-1 pt-1 border-t border-neutral-100 dark:border-neutral-700">
+          <div className="flex items-center gap-0.5">
+            <span className="text-[8px] text-neutral-400 mr-0.5">猜对:</span>
+            <div className="flex -space-x-1">
               {correctUsers.slice(0, 5).map((user) => (
                 <div key={user.id} className="relative group">
-                  <Avatar 
-                    src={user.avatar} 
-                    alt={user.nickname} 
-                    size="xs" 
-                    className="w-5 h-5 ring-1 ring-white dark:ring-neutral-800"
+                  <Avatar
+                    src={user.avatar}
+                    alt={user.nickname}
+                    size="xs"
+                    className="w-4 h-4 ring-1 ring-white dark:ring-neutral-800"
                   />
-                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-neutral-800 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-1.5 py-0.5 bg-neutral-800 text-white text-[9px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
                     {user.nickname}
                   </div>
                 </div>
               ))}
               {correctUsers.length > 5 && (
-                <div className="w-5 h-5 rounded-full bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center ring-1 ring-white dark:ring-neutral-800">
-                  <span className="text-[8px] text-neutral-600 dark:text-neutral-400">+{correctUsers.length - 5}</span>
+                <div className="w-4 h-4 rounded-full bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center ring-1 ring-white dark:ring-neutral-800">
+                  <span className="text-[7px] text-neutral-600 dark:text-neutral-400">+{correctUsers.length - 5}</span>
                 </div>
               )}
             </div>
@@ -149,40 +139,49 @@ const MatchCard = ({ match, bets, users }: { match: Match; bets?: Bet[]; users?:
 };
 
 const EmptyMatchCard = () => (
-  <div className="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg p-2.5 shadow-sm hover:shadow-md transition-shadow">
-    <div className="flex items-center justify-between gap-1 mb-1">
-      <span className="text-xs text-neutral-500 dark:text-neutral-400">--/-- --:--</span>
-      <span className="text-xs text-neutral-400">未开赛</span>
+  <div className="bg-white/50 dark:bg-neutral-800/50 border border-dashed border-neutral-200 dark:border-neutral-700 rounded-md p-1.5">
+    <div className="flex items-center justify-between gap-1 mb-0.5">
+      <span className="text-[9px] text-neutral-400">--/--</span>
+      <span className="text-[9px] text-neutral-400">待定</span>
     </div>
-
-    <div className="flex items-center gap-2 p-1.5 rounded">
-      <span className="text-base flex-shrink-0">⚪</span>
-      <span className="text-sm truncate flex-1 text-neutral-800 dark:text-neutral-200">待定</span>
+    <div className="flex items-center gap-1 px-1 py-0.5">
+      <span className="text-xs flex-shrink-0">⚪</span>
+      <span className="text-[11px] truncate flex-1 text-neutral-400">待定</span>
     </div>
-
-    <div className="flex items-center gap-2 p-1.5 rounded">
-      <span className="text-base flex-shrink-0">⚪</span>
-      <span className="text-sm truncate flex-1 text-neutral-800 dark:text-neutral-200">待定</span>
+    <div className="flex items-center gap-1 px-1 py-0.5">
+      <span className="text-xs flex-shrink-0">⚪</span>
+      <span className="text-[11px] truncate flex-1 text-neutral-400">待定</span>
     </div>
   </div>
 );
 
+const PairConnector = () => (
+  <div className="absolute right-[-12px] top-0 bottom-0 w-3 pointer-events-none z-0">
+    <div className="absolute top-1/4 left-0 w-full h-px bg-neutral-300 dark:bg-neutral-600" />
+    <div className="absolute top-3/4 left-0 w-full h-px bg-neutral-300 dark:bg-neutral-600" />
+    <div className="absolute top-1/4 bottom-1/4 right-0 w-px bg-neutral-300 dark:bg-neutral-600" />
+    <div className="absolute top-1/2 left-full w-full h-px bg-neutral-300 dark:bg-neutral-600" />
+  </div>
+);
 
+const KnockoutBracket = () => {
+  const matches = useAppStore((state) => state.matches);
+  const bets = useAppStore((state) => state.bets);
+  const users = useAppStore((state) => state.users);
 
-const KnockoutBracket = ({ matches, bets = [], users = [] }: KnockoutBracketProps) => {
   const knockoutMatches = useMemo(() => {
     const filtered = matches.filter((m) => m.stage === 'knockout');
-    
+
     const hasMatchNumbers = filtered.some((m) => m.matchNumber);
-    
+
     if (hasMatchNumbers) {
       return filtered;
     }
-    
+
     const sorted = [...filtered].sort(
       (a, b) => new Date(a.matchTime).getTime() - new Date(b.matchTime).getTime()
     );
-    
+
     return sorted.map((match, index) => ({
       ...match,
       matchNumber: String(index + 1),
@@ -221,54 +220,90 @@ const KnockoutBracket = ({ matches, bets = [], users = [] }: KnockoutBracketProp
     );
   }
 
-  // 决赛和季军赛单独处理，放在最后两列
   const mainRounds = bracketRounds.filter((r) => r.name !== '季军赛');
   const thirdPlaceRound = bracketRounds.find((r) => r.name === '季军赛');
 
+  const renderRound = (round: typeof bracketRounds[0], isLastRound: boolean) => {
+    const cardSlots = Array.from({ length: round.count }).map((_, index) =>
+      round.matches[index] || null
+    );
+
+    if (round.count === 1) {
+      return (
+        <div key={round.name} className="flex flex-col w-[130px] sm:w-[150px] flex-shrink-0">
+          <div className="mb-2 text-center">
+            <h3 className={`font-display text-xs font-bold ${round.name === '决赛' ? 'text-amber-600 dark:text-amber-400' : 'text-amber-600 dark:text-amber-400'}`}>
+              {round.name}
+            </h3>
+          </div>
+          <div className="flex flex-col justify-center flex-1">
+            {cardSlots[0] ? (
+              <MatchCard match={cardSlots[0]} bets={bets} users={users} />
+            ) : (
+              <EmptyMatchCard />
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    const pairs: (Match | null)[][] = [];
+    for (let i = 0; i < cardSlots.length; i += 2) {
+      pairs.push([cardSlots[i], cardSlots[i + 1] || null]);
+    }
+
+    return (
+      <div key={round.name} className="flex flex-col w-[130px] sm:w-[150px] flex-shrink-0">
+        <div className="mb-2 text-center">
+          <h3 className="font-display text-xs font-bold text-blue-600 dark:text-blue-400">
+            {round.name}
+          </h3>
+        </div>
+        <div className="flex flex-col flex-1 gap-[5px] justify-around">
+          {pairs.map((pair, pairIndex) => (
+            <div
+              key={pairIndex}
+              className="relative flex flex-col gap-[5px]"
+            >
+              {pair[0] ? (
+                <MatchCard match={pair[0]} bets={bets} users={users} />
+              ) : (
+                <EmptyMatchCard />
+              )}
+              {pair[1] ? (
+                <MatchCard match={pair[1]} bets={bets} users={users} />
+              ) : (
+                <EmptyMatchCard />
+              )}
+              {!isLastRound && <PairConnector />}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="overflow-x-auto pb-4 -mx-4 px-4">
-      <div className="flex gap-4 min-w-max items-stretch">
-        {mainRounds.map((round) => (
-          <div key={round.name} className="flex flex-col w-[180px] sm:w-[200px] flex-shrink-0">
-            <div className="mb-4 text-center">
-              <h3 className={`font-display text-base font-bold ${round.name === '决赛' ? 'text-amber-600 dark:text-amber-400' : 'text-blue-600 dark:text-blue-400'}`}>
-                {round.name}
-              </h3>
-            </div>
+      <div className="flex gap-3 min-w-max items-stretch">
+        {mainRounds.map((round, roundIndex) => {
+          const isLastRound = roundIndex === mainRounds.length - 1;
+          return renderRound(round, isLastRound);
+        })}
 
-            {/* 比赛列表 - 显示固定数量的卡片，有数据显示MatchCard，无数据显示占位 */}
-            <div className="flex flex-col justify-around flex-1 gap-3">
-              {Array.from({ length: round.count }).map((_, index) => {
-                const matchIndex = index;
-                const match = round.matches[matchIndex];
-                
-                if (match) {
-                  return <MatchCard key={match.id} match={match} bets={bets} users={users} />;
-                } else {
-                  return <EmptyMatchCard key={`${round.key}-${index}`} />;
-                }
-              })}
-            </div>
-          </div>
-        ))}
-
-        {/* 季军赛作为独立列放在决赛后面 */}
         {thirdPlaceRound && (
-          <div className="flex flex-col w-[180px] sm:w-[200px] flex-shrink-0">
-            <div className="mb-4 text-center">
-              <h3 className="font-display text-base text-amber-600 dark:text-amber-400 font-bold">
+          <div className="flex flex-col w-[130px] sm:w-[150px] flex-shrink-0">
+            <div className="mb-2 text-center">
+              <h3 className="font-display text-xs text-amber-600 dark:text-amber-400 font-bold">
                 {thirdPlaceRound.name}
               </h3>
             </div>
-            <div className="flex flex-col justify-around flex-1 gap-3">
-              {Array.from({ length: thirdPlaceRound.count }).map((_, index) => {
-                const match = thirdPlaceRound.matches[index];
-                if (match) {
-                  return <MatchCard key={match.id} match={match} bets={bets} users={users} />;
-                } else {
-                  return <EmptyMatchCard key={`${thirdPlaceRound.key}-${index}`} />;
-                }
-              })}
+            <div className="flex flex-col justify-center flex-1">
+              {thirdPlaceRound.matches[0] ? (
+                <MatchCard match={thirdPlaceRound.matches[0]} bets={bets} users={users} />
+              ) : (
+                <EmptyMatchCard />
+              )}
             </div>
           </div>
         )}
