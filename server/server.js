@@ -189,6 +189,24 @@ const writeData = (env, data) => {
   writeJsonFile(getDataFile(env), dataToSave);
 };
 
+const getWinner = (match) => {
+  if (match.status !== 'finished' || match.homeScore === null || match.awayScore === null) return null;
+  if (match.homeScore > match.awayScore) return match.homeTeam;
+  if (match.awayScore > match.homeScore) return match.awayTeam;
+  if (match.homePenaltyScore !== null && match.awayPenaltyScore !== null) {
+    if (match.homePenaltyScore > match.awayPenaltyScore) return match.homeTeam;
+    if (match.awayPenaltyScore > match.homePenaltyScore) return match.awayTeam;
+  }
+  return null;
+};
+
+const getWinnerFlag = (match) => {
+  const winner = getWinner(match);
+  if (!winner) return null;
+  if (winner === match.homeTeam) return match.homeFlag;
+  return match.awayFlag;
+};
+
 const sortKnockoutMatches = (matches) => {
   const roundOrder = {
     'round_of_32': 1,
@@ -201,6 +219,10 @@ const sortKnockoutMatches = (matches) => {
   
   const roundOf32 = matches.filter(m => m.roundKey === 'round_of_32');
   const roundOf16 = matches.filter(m => m.roundKey === 'round_of_16');
+  const quarterFinals = matches.filter(m => m.roundKey === 'quarter_final');
+  const semiFinals = matches.filter(m => m.roundKey === 'semi_final');
+  const finalMatch = matches.filter(m => m.roundKey === 'final');
+  const thirdPlace = matches.filter(m => m.roundKey === 'third_place');
   
   const teamToMatch32 = new Map();
   roundOf32.forEach(match => {
@@ -301,6 +323,57 @@ const sortKnockoutMatches = (matches) => {
       usedIds16.add(match.id);
     }
   });
+  
+  // 根据上一轮已结束的比赛，推断下一轮的待定对阵
+  const inferNextRound = (currentRoundSorted, nextRoundSorted, fixedOrder) => {
+    nextRoundSorted.forEach((nextMatch, idx) => {
+      if (idx >= currentRoundSorted.length / 2) return;
+      
+      const match1 = currentRoundSorted[idx * 2];
+      const match2 = currentRoundSorted[idx * 2 + 1];
+      if (!match1 || !match2) return;
+      
+      const winner1 = getWinner(match1);
+      const winner2 = getWinner(match2);
+      const flag1 = getWinnerFlag(match1);
+      const flag2 = getWinnerFlag(match2);
+      
+      const needsHomeInfer = !nextMatch.homeTeam || nextMatch.homeTeam === 'None' || nextMatch.homeTeam === '待定';
+      const needsAwayInfer = !nextMatch.awayTeam || nextMatch.awayTeam === 'None' || nextMatch.awayTeam === '待定';
+      
+      if (winner1 && needsHomeInfer) {
+        nextMatch.homeTeam = winner1;
+        nextMatch.homeFlag = flag1 || nextMatch.homeFlag;
+      }
+      if (winner2 && needsAwayInfer) {
+        nextMatch.awayTeam = winner2;
+        nextMatch.awayFlag = flag2 || nextMatch.awayFlag;
+      }
+    });
+  };
+  
+  // 1/16 → 1/8
+  inferNextRound(sorted32, sorted16, order16);
+  
+  // 1/8 → 1/4
+  const sortedQF = [...quarterFinals].sort((a, b) => {
+    const idA = parseInt(a.id.replace('api_', '') || '0', 10);
+    const idB = parseInt(b.id.replace('api_', '') || '0', 10);
+    return idA - idB;
+  });
+  inferNextRound(sorted16, sortedQF);
+  
+  // 1/4 → 半决赛
+  const sortedSF = [...semiFinals].sort((a, b) => {
+    const idA = parseInt(a.id.replace('api_', '') || '0', 10);
+    const idB = parseInt(b.id.replace('api_', '') || '0', 10);
+    return idA - idB;
+  });
+  inferNextRound(sortedQF, sortedSF);
+  
+  // 半决赛 → 决赛
+  const sortedFinal = [...finalMatch];
+  inferNextRound(sortedSF, sortedFinal);
   
   return [...matches].sort((a, b) => {
     if (a.stage === 'knockout' && b.stage === 'knockout') {
@@ -789,7 +862,7 @@ app.post('/api/upload/bet', uploadBet.single('file'), (req, res) => {
 
 app.post('/api/ai/recognize', async (req, res) => {
   try {
-    const { imageUrl } = req.body;
+    const { imageUrl, winAmount } = req.body;
     if (!imageUrl) {
       return res.status(400).json({ success: false, message: '缺少图片URL' });
     }
@@ -804,7 +877,7 @@ app.post('/api/ai/recognize', async (req, res) => {
       return res.status(400).json({ success: false, message: '图片文件不存在' });
     }
 
-    const result = await recognizeBetImage(imagePath, imageUrl, aiConfig, readMatches());
+    const result = await recognizeBetImage(imagePath, imageUrl, aiConfig, readMatches(), winAmount);
     if (!result) {
       return res.json({ success: true, result: null, message: '未能识别出比赛信息' });
     }

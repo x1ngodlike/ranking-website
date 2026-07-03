@@ -142,13 +142,23 @@ const apiMatchToLocal = (apiMatch) => {
     const pAway = penalties?.away ?? 0;
 
     if (ftHome !== null) {
-      homeScore = ftHome - etHome - pHome;
+      // 如果有加时赛但没有点球，显示总比分（常规时间+加时赛）
+      // 如果有点球，显示常规时间比分（减去加时赛和点球）
+      if (penalties?.home !== null && penalties?.away !== null) {
+        homeScore = ftHome - etHome - pHome;
+      } else {
+        homeScore = ftHome;
+      }
     } else if (halfTime?.home !== null) {
       homeScore = halfTime.home;
     }
 
     if (ftAway !== null) {
-      awayScore = ftAway - etAway - pAway;
+      if (penalties?.home !== null && penalties?.away !== null) {
+        awayScore = ftAway - etAway - pAway;
+      } else {
+        awayScore = ftAway;
+      }
     } else if (halfTime?.away !== null) {
       awayScore = halfTime.away;
     }

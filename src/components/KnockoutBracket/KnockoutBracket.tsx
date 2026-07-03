@@ -44,7 +44,13 @@ const getRoundMatches = (matches: Match[], roundKey: string): Match[] => {
 const MatchCard = ({ match }: { match: Match }) => {
   const isFinished = match.status === 'finished';
   const winner = isFinished && match.homeScore !== null && match.awayScore !== null
-    ? (match.homeScore > match.awayScore ? 'home' : 'away')
+    ? (match.homeScore > match.awayScore 
+        ? 'home' 
+        : match.homeScore < match.awayScore 
+          ? 'away' 
+          : match.homePenaltyScore !== null && match.awayPenaltyScore !== null
+            ? (match.homePenaltyScore > match.awayPenaltyScore ? 'home' : 'away')
+            : null)
     : null;
   const homeWon = winner === 'home';
   const awayWon = winner === 'away';

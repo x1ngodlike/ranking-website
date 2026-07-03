@@ -176,10 +176,10 @@ export const api = {
       body: JSON.stringify(config),
     }, true),
 
-  recognizeBetImage: (imageUrl: string) =>
+  recognizeBetImage: (imageUrl: string, winAmount?: number) =>
     request<{ success: boolean; result: AIRecognitionResult | null; message?: string }>('/api/ai/recognize', {
       method: 'POST',
-      body: JSON.stringify({ imageUrl }),
+      body: JSON.stringify({ imageUrl, winAmount }),
     }, false),
 };
 

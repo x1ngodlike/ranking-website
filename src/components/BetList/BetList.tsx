@@ -50,7 +50,7 @@ const BetList = ({ bets, showUser = false, canDelete = false }: BetListProps) =>
     try {
       setRecognitionStatus('AI正在分析图片内容...');
       
-      const res = await api.recognizeBetImage(bet.imageUrl);
+      const res = await api.recognizeBetImage(bet.imageUrl, bet.winAmount);
 
       if (res.success && res.result?.comment) {
         setRecognitionStatus('正在保存AI简述...');
@@ -140,40 +140,6 @@ const BetList = ({ bets, showUser = false, canDelete = false }: BetListProps) =>
                   </div>
                 )}
 
-                {/* AI简述展示 */}
-                {bet.aiComment && !isRecognizing && (
-                  <div className="mt-2 p-2 rounded-lg bg-primary-50/50 dark:bg-primary-900/10 border border-primary-200/50 dark:border-primary-800/30">
-                    <div className="flex items-center gap-1.5 mb-1">
-                      <Sparkles size={13} className="text-primary-500" />
-                      <span className="text-xs font-medium text-primary-700 dark:text-primary-300">
-                        AI简述
-                      </span>
-                    </div>
-                    <p className="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                      {bet.aiComment}
-                    </p>
-                  </div>
-                )}
-
-                {/* 识别进度 */}
-                {isRecognizing && (
-                  <div className="mt-2 p-2 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 flex items-center gap-2">
-                    <Loader2 size={14} className="animate-spin text-blue-500" />
-                    <span className="text-xs text-blue-700 dark:text-blue-300">
-                      {recognitionStatus || 'AI识别中...'}
-                    </span>
-                  </div>
-                )}
-
-                {/* 错误提示 */}
-                {error && (
-                  <div className="mt-2 p-2 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 flex items-start gap-1.5">
-                    <AlertCircle size={14} className="text-red-500 flex-shrink-0 mt-0.5" />
-                    <p className="text-xs text-red-600 dark:text-red-400">
-                      {error}
-                    </p>
-                  </div>
-                )}
               </div>
 
               <div className="text-right flex-shrink-0 min-w-[80px]">
@@ -219,6 +185,41 @@ const BetList = ({ bets, showUser = false, canDelete = false }: BetListProps) =>
                 )}
               </div>
             </div>
+
+            {/* AI简述展示 - 放在外层，横跨整个卡片宽度 */}
+            {bet.aiComment && !isRecognizing && (
+              <div className="mt-2 p-2 rounded-lg bg-primary-50/50 dark:bg-primary-900/10 border border-primary-200/50 dark:border-primary-800/30">
+                <div className="flex items-center gap-1.5 mb-1">
+                  <Sparkles size={13} className="text-primary-500" />
+                  <span className="text-xs font-medium text-primary-700 dark:text-primary-300">
+                    AI简述
+                  </span>
+                </div>
+                <p className="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed">
+                  {bet.aiComment}
+                </p>
+              </div>
+            )}
+
+            {/* 识别进度 */}
+            {isRecognizing && (
+              <div className="mt-2 p-2 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 flex items-center gap-2">
+                <Loader2 size={14} className="animate-spin text-blue-500" />
+                <span className="text-xs text-blue-700 dark:text-blue-300">
+                  {recognitionStatus || 'AI识别中...'}
+                </span>
+              </div>
+            )}
+
+            {/* 错误提示 */}
+            {error && (
+              <div className="mt-2 p-2 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 flex items-start gap-1.5">
+                <AlertCircle size={14} className="text-red-500 flex-shrink-0 mt-0.5" />
+                <p className="text-xs text-red-600 dark:text-red-400">
+                  {error}
+                </p>
+              </div>
+            )}
           </motion.div>
         );
       })}
