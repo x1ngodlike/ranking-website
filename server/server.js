@@ -614,7 +614,7 @@ app.post('/api/ai-config', requireAuth, (req, res) => {
   const config = saveAIConfig({
     apiEndpoint: apiEndpoint || 'https://api.deepseek.com/v1/chat/completions',
     apiKey: apiKey || '',
-    model: model || 'deepseek-v4-flash',
+    model: model || 'gpt-4o-mini',
     siteUrl: siteUrl || '',
   });
   res.json({ success: true, config });

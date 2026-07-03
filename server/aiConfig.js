@@ -4,7 +4,7 @@ const fs = require('fs');
 const DEFAULT_AI_CONFIG = {
   apiEndpoint: 'https://api.deepseek.com/v1/chat/completions',
   apiKey: '',
-  model: 'deepseek-v4-flash',
+  model: 'gpt-4o-mini',
   siteUrl: '',
 };
 

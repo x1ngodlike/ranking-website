@@ -11,7 +11,7 @@ const AIConfigSettings = ({ onClose }: AIConfigSettingsProps) => {
   const [config, setConfig] = useState<AIConfig>({
     apiEndpoint: '',
     apiKey: '',
-    model: 'deepseek-v4-flash',
+    model: 'gpt-4o-mini',
     siteUrl: '',
   });
   const [isLoading, setIsLoading] = useState(true);
@@ -143,11 +143,11 @@ const AIConfigSettings = ({ onClose }: AIConfigSettingsProps) => {
             type="text"
             value={config.model}
             onChange={(e) => setConfig({ ...config, model: e.target.value })}
-            placeholder="deepseek-v4-flash"
+            placeholder="gpt-4o-mini"
             className="w-full px-4 py-3 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-neutral-800 dark:text-neutral-200 focus:outline-none focus:border-primary-500/50 transition-colors text-sm"
           />
           <p className="text-xs text-neutral-500 mt-1">
-            例如：deepseek-v4-flash、gpt-4o、claude-3-sonnet 等
+            例如：gpt-4o-mini、gpt-4o、claude-3-sonnet 等
           </p>
         </div>
 
