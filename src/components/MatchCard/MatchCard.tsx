@@ -115,7 +115,7 @@ const MatchCard = ({ match, isAdmin = false }: MatchCardProps) => {
                 >
                   {match.homeScore !== null && match.awayScore !== null ? (
                     <span className="font-display text-3xl text-neutral-800 dark:text-neutral-200">
-                      {match.homeScore} : {match.awayScore}
+                      {match.homeScore}{match.homePenaltyScore !== null ? `[${match.homePenaltyScore}]` : ''} : {match.awayScore}{match.awayPenaltyScore !== null ? `[${match.awayPenaltyScore}]` : ''}
                     </span>
                   ) : (
                     <span className="font-display text-xl text-neutral-400 dark:text-neutral-500">

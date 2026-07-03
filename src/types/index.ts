@@ -18,8 +18,11 @@ export interface Match {
   matchTime: string;
   stage: MatchStage;
   groupName?: string;
+  roundKey?: string;
   homeScore: number | null;
   awayScore: number | null;
+  homePenaltyScore?: number | null;
+  awayPenaltyScore?: number | null;
   status: MatchStatus;
   matchNumber?: string;
 }

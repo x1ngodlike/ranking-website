@@ -14,9 +14,9 @@ const KNOCKOUT_ROUNDS = [
   { key: 'third_place', name: '季军赛', count: 1 },
 ];
 
-const getRoundKey = (matchNumber?: string): string => {
-  if (!matchNumber) return 'round_of_32';
-  const num = parseInt(matchNumber, 10);
+const getRoundKey = (match: Match): string => {
+  if (match.roundKey) return match.roundKey;
+  const num = parseInt(match.matchNumber || '0', 10);
   if (num >= 1 && num <= 16) return 'round_of_32';
   if (num >= 17 && num <= 24) return 'round_of_16';
   if (num >= 25 && num <= 28) return 'quarter_final';
@@ -29,7 +29,7 @@ const getRoundKey = (matchNumber?: string): string => {
 const getRoundMatches = (matches: Match[], roundKey: string): Match[] => {
   return matches
     .filter((m) => m.stage === 'knockout')
-    .filter((m) => getRoundKey(m.matchNumber) === roundKey)
+    .filter((m) => getRoundKey(m) === roundKey)
     .sort((a, b) => {
       const numA = parseInt(a.matchNumber || '0', 10);
       const numB = parseInt(b.matchNumber || '0', 10);
@@ -63,7 +63,7 @@ const MatchCard = ({ match }: { match: Match }) => {
         </span>
         {match.homeScore !== null && match.awayScore !== null && (
           <span className={`font-display text-[11px] flex-shrink-0 ${homeWon ? 'text-red-600 dark:text-red-400 font-bold' : 'text-neutral-800 dark:text-neutral-200'}`}>
-            {match.homeScore}
+            {match.homeScore}{match.homePenaltyScore !== null ? `[${match.homePenaltyScore}]` : ''}
           </span>
         )}
       </div>
@@ -75,7 +75,7 @@ const MatchCard = ({ match }: { match: Match }) => {
         </span>
         {match.homeScore !== null && match.awayScore !== null && (
           <span className={`font-display text-[11px] flex-shrink-0 ${awayWon ? 'text-red-600 dark:text-red-400 font-bold' : 'text-neutral-800 dark:text-neutral-200'}`}>
-            {match.awayScore}
+            {match.awayScore}{match.awayPenaltyScore !== null ? `[${match.awayPenaltyScore}]` : ''}
           </span>
         )}
       </div>
@@ -206,7 +206,11 @@ const KnockoutBracket = () => {
     const hasMatchNumbers = filtered.some((m) => m.matchNumber);
 
     if (hasMatchNumbers) {
-      return filtered;
+      return [...filtered].sort((a, b) => {
+        const numA = parseInt(a.matchNumber || '0', 10);
+        const numB = parseInt(b.matchNumber || '0', 10);
+        return numA - numB;
+      });
     }
 
     const sorted = [...filtered].sort(

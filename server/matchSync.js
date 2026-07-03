@@ -95,13 +95,28 @@ const extractStageInfo = (apiMatch) => {
     return {
       stage: 'group',
       groupName: apiMatch.group?.replace('Group ', '') || undefined,
+      roundKey: undefined,
     };
   }
-  return { stage: 'knockout' };
+  
+  const stageMap = {
+    'ROUND_OF_32': 'round_of_32',
+    'ROUND_OF_16': 'round_of_16',
+    'ROUND_OF_8': 'round_of_8',
+    'QUARTER_FINAL': 'quarter_final',
+    'SEMI_FINAL': 'semi_final',
+    'FINAL': 'final',
+    'THIRD_PLACE': 'third_place',
+  };
+  
+  return { 
+    stage: 'knockout',
+    roundKey: stageMap[apiMatch.stage] || 'round_of_32',
+  };
 };
 
 const apiMatchToLocal = (apiMatch) => {
-  const { stage, groupName } = extractStageInfo(apiMatch);
+  const { stage, groupName, roundKey } = extractStageInfo(apiMatch);
   const status = statusMap[apiMatch.status] || 'upcoming';
 
   const hasScore = status === 'finished' || status === 'live';
@@ -112,6 +127,12 @@ const apiMatchToLocal = (apiMatch) => {
   const homeScore = hasScore ? (scoreData?.home ?? null) : null;
   const awayScore = hasScore ? (scoreData?.away ?? null) : null;
 
+  const extraTime = apiMatch.score.extraTime;
+  const penalties = apiMatch.score.penalties;
+
+  const homePenaltyScore = penalties?.home ?? null;
+  const awayPenaltyScore = penalties?.away ?? null;
+
   return {
     id: `api_${apiMatch.id}`,
     homeTeam: getTeamChineseName(apiMatch.homeTeam.name),
@@ -121,8 +142,11 @@ const apiMatchToLocal = (apiMatch) => {
     matchTime: apiMatch.utcDate,
     stage,
     groupName,
+    roundKey,
     homeScore,
     awayScore,
+    homePenaltyScore,
+    awayPenaltyScore,
     status,
     matchNumber: String(apiMatch.matchNumber),
   };
