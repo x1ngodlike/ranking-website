@@ -202,58 +202,103 @@ const sortKnockoutMatches = (matches) => {
   const roundOf32 = matches.filter(m => m.roundKey === 'round_of_32');
   const roundOf16 = matches.filter(m => m.roundKey === 'round_of_16');
   
-  const teamToMatch = new Map();
+  const teamToMatch32 = new Map();
   roundOf32.forEach(match => {
     if (match.homeTeam && match.homeTeam !== '待定') {
-      teamToMatch.set(match.homeTeam, match);
+      teamToMatch32.set(match.homeTeam, match);
     }
     if (match.awayTeam && match.awayTeam !== '待定') {
-      teamToMatch.set(match.awayTeam, match);
+      teamToMatch32.set(match.awayTeam, match);
     }
   });
   
   const sorted32 = [];
-  const usedIds = new Set();
-  const idSorted32 = [...roundOf32].sort((a, b) => {
-    const idA = parseInt(a.id.replace('api_', '') || '0', 10);
-    const idB = parseInt(b.id.replace('api_', '') || '0', 10);
-    return idA - idB;
+  const usedIds32 = new Set();
+  
+  const order32 = [
+    ['德国', '巴拉圭'],
+    ['法国', '瑞典'],
+    ['南非', '加拿大'],
+    ['荷兰', '摩洛哥'],
+    ['葡萄牙', '克罗地亚'],
+    ['西班牙', '奥地利'],
+    ['美国', '波黑'],
+    ['比利时', '塞内加尔'],
+    ['巴西', '日本'],
+    ['科特迪瓦', '挪威'],
+    ['墨西哥', '厄瓜多尔'],
+    ['英格兰', '刚果(金)'],
+    ['阿根廷', '佛得角'],
+    ['澳大利亚', '埃及'],
+    ['瑞士', '阿尔及利亚'],
+    ['哥伦比亚', '加纳'],
+  ];
+  
+  order32.forEach(pair => {
+    const [team1, team2] = pair;
+    const match = teamToMatch32.get(team1) || teamToMatch32.get(team2);
+    if (match && !usedIds32.has(match.id)) {
+      sorted32.push(match);
+      usedIds32.add(match.id);
+    }
   });
   
-  roundOf16.sort((a, b) => {
-    const idA = parseInt(a.id.replace('api_', '') || '0', 10);
-    const idB = parseInt(b.id.replace('api_', '') || '0', 10);
-    return idA - idB;
-  }).forEach(nextMatch => {
-    const homeTeam = nextMatch.homeTeam && nextMatch.homeTeam !== 'None' ? nextMatch.homeTeam : null;
-    const awayTeam = nextMatch.awayTeam && nextMatch.awayTeam !== 'None' ? nextMatch.awayTeam : null;
+  roundOf32.forEach(match => {
+    if (!usedIds32.has(match.id)) {
+      sorted32.push(match);
+      usedIds32.add(match.id);
+    }
+  });
+  
+  const sorted16 = [];
+  const usedIds16 = new Set();
+  
+  const order16 = [
+    ['巴拉圭', '法国'],
+    ['加拿大', '摩洛哥'],
+    ['葡萄牙', '西班牙'],
+    ['美国', '比利时'],
+    ['巴西', '挪威'],
+    ['墨西哥', '英格兰'],
+    ['阿根廷', '澳大利亚'],
+    ['瑞士', '哥伦比亚'],
+  ];
+  
+  const pendingMatches = roundOf16.filter(m => 
+    (!m.homeTeam || m.homeTeam === 'None' || m.homeTeam === '待定') && 
+    (!m.awayTeam || m.awayTeam === 'None' || m.awayTeam === '待定')
+  );
+  
+  let pendingIdx = 0;
+  
+  order16.forEach(pair => {
+    const [team1, team2] = pair;
     
-    let added = 0;
-    if (homeTeam && teamToMatch.has(homeTeam)) {
-      const homeMatch = teamToMatch.get(homeTeam);
-      if (!usedIds.has(homeMatch.id)) {
-        sorted32.push(homeMatch);
-        usedIds.add(homeMatch.id);
-        added++;
+    let match = roundOf16.find(m => 
+      !usedIds16.has(m.id) &&
+      ((m.homeTeam === team1 || m.awayTeam === team1) ||
+       (m.homeTeam === team2 || m.awayTeam === team2))
+    );
+    
+    if (!match && pendingIdx < pendingMatches.length) {
+      match = pendingMatches[pendingIdx];
+      pendingIdx++;
+    }
+    
+    if (!match) {
+      const unusedOthers = roundOf16.filter(m => 
+        !usedIds16.has(m.id) &&
+        !((m.homeTeam === 'None' || m.homeTeam === '待定') && 
+          (m.awayTeam === 'None' || m.awayTeam === '待定'))
+      );
+      if (unusedOthers.length > 0) {
+        match = unusedOthers[0];
       }
     }
     
-    if (awayTeam && teamToMatch.has(awayTeam)) {
-      const awayMatch = teamToMatch.get(awayTeam);
-      if (!usedIds.has(awayMatch.id)) {
-        sorted32.push(awayMatch);
-        usedIds.add(awayMatch.id);
-        added++;
-      }
-    }
-    
-    const needed = 2 - added;
-    for (let i = 0; i < needed; i++) {
-      const nextUnused = idSorted32.find(m => !usedIds.has(m.id));
-      if (nextUnused) {
-        sorted32.push(nextUnused);
-        usedIds.add(nextUnused.id);
-      }
+    if (match) {
+      sorted16.push(match);
+      usedIds16.add(match.id);
     }
   });
   
@@ -262,6 +307,11 @@ const sortKnockoutMatches = (matches) => {
       if (a.roundKey === 'round_of_32' && b.roundKey === 'round_of_32') {
         const idxA = sorted32.findIndex(m => m.id === a.id);
         const idxB = sorted32.findIndex(m => m.id === b.id);
+        return idxA - idxB;
+      }
+      if (a.roundKey === 'round_of_16' && b.roundKey === 'round_of_16') {
+        const idxA = sorted16.findIndex(m => m.id === a.id);
+        const idxB = sorted16.findIndex(m => m.id === b.id);
         return idxA - idxB;
       }
       const orderA = roundOrder[a.roundKey] || 1;
