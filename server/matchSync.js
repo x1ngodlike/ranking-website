@@ -124,6 +124,7 @@ const apiMatchToLocal = (apiMatch) => {
     homeScore,
     awayScore,
     status,
+    matchNumber: String(apiMatch.matchNumber),
   };
 };
 
@@ -165,11 +166,6 @@ const syncMatches = async (apiKey, competitionId = '2000') => {
     const matches = data.matches.map(apiMatchToLocal);
     matches.sort((a, b) => new Date(a.matchTime).getTime() - new Date(b.matchTime).getTime());
     
-    const knockoutMatches = matches.filter((m) => m.stage === 'knockout');
-    knockoutMatches.forEach((match, index) => {
-      match.matchNumber = String(index + 1);
-    });
-
     console.log(`[MatchSync] Synced ${matches.length} matches, ${matches.filter(m => m.status === 'live').length} live`);
     return { success: true, matches };
   } catch (error) {
