@@ -40,7 +40,9 @@ const getRoundMatches = (matches: Match[], roundKey: string): Match[] => {
     .filter((m) => m.stage === 'knockout')
     .filter((m) => getRoundKey(m) === roundKey)
     .sort((a, b) => {
-      return new Date(a.matchTime).getTime() - new Date(b.matchTime).getTime();
+      const idA = parseInt(a.id.replace('api_', '') || '0', 10);
+      const idB = parseInt(b.id.replace('api_', '') || '0', 10);
+      return idA - idB;
     });
 };
 
