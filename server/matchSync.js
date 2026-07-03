@@ -142,9 +142,9 @@ const apiMatchToLocal = (apiMatch) => {
     const pAway = penalties?.away ?? 0;
 
     if (ftHome !== null) {
-      // 如果有加时赛但没有点球，显示总比分（常规时间+加时赛）
-      // 如果有点球，显示常规时间比分（减去加时赛和点球）
-      if (penalties?.home !== null && penalties?.away !== null) {
+      // 只有当 penalties 存在且不为 null 时，才算有点球
+      // 否则显示 fullTime（含加时赛的总比分）
+      if (penalties && penalties.home !== null && penalties.away !== null) {
         homeScore = ftHome - etHome - pHome;
       } else {
         homeScore = ftHome;
@@ -154,7 +154,7 @@ const apiMatchToLocal = (apiMatch) => {
     }
 
     if (ftAway !== null) {
-      if (penalties?.home !== null && penalties?.away !== null) {
+      if (penalties && penalties.home !== null && penalties.away !== null) {
         awayScore = ftAway - etAway - pAway;
       } else {
         awayScore = ftAway;
