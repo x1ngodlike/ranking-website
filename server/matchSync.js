@@ -213,7 +213,90 @@ const syncMatches = async (apiKey, competitionId = '2000') => {
     }
 
     const matches = data.matches.map(apiMatchToLocal);
-    matches.sort((a, b) => new Date(a.matchTime).getTime() - new Date(b.matchTime).getTime());
+    
+    const roundOrder = {
+      'round_of_32': 1,
+      'round_of_16': 2,
+      'quarter_final': 3,
+      'semi_final': 4,
+      'final': 5,
+      'third_place': 6,
+    };
+    
+    const roundOf32 = matches.filter(m => m.roundKey === 'round_of_32');
+    const roundOf16 = matches.filter(m => m.roundKey === 'round_of_16');
+    
+    const teamToMatch = new Map();
+    roundOf32.forEach(match => {
+      if (match.homeTeam && match.homeTeam !== '待定') {
+        teamToMatch.set(match.homeTeam, match);
+      }
+      if (match.awayTeam && match.awayTeam !== '待定') {
+        teamToMatch.set(match.awayTeam, match);
+      }
+    });
+    
+    const sorted32 = [];
+    const usedIds = new Set();
+    const idSorted32 = [...roundOf32].sort((a, b) => {
+      const idA = parseInt(a.id.replace('api_', '') || '0', 10);
+      const idB = parseInt(b.id.replace('api_', '') || '0', 10);
+      return idA - idB;
+    });
+    
+    roundOf16.sort((a, b) => {
+      const idA = parseInt(a.id.replace('api_', '') || '0', 10);
+      const idB = parseInt(b.id.replace('api_', '') || '0', 10);
+      return idA - idB;
+    }).forEach(nextMatch => {
+      const homeTeam = nextMatch.homeTeam && nextMatch.homeTeam !== 'None' ? nextMatch.homeTeam : null;
+      const awayTeam = nextMatch.awayTeam && nextMatch.awayTeam !== 'None' ? nextMatch.awayTeam : null;
+      
+      let added = 0;
+      if (homeTeam && teamToMatch.has(homeTeam)) {
+        const homeMatch = teamToMatch.get(homeTeam);
+        if (!usedIds.has(homeMatch.id)) {
+          sorted32.push(homeMatch);
+          usedIds.add(homeMatch.id);
+          added++;
+        }
+      }
+      
+      if (awayTeam && teamToMatch.has(awayTeam)) {
+        const awayMatch = teamToMatch.get(awayTeam);
+        if (!usedIds.has(awayMatch.id)) {
+          sorted32.push(awayMatch);
+          usedIds.add(awayMatch.id);
+          added++;
+        }
+      }
+      
+      const needed = 2 - added;
+      for (let i = 0; i < needed; i++) {
+        const nextUnused = idSorted32.find(m => !usedIds.has(m.id));
+        if (nextUnused) {
+          sorted32.push(nextUnused);
+          usedIds.add(nextUnused.id);
+        }
+      }
+    });
+    
+    matches.sort((a, b) => {
+      if (a.stage === 'knockout' && b.stage === 'knockout') {
+        if (a.roundKey === 'round_of_32' && b.roundKey === 'round_of_32') {
+          const idxA = sorted32.findIndex(m => m.id === a.id);
+          const idxB = sorted32.findIndex(m => m.id === b.id);
+          return idxA - idxB;
+        }
+        const orderA = roundOrder[a.roundKey] || 1;
+        const orderB = roundOrder[b.roundKey] || 1;
+        if (orderA !== orderB) return orderA - orderB;
+        const idA = parseInt(a.id.replace('api_', '') || '0', 10);
+        const idB = parseInt(b.id.replace('api_', '') || '0', 10);
+        return idA - idB;
+      }
+      return new Date(a.matchTime).getTime() - new Date(b.matchTime).getTime();
+    });
     
     console.log(`[MatchSync] Synced ${matches.length} matches, ${matches.filter(m => m.status === 'live').length} live`);
     return { success: true, matches };

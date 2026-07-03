@@ -38,12 +38,7 @@ const getRoundKey = (match: Match): string => {
 const getRoundMatches = (matches: Match[], roundKey: string): Match[] => {
   return matches
     .filter((m) => m.stage === 'knockout')
-    .filter((m) => getRoundKey(m) === roundKey)
-    .sort((a, b) => {
-      const idA = parseInt(a.id.replace('api_', '') || '0', 10);
-      const idB = parseInt(b.id.replace('api_', '') || '0', 10);
-      return idA - idB;
-    });
+    .filter((m) => getRoundKey(m) === roundKey);
 };
 
 const MatchCard = ({ match }: { match: Match }) => {
@@ -210,18 +205,7 @@ const KnockoutBracket = () => {
   const containerRef = useRef<HTMLDivElement>(null);
 
   const knockoutMatches = useMemo(() => {
-    const filtered = matches.filter((m) => m.stage === 'knockout');
-
-    return [...filtered].sort((a, b) => {
-      const orderA = ROUND_ORDER[a.roundKey || 'round_of_32'] || 1;
-      const orderB = ROUND_ORDER[b.roundKey || 'round_of_32'] || 1;
-      if (orderA !== orderB) {
-        return orderA - orderB;
-      }
-      const idA = parseInt(a.id.replace('api_', '') || '0', 10);
-      const idB = parseInt(b.id.replace('api_', '') || '0', 10);
-      return idA - idB;
-    });
+    return matches.filter((m) => m.stage === 'knockout');
   }, [matches]);
 
   const bracketRounds = useMemo(() => {
