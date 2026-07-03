@@ -101,11 +101,10 @@ const extractStageInfo = (apiMatch) => {
   }
   
   const stageMap = {
-    'ROUND_OF_32': 'round_of_32',
-    'ROUND_OF_16': 'round_of_16',
-    'ROUND_OF_8': 'round_of_8',
-    'QUARTER_FINAL': 'quarter_final',
-    'SEMI_FINAL': 'semi_final',
+    'LAST_32': 'round_of_32',
+    'LAST_16': 'round_of_16',
+    'QUARTER_FINALS': 'quarter_final',
+    'SEMI_FINALS': 'semi_final',
     'FINAL': 'final',
     'THIRD_PLACE': 'third_place',
   };
@@ -139,15 +138,17 @@ const apiMatchToLocal = (apiMatch) => {
     const ftAway = fullTime?.away ?? null;
     const etHome = extraTime?.home ?? 0;
     const etAway = extraTime?.away ?? 0;
+    const pHome = penalties?.home ?? 0;
+    const pAway = penalties?.away ?? 0;
 
     if (ftHome !== null) {
-      homeScore = ftHome - etHome;
+      homeScore = ftHome - etHome - pHome;
     } else if (halfTime?.home !== null) {
       homeScore = halfTime.home;
     }
 
     if (ftAway !== null) {
-      awayScore = ftAway - etAway;
+      awayScore = ftAway - etAway - pAway;
     } else if (halfTime?.away !== null) {
       awayScore = halfTime.away;
     }

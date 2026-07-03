@@ -14,6 +14,15 @@ const KNOCKOUT_ROUNDS = [
   { key: 'third_place', name: '季军赛', count: 1 },
 ];
 
+const ROUND_ORDER = {
+  'round_of_32': 1,
+  'round_of_16': 2,
+  'quarter_final': 3,
+  'semi_final': 4,
+  'final': 5,
+  'third_place': 6,
+};
+
 const getRoundKey = (match: Match): string => {
   if (match.roundKey) return match.roundKey;
   const num = parseInt(match.matchNumber || '0', 10);
@@ -31,9 +40,7 @@ const getRoundMatches = (matches: Match[], roundKey: string): Match[] => {
     .filter((m) => m.stage === 'knockout')
     .filter((m) => getRoundKey(m) === roundKey)
     .sort((a, b) => {
-      const numA = parseInt(a.matchNumber || '0', 10);
-      const numB = parseInt(b.matchNumber || '0', 10);
-      return numA - numB;
+      return new Date(a.matchTime).getTime() - new Date(b.matchTime).getTime();
     });
 };
 
@@ -203,24 +210,14 @@ const KnockoutBracket = () => {
   const knockoutMatches = useMemo(() => {
     const filtered = matches.filter((m) => m.stage === 'knockout');
 
-    const hasMatchNumbers = filtered.some((m) => m.matchNumber);
-
-    if (hasMatchNumbers) {
-      return [...filtered].sort((a, b) => {
-        const numA = parseInt(a.matchNumber || '0', 10);
-        const numB = parseInt(b.matchNumber || '0', 10);
-        return numA - numB;
-      });
-    }
-
-    const sorted = [...filtered].sort(
-      (a, b) => new Date(a.matchTime).getTime() - new Date(b.matchTime).getTime()
-    );
-
-    return sorted.map((match, index) => ({
-      ...match,
-      matchNumber: String(index + 1),
-    }));
+    return [...filtered].sort((a, b) => {
+      const orderA = ROUND_ORDER[a.roundKey || 'round_of_32'] || 1;
+      const orderB = ROUND_ORDER[b.roundKey || 'round_of_32'] || 1;
+      if (orderA !== orderB) {
+        return orderA - orderB;
+      }
+      return new Date(a.matchTime).getTime() - new Date(b.matchTime).getTime();
+    });
   }, [matches]);
 
   const bracketRounds = useMemo(() => {
