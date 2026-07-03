@@ -463,7 +463,7 @@ app.post('/api/matches/sync', async (req, res) => {
   if (result.success) {
     writeMatches(environment, result.matches);
     // 同步成功后重新调度定时器
-    scheduleNextMatchSync(hasLiveMatches(result.matches));
+    scheduleNextMatchSync(result.matches);
     res.json({
       success: true,
       count: result.matches.length,
@@ -665,7 +665,7 @@ app.post('/api/ai/recognize', async (req, res) => {
       return res.status(400).json({ success: false, message: '图片文件不存在' });
     }
 
-    const result = await recognizeBetImage(imagePath, imageUrl, aiConfig);
+    const result = await recognizeBetImage(imagePath, imageUrl, aiConfig, readMatches());
     if (!result) {
       return res.json({ success: true, result: null, message: '未能识别出比赛信息' });
     }
@@ -806,8 +806,9 @@ if (IS_PRODUCTION) {
 }
 
 // ========== 服务器端赛程自动同步 ==========
-const MATCH_SYNC_LIVE_INTERVAL = 60 * 1000;       // 有比赛时：1分钟
-const MATCH_SYNC_NORMAL_INTERVAL = 4 * 60 * 60 * 1000;  // 无比赛时：4小时
+const MATCH_SYNC_LIVE_INTERVAL = 60 * 1000;           // 有比赛时：1分钟
+const MATCH_SYNC_UPCOMING_INTERVAL = 5 * 60 * 1000;   // 有即将开赛时：5分钟
+const MATCH_SYNC_NORMAL_INTERVAL = 2 * 60 * 60 * 1000;    // 无比赛时：2小时
 
 let matchSyncTimer = null;
 
@@ -829,21 +830,35 @@ const runMatchSync = async () => {
       console.log(`[MatchSync] Synced ${result.matches.length} matches`);
 
       // 根据是否有直播比赛调整下次同步间隔
-      scheduleNextMatchSync(hasLiveMatches(result.matches));
+      scheduleNextMatchSync(result.matches);
     } else {
       console.warn(`[MatchSync] Failed: ${result.reason}`);
-      scheduleNextMatchSync(false);
+      scheduleNextMatchSync([]);
     }
   } catch (e) {
     console.error('[MatchSync] Error:', e);
-    scheduleNextMatchSync(false);
+    scheduleNextMatchSync([]);
   }
 };
 
-const scheduleNextMatchSync = (live) => {
+const scheduleNextMatchSync = (matches) => {
   if (matchSyncTimer) clearTimeout(matchSyncTimer);
-  const interval = live ? MATCH_SYNC_LIVE_INTERVAL : MATCH_SYNC_NORMAL_INTERVAL;
-  console.log(`[MatchSync] Next sync in ${interval / 1000}s (live: ${live})`);
+
+  let interval;
+  if (matches.some(m => m.status === 'live')) {
+    interval = MATCH_SYNC_LIVE_INTERVAL;
+  } else {
+    // 检查是否有2小时内即将开赛的比赛
+    const now = Date.now();
+    const hasUpcoming = matches.some(m => {
+      if (m.status !== 'upcoming') return false;
+      const matchTime = new Date(m.matchTime).getTime();
+      return matchTime - now > 0 && matchTime - now < 2 * 60 * 60 * 1000;
+    });
+    interval = hasUpcoming ? MATCH_SYNC_UPCOMING_INTERVAL : MATCH_SYNC_NORMAL_INTERVAL;
+  }
+
+  console.log(`[MatchSync] Next sync in ${interval / 1000}s`);
   matchSyncTimer = setTimeout(runMatchSync, interval);
 };
 

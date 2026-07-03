@@ -32,7 +32,7 @@ export interface Bet {
   note?: string;
   imageUrl?: string;
   createdAt: string;
-  // AI简评
+  // AI简述
   aiComment?: string;
 }
 

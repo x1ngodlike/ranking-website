@@ -285,13 +285,13 @@ const MatchesPage = () => {
                       : 'bg-neutral-50 dark:bg-neutral-800/50 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700/50 border border-transparent'
                   }`}
                 >
-                  <span className={`text-xs font-medium ${isSelected ? 'text-neutral-800 dark:text-neutral-200' : ''}`}>
+                  <span className={`text-xs font-medium ${isSelected ? 'text-white' : ''}`}>
                     {getWeekdayName(date)}
                   </span>
                   <span className="text-2xl font-bold my-0.5">
                     {date.getDate()}
                   </span>
-                  <span className={`text-xs ${isSelected ? 'text-neutral-800 dark:text-neutral-200' : 'text-neutral-500 dark:text-neutral-400'}`}>
+                  <span className={`text-xs ${isSelected ? 'text-white' : 'text-neutral-500 dark:text-neutral-400'}`}>
                     {date.getMonth() + 1}月
                   </span>
                   {matchCount > 0 && (
@@ -311,7 +311,7 @@ const MatchesPage = () => {
                         ))}
                       </div>
                       {matchCount > 3 && (
-                        <span className={`text-xs ${isSelected ? 'text-neutral-800 dark:text-neutral-200' : 'text-neutral-500 dark:text-neutral-400'}`}>
+                        <span className={`text-xs ${isSelected ? 'text-white' : 'text-neutral-500 dark:text-neutral-400'}`}>
                           +{matchCount - 3}
                         </span>
                       )}

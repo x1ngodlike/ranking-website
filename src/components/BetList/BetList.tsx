@@ -53,14 +53,14 @@ const BetList = ({ bets, showUser = false, canDelete = false }: BetListProps) =>
       const res = await api.recognizeBetImage(bet.imageUrl);
 
       if (res.success && res.result?.comment) {
-        setRecognitionStatus('正在保存AI简评...');
+        setRecognitionStatus('正在保存AI简述...');
         
         try {
           await updateBet(bet.id, {
             aiComment: res.result.comment,
           });
         } catch (e) {
-          console.error('保存AI简评失败:', e);
+          console.error('保存AI简述失败:', e);
         }
 
         setRecognitionStatus('');
@@ -140,13 +140,13 @@ const BetList = ({ bets, showUser = false, canDelete = false }: BetListProps) =>
                   </div>
                 )}
 
-                {/* AI简评展示 */}
+                {/* AI简述展示 */}
                 {bet.aiComment && !isRecognizing && (
                   <div className="mt-2 p-2 rounded-lg bg-primary-50/50 dark:bg-primary-900/10 border border-primary-200/50 dark:border-primary-800/30">
                     <div className="flex items-center gap-1.5 mb-1">
                       <Sparkles size={13} className="text-primary-500" />
                       <span className="text-xs font-medium text-primary-700 dark:text-primary-300">
-                        AI简评
+                        AI简述
                       </span>
                     </div>
                     <p className="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed">
@@ -192,7 +192,7 @@ const BetList = ({ bets, showUser = false, canDelete = false }: BetListProps) =>
                             ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-500'
                             : 'hover:bg-primary-50 dark:hover:bg-primary-900/20 text-neutral-400 hover:text-primary-500'
                         } disabled:cursor-not-allowed`}
-                        title="AI简评"
+                        title="AI简述"
                       >
                         {isRecognizing ? (
                           <Loader2 size={16} className="animate-spin" />
