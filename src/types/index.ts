@@ -35,8 +35,10 @@ export interface Bet {
   note?: string;
   imageUrl?: string;
   createdAt: string;
-  // AI简述
+  // AI评价
   aiComment?: string;
+  // AI识别中标记
+  aiRecognizing?: boolean;
 }
 
 export interface AIConfig {

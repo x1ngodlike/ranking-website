@@ -53,14 +53,14 @@ const BetList = ({ bets, showUser = false, canDelete = false }: BetListProps) =>
       const res = await api.recognizeBetImage(bet.imageUrl, bet.winAmount);
 
       if (res.success && res.result?.comment) {
-        setRecognitionStatus('正在保存AI简述...');
+        setRecognitionStatus('正在保存AI评价...');
         
         try {
           await updateBet(bet.id, {
             aiComment: res.result.comment,
           });
         } catch (e) {
-          console.error('保存AI简述失败:', e);
+          console.error('保存AI评价失败:', e);
         }
 
         setRecognitionStatus('');
@@ -158,7 +158,7 @@ const BetList = ({ bets, showUser = false, canDelete = false }: BetListProps) =>
                             ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-500'
                             : 'hover:bg-primary-50 dark:hover:bg-primary-900/20 text-neutral-400 hover:text-primary-500'
                         } disabled:cursor-not-allowed`}
-                        title="AI简述"
+                        title="AI评价"
                       >
                         {isRecognizing ? (
                           <Loader2 size={16} className="animate-spin" />
@@ -186,18 +186,28 @@ const BetList = ({ bets, showUser = false, canDelete = false }: BetListProps) =>
               </div>
             </div>
 
-            {/* AI简述展示 - 放在外层，横跨整个卡片宽度 */}
-            {bet.aiComment && !isRecognizing && (
+            {/* AI评价展示 - 放在外层，横跨整个卡片宽度 */}
+            {bet.aiComment && !isRecognizing && !bet.aiRecognizing && (
               <div className="mt-2 p-2 rounded-lg bg-primary-50/50 dark:bg-primary-900/10 border border-primary-200/50 dark:border-primary-800/30">
                 <div className="flex items-center gap-1.5 mb-1">
                   <Sparkles size={13} className="text-primary-500" />
                   <span className="text-xs font-medium text-primary-700 dark:text-primary-300">
-                    AI简述
+                    AI评价
                   </span>
                 </div>
                 <p className="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed">
                   {bet.aiComment}
                 </p>
+              </div>
+            )}
+
+            {/* AI识别中状态 - 新增记录自动识别 */}
+            {bet.aiRecognizing && !isRecognizing && (
+              <div className="mt-2 p-2 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 flex items-center gap-2">
+                <Loader2 size={14} className="animate-spin text-blue-500" />
+                <span className="text-xs text-blue-700 dark:text-blue-300">
+                  AI识别中...
+                </span>
               </div>
             )}
 

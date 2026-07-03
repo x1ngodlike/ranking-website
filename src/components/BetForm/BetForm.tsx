@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { generateId } from '@/utils/helpers';
+import { api } from '@/utils/api';
 import { X, Calendar, Image as ImageIcon, Plus } from 'lucide-react';
 import Avatar from '@/components/Avatar';
 import ImageUploader from '@/components/ImageUploader/ImageUploader';
@@ -34,7 +35,7 @@ const BetForm = ({ onClose, preSelectedUserId, bet }: BetFormProps) => {
     }
   }, [preSelectedUserId, users, selectedUserId, isEditMode, bet]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedUserId || !winAmount) return;
 
@@ -57,14 +58,36 @@ const BetForm = ({ onClose, preSelectedUserId, bet }: BetFormProps) => {
         note: note || undefined,
         imageUrl: imageUrl || undefined,
         createdAt: new Date().toISOString(),
+        // 如果有图片且中奖，先标记为识别中
+        aiRecognizing: imageUrl && winNum > 0 ? true : undefined,
       };
       addBet(newBet);
-    }
 
-    setWinAmount('');
-    setNote('');
-    setImageUrl(undefined);
-    onClose?.();
+      // 先关闭表单，让列表显示"AI识别中..."
+      setWinAmount('');
+      setNote('');
+      setImageUrl(undefined);
+      onClose?.();
+
+      // 新增记录成功后，如果有图片则自动AI识别
+      if (imageUrl && winNum > 0) {
+        try {
+          const res = await api.recognizeBetImage(imageUrl, winNum);
+          if (res.success && res.result?.comment) {
+            updateBet(newBet.id, { 
+              aiComment: res.result.comment,
+              aiRecognizing: undefined 
+            });
+          } else {
+            // 识别失败也要清除标记
+            updateBet(newBet.id, { aiRecognizing: undefined });
+          }
+        } catch (error) {
+          console.error('AI自动识别失败:', error);
+          updateBet(newBet.id, { aiRecognizing: undefined });
+        }
+      }
+    }
   };
 
   const selectedUser = users.find((u) => u.id === selectedUserId);
