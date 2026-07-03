@@ -96,6 +96,7 @@ const extractStageInfo = (apiMatch) => {
       stage: 'group',
       groupName: apiMatch.group?.replace('Group ', '') || undefined,
       roundKey: undefined,
+      originalStage: apiMatch.stage,
     };
   }
   
@@ -112,26 +113,48 @@ const extractStageInfo = (apiMatch) => {
   return { 
     stage: 'knockout',
     roundKey: stageMap[apiMatch.stage] || 'round_of_32',
+    originalStage: apiMatch.stage,
   };
 };
 
 const apiMatchToLocal = (apiMatch) => {
-  const { stage, groupName, roundKey } = extractStageInfo(apiMatch);
+  const { stage, groupName, roundKey, originalStage } = extractStageInfo(apiMatch);
   const status = statusMap[apiMatch.status] || 'upcoming';
 
   const hasScore = status === 'finished' || status === 'live';
-  const scoreData = apiMatch.score.fullTime?.home !== null
-    ? apiMatch.score.fullTime
-    : apiMatch.score.halfTime;
-
-  const homeScore = hasScore ? (scoreData?.home ?? null) : null;
-  const awayScore = hasScore ? (scoreData?.away ?? null) : null;
-
+  
   const extraTime = apiMatch.score.extraTime;
   const penalties = apiMatch.score.penalties;
+  
+  let homeScore = null;
+  let awayScore = null;
+  let homePenaltyScore = null;
+  let awayPenaltyScore = null;
 
-  const homePenaltyScore = penalties?.home ?? null;
-  const awayPenaltyScore = penalties?.away ?? null;
+  if (hasScore) {
+    const fullTime = apiMatch.score.fullTime;
+    const halfTime = apiMatch.score.halfTime;
+    
+    const ftHome = fullTime?.home ?? null;
+    const ftAway = fullTime?.away ?? null;
+    const etHome = extraTime?.home ?? 0;
+    const etAway = extraTime?.away ?? 0;
+
+    if (ftHome !== null) {
+      homeScore = ftHome - etHome;
+    } else if (halfTime?.home !== null) {
+      homeScore = halfTime.home;
+    }
+
+    if (ftAway !== null) {
+      awayScore = ftAway - etAway;
+    } else if (halfTime?.away !== null) {
+      awayScore = halfTime.away;
+    }
+
+    homePenaltyScore = penalties?.home ?? null;
+    awayPenaltyScore = penalties?.away ?? null;
+  }
 
   return {
     id: `api_${apiMatch.id}`,
@@ -143,12 +166,13 @@ const apiMatchToLocal = (apiMatch) => {
     stage,
     groupName,
     roundKey,
+    originalStage,
     homeScore,
     awayScore,
     homePenaltyScore,
     awayPenaltyScore,
     status,
-    matchNumber: String(apiMatch.matchNumber),
+    matchNumber: apiMatch.matchNumber ? String(apiMatch.matchNumber) : undefined,
   };
 };
 
