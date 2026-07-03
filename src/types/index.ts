@@ -32,10 +32,6 @@ export interface Bet {
   note?: string;
   imageUrl?: string;
   createdAt: string;
-  // AI识别关联比赛
-  matchId?: string;
-  predictedHomeScore?: number;
-  predictedAwayScore?: number;
   // AI简评
   aiComment?: string;
 }

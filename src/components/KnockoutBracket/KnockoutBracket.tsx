@@ -1,8 +1,7 @@
-import { useMemo } from 'react';
+import { useMemo, useRef, useEffect, useState, useCallback } from 'react';
 import { useAppStore } from '@/store/useAppStore';
-import type { Match, Bet, User } from '@/types';
+import type { Match } from '@/types';
 import { formatDate } from '@/utils/helpers';
-import Avatar from '@/components/Avatar';
 
 interface KnockoutBracketProps {}
 
@@ -38,39 +37,13 @@ const getRoundMatches = (matches: Match[], roundKey: string): Match[] => {
     });
 };
 
-const isPredictionCorrect = (match: Match, bet: Bet): boolean => {
-  if (!match.homeScore || !match.awayScore || !bet.predictedHomeScore || !bet.predictedAwayScore) {
-    return false;
-  }
-  const actualWinner = match.homeScore > match.awayScore ? 'home' : 'away';
-  const predictedWinner = bet.predictedHomeScore > bet.predictedAwayScore ? 'home' : 'away';
-  return actualWinner === predictedWinner;
-};
-
-const getCorrectPredictUsers = (match: Match, bets: Bet[], users: User[]): User[] => {
-  if (!bets || !users || match.status !== 'finished') return [];
-
-  const correctBets = bets.filter((bet) =>
-    bet.matchId === match.id && isPredictionCorrect(match, bet)
-  );
-
-  const userMap = new Map(users.map((u) => [u.id, u]));
-  return correctBets
-    .map((bet) => userMap.get(bet.userId))
-    .filter((u): u is User => u !== undefined);
-};
-
-const MatchCard = ({ match, bets, users }: { match: Match; bets?: Bet[]; users?: User[] }) => {
+const MatchCard = ({ match }: { match: Match }) => {
   const isFinished = match.status === 'finished';
   const winner = isFinished && match.homeScore !== null && match.awayScore !== null
     ? (match.homeScore > match.awayScore ? 'home' : 'away')
     : null;
   const homeWon = winner === 'home';
   const awayWon = winner === 'away';
-
-  const correctUsers = useMemo(() => {
-    return getCorrectPredictUsers(match, bets || [], users || []);
-  }, [match, bets, users]);
 
   return (
     <div className="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-md p-1.5 shadow-sm hover:shadow-md transition-shadow">
@@ -106,34 +79,6 @@ const MatchCard = ({ match, bets, users }: { match: Match; bets?: Bet[]; users?:
           </span>
         )}
       </div>
-
-      {correctUsers.length > 0 && (
-        <div className="mt-1 pt-1 border-t border-neutral-100 dark:border-neutral-700">
-          <div className="flex items-center gap-0.5">
-            <span className="text-[8px] text-neutral-400 mr-0.5">猜对:</span>
-            <div className="flex -space-x-1">
-              {correctUsers.slice(0, 5).map((user) => (
-                <div key={user.id} className="relative group">
-                  <Avatar
-                    src={user.avatar}
-                    alt={user.nickname}
-                    size="xs"
-                    className="w-4 h-4 ring-1 ring-white dark:ring-neutral-800"
-                  />
-                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-1.5 py-0.5 bg-neutral-800 text-white text-[9px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
-                    {user.nickname}
-                  </div>
-                </div>
-              ))}
-              {correctUsers.length > 5 && (
-                <div className="w-4 h-4 rounded-full bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center ring-1 ring-white dark:ring-neutral-800">
-                  <span className="text-[7px] text-neutral-600 dark:text-neutral-400">+{correctUsers.length - 5}</span>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
@@ -155,19 +100,105 @@ const EmptyMatchCard = () => (
   </div>
 );
 
-const PairConnector = () => (
-  <div className="absolute right-[-12px] top-0 bottom-0 w-3 pointer-events-none z-0">
-    <div className="absolute top-1/4 left-0 w-full h-px bg-neutral-300 dark:bg-neutral-600" />
-    <div className="absolute top-3/4 left-0 w-full h-px bg-neutral-300 dark:bg-neutral-600" />
-    <div className="absolute top-1/4 bottom-1/4 right-0 w-px bg-neutral-300 dark:bg-neutral-600" />
-    <div className="absolute top-1/2 left-full w-full h-px bg-neutral-300 dark:bg-neutral-600" />
-  </div>
-);
+// 连接线组件：绘制从上一轮两张卡片到下一轮一张卡片的连接线
+const BracketConnectors = ({ containerRef, roundCardCounts }: { 
+  containerRef: React.RefObject<HTMLDivElement | null>;
+  roundCardCounts: number[];
+}) => {
+  const [lines, setLines] = useState<{ x1: number; y1: number; x2: number; y2: number; mx: number }[]>([]);
+
+  const updateLines = useCallback(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const roundEls = container.querySelectorAll<HTMLElement>('[data-round]');
+    if (roundEls.length < 2) { setLines([]); return; }
+
+    const containerRect = container.getBoundingClientRect();
+    const newLines: { x1: number; y1: number; x2: number; y2: number; mx: number }[] = [];
+
+    for (let r = 0; r < roundEls.length - 1; r++) {
+      const currentRound = roundEls[r];
+      const nextRound = roundEls[r + 1];
+
+      // 跳过季军赛（不连线）
+      if (nextRound.getAttribute('data-round') === 'third_place') continue;
+
+      const currentCards = currentRound.querySelectorAll<HTMLElement>('[data-card]');
+      const nextCards = nextRound.querySelectorAll<HTMLElement>('[data-card]');
+
+      for (let n = 0; n < nextCards.length; n++) {
+        const nextCard = nextCards[n];
+        const nextRect = nextCard.getBoundingClientRect();
+        const nextY = nextRect.top + nextRect.height / 2 - containerRect.top;
+        const nextX = nextRect.left - containerRect.left;
+
+        // 上一轮中对应的两个卡片索引
+        const topIdx = n * 2;
+        const bottomIdx = n * 2 + 1;
+
+        if (topIdx < currentCards.length && bottomIdx < currentCards.length) {
+          const topRect = currentCards[topIdx].getBoundingClientRect();
+          const bottomRect = currentCards[bottomIdx].getBoundingClientRect();
+
+          const topY = topRect.top + topRect.height / 2 - containerRect.top;
+          const topX = topRect.right - containerRect.left;
+          const bottomY = bottomRect.top + bottomRect.height / 2 - containerRect.top;
+          const bottomX = bottomRect.right - containerRect.left;
+
+          const midX = topX + (nextX - topX) / 2;
+
+          newLines.push({ x1: topX, y1: topY, x2: midX, y2: topY, mx: midX });
+          newLines.push({ x1: midX, y1: topY, x2: midX, y2: bottomY, mx: midX });
+          newLines.push({ x1: midX, y1: bottomY, x2: bottomX, y2: bottomY, mx: midX });
+          newLines.push({ x1: midX, y1: (topY + bottomY) / 2, x2: nextX, y2: nextY, mx: midX });
+        }
+      }
+    }
+
+    setLines(newLines);
+  }, [containerRef]);
+
+  useEffect(() => {
+    updateLines();
+    window.addEventListener('resize', updateLines);
+    // 延迟更新确保DOM已渲染
+    const timer = setTimeout(updateLines, 100);
+    return () => {
+      window.removeEventListener('resize', updateLines);
+      clearTimeout(timer);
+    };
+  }, [updateLines, roundCardCounts]);
+
+  if (lines.length === 0) return null;
+
+  const container = containerRef.current;
+  if (!container) return null;
+
+  return (
+    <svg
+      className="absolute inset-0 pointer-events-none"
+      style={{ width: container.scrollWidth, height: container.scrollHeight }}
+    >
+      {lines.map((line, i) => (
+        <line
+          key={i}
+          x1={line.x1}
+          y1={line.y1}
+          x2={line.x2}
+          y2={line.y2}
+          stroke="currentColor"
+          strokeWidth={1}
+          className="text-neutral-300 dark:text-neutral-600"
+        />
+      ))}
+    </svg>
+  );
+};
 
 const KnockoutBracket = () => {
   const matches = useAppStore((state) => state.matches);
-  const bets = useAppStore((state) => state.bets);
-  const users = useAppStore((state) => state.users);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const knockoutMatches = useMemo(() => {
     const filtered = matches.filter((m) => m.stage === 'knockout');
@@ -199,6 +230,11 @@ const KnockoutBracket = () => {
 
   const hasKnockoutMatches = knockoutMatches.length > 0;
 
+  // 记录每轮卡片数量用于触发连线更新
+  const roundCardCounts = useMemo(() => {
+    return bracketRounds.map(r => r.matches.length);
+  }, [bracketRounds]);
+
   if (!hasKnockoutMatches) {
     return (
       <div className="card text-center py-16">
@@ -223,76 +259,40 @@ const KnockoutBracket = () => {
   const mainRounds = bracketRounds.filter((r) => r.name !== '季军赛');
   const thirdPlaceRound = bracketRounds.find((r) => r.name === '季军赛');
 
-  const renderRound = (round: typeof bracketRounds[0], isLastRound: boolean) => {
-    const cardSlots = Array.from({ length: round.count }).map((_, index) =>
-      round.matches[index] || null
-    );
-
-    if (round.count === 1) {
-      return (
-        <div key={round.name} className="flex flex-col w-[130px] sm:w-[150px] flex-shrink-0">
-          <div className="mb-2 text-center">
-            <h3 className={`font-display text-xs font-bold ${round.name === '决赛' ? 'text-amber-600 dark:text-amber-400' : 'text-amber-600 dark:text-amber-400'}`}>
-              {round.name}
-            </h3>
-          </div>
-          <div className="flex flex-col justify-center flex-1">
-            {cardSlots[0] ? (
-              <MatchCard match={cardSlots[0]} bets={bets} users={users} />
-            ) : (
-              <EmptyMatchCard />
-            )}
-          </div>
-        </div>
-      );
-    }
-
-    const pairs: (Match | null)[][] = [];
-    for (let i = 0; i < cardSlots.length; i += 2) {
-      pairs.push([cardSlots[i], cardSlots[i + 1] || null]);
-    }
-
-    return (
-      <div key={round.name} className="flex flex-col w-[130px] sm:w-[150px] flex-shrink-0">
-        <div className="mb-2 text-center">
-          <h3 className="font-display text-xs font-bold text-blue-600 dark:text-blue-400">
-            {round.name}
-          </h3>
-        </div>
-        <div className="flex flex-col flex-1 gap-[5px] justify-around">
-          {pairs.map((pair, pairIndex) => (
-            <div
-              key={pairIndex}
-              className="relative flex flex-col gap-[5px]"
-            >
-              {pair[0] ? (
-                <MatchCard match={pair[0]} bets={bets} users={users} />
-              ) : (
-                <EmptyMatchCard />
-              )}
-              {pair[1] ? (
-                <MatchCard match={pair[1]} bets={bets} users={users} />
-              ) : (
-                <EmptyMatchCard />
-              )}
-              {!isLastRound && <PairConnector />}
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  };
-
   return (
     <div className="overflow-x-auto pb-4 -mx-4 px-4">
-      <div className="flex gap-3 min-w-max items-stretch">
+      <div ref={containerRef} className="relative flex gap-3 min-w-max items-stretch">
+        <BracketConnectors containerRef={containerRef} roundCardCounts={roundCardCounts} />
+
         {mainRounds.map((round, roundIndex) => {
-          const isLastRound = roundIndex === mainRounds.length - 1;
-          return renderRound(round, isLastRound);
+          const cardSlots = Array.from({ length: round.count }).map((_, index) =>
+            round.matches[index] || null
+          );
+
+          return (
+            <div key={round.name} data-round={round.key} className="flex flex-col w-[130px] sm:w-[150px] flex-shrink-0">
+              <div className="mb-2 text-center">
+                <h3 className={`font-display text-xs font-bold ${round.name === '决赛' ? 'text-amber-600 dark:text-amber-400' : 'text-blue-600 dark:text-blue-400'}`}>
+                  {round.name}
+                </h3>
+              </div>
+              <div className="flex flex-col flex-1 gap-[5px] justify-around">
+                {cardSlots.map((match, cardIndex) => (
+                  <div key={cardIndex} data-card={`${roundIndex}-${cardIndex}`}>
+                    {match ? (
+                      <MatchCard match={match} />
+                    ) : (
+                      <EmptyMatchCard />
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
         })}
 
         {thirdPlaceRound && (
-          <div className="flex flex-col w-[130px] sm:w-[150px] flex-shrink-0">
+          <div data-round="third_place" className="flex flex-col w-[130px] sm:w-[150px] flex-shrink-0">
             <div className="mb-2 text-center">
               <h3 className="font-display text-xs text-amber-600 dark:text-amber-400 font-bold">
                 {thirdPlaceRound.name}
@@ -300,7 +300,7 @@ const KnockoutBracket = () => {
             </div>
             <div className="flex flex-col justify-center flex-1">
               {thirdPlaceRound.matches[0] ? (
-                <MatchCard match={thirdPlaceRound.matches[0]} bets={bets} users={users} />
+                <MatchCard match={thirdPlaceRound.matches[0]} />
               ) : (
                 <EmptyMatchCard />
               )}

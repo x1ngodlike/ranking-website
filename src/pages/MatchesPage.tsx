@@ -218,8 +218,8 @@ const MatchesPage = () => {
             onClick={() => setViewMode('timeline')}
             className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
               viewMode === 'timeline'
-                ? 'bg-white dark:bg-neutral-700 text-primary-500 shadow-md'
-                : 'text-neutral-600 dark:text-neutral-400 hover:text-primary-500'
+                ? 'bg-white dark:bg-neutral-700 text-primary-600 dark:text-white shadow-md'
+                : 'text-neutral-600 dark:text-neutral-400 hover:text-primary-600 dark:hover:text-white'
             }`}
           >
             <CalendarDays size={16} />
@@ -229,8 +229,8 @@ const MatchesPage = () => {
             onClick={() => setViewMode('bracket')}
             className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
               viewMode === 'bracket'
-                ? 'bg-white dark:bg-neutral-700 text-primary-500 shadow-md'
-                : 'text-neutral-600 dark:text-neutral-400 hover:text-primary-500'
+                ? 'bg-white dark:bg-neutral-700 text-primary-600 dark:text-white shadow-md'
+                : 'text-neutral-600 dark:text-neutral-400 hover:text-primary-600 dark:hover:text-white'
             }`}
           >
             <GitBranch size={16} />
