@@ -34,15 +34,17 @@ const CalculatorPage = () => {
         initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5, delay: 0.1 }}
-        className="card overflow-hidden p-0"
+        className="flex justify-center"
       >
-        <iframe
-          src={CALCULATOR_URL}
-          title="竞彩足球胜平负奖金计算器"
-          className="w-full"
-          style={{ height: 'calc(100vh - 220px)', minHeight: '500px', border: 'none' }}
-          sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
-        />
+        <div className="w-full max-w-md border border-neutral-200 dark:border-neutral-700 rounded-xl overflow-hidden shadow-lg" style={{ height: '750px' }}>
+          <iframe
+            src={CALCULATOR_URL}
+            title="竞彩足球胜平负奖金计算器"
+            className="w-full h-full"
+            style={{ border: 'none', width: 'calc(100% + 17px)' }}
+            sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
+          />
+        </div>
       </motion.div>
     </div>
   );

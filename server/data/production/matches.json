@@ -1353,11 +1353,11 @@
     "stage": "knockout",
     "roundKey": "round_of_32",
     "originalStage": "LAST_32",
-    "homeScore": null,
-    "awayScore": null,
+    "homeScore": 3,
+    "awayScore": 2,
     "homePenaltyScore": null,
     "awayPenaltyScore": null,
-    "status": "upcoming"
+    "status": "finished"
   },
   {
     "id": "api_537428",
@@ -1369,9 +1369,9 @@
     "stage": "knockout",
     "roundKey": "round_of_32",
     "originalStage": "LAST_32",
-    "homeScore": 1,
+    "homeScore": -1,
     "awayScore": 1,
-    "homePenaltyScore": 3,
+    "homePenaltyScore": 4,
     "awayPenaltyScore": 4,
     "status": "finished"
   },
@@ -1401,11 +1401,11 @@
     "stage": "knockout",
     "roundKey": "round_of_32",
     "originalStage": "LAST_32",
-    "homeScore": null,
-    "awayScore": null,
+    "homeScore": 1,
+    "awayScore": 0,
     "homePenaltyScore": null,
     "awayPenaltyScore": null,
-    "status": "upcoming"
+    "status": "finished"
   },
   {
     "id": "api_537375",
