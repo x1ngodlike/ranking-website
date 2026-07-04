@@ -5,7 +5,7 @@ const CALCULATOR_URL = 'https://m.sporttery.cn/mjc/jsq/zqspf/';
 
 const CalculatorPage = () => {
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="max-w-3xl mx-auto">
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
