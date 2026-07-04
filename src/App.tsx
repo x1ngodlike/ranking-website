@@ -9,7 +9,7 @@ import { applyTheme, initThemeListener } from './utils/theme';
 const BetsPage = lazy(() => import('./pages/BetsPage'));
 const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 const MatchesPage = lazy(() => import('./pages/MatchesPage'));
-const UsersPage = lazy(() => import('./pages/UsersPage'));
+const NewsPage = lazy(() => import('./pages/NewsPage'));
 const CalculatorPage = lazy(() => import('./pages/CalculatorPage'));
 
 const PageLoader = () => (
@@ -56,10 +56,10 @@ function AnimatedRoutes() {
             }
           />
           <Route
-            path="/users"
+            path="/news"
             element={
               <Suspense fallback={<PageLoader />}>
-                <UsersPage />
+                <NewsPage />
               </Suspense>
             }
           />

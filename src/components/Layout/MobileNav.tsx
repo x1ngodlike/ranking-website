@@ -1,12 +1,12 @@
 import { useLocation, Link } from 'react-router-dom';
-import { Trophy, Ticket, Calendar, Users, Calculator } from 'lucide-react';
+import { Trophy, Ticket, Calendar, Calculator, Newspaper } from 'lucide-react';
 
 const navItems = [
   { path: '/', label: '排行榜', icon: Trophy },
   { path: '/bets', label: '中奖', icon: Ticket },
   { path: '/matches', label: '赛程', icon: Calendar },
+  { path: '/news', label: '新闻', icon: Newspaper },
   { path: '/calculator', label: '计算', icon: Calculator },
-  { path: '/users', label: '成员', icon: Users },
 ];
 
 const MobileNav = () => {

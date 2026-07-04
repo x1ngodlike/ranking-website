@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Trophy, Ticket, Calendar, Users, Settings, Calculator } from 'lucide-react';
+import { Trophy, Ticket, Calendar, Users, Settings, Calculator, Newspaper } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import ThemeToggle from '@/components/ThemeToggle/ThemeToggle';
 
@@ -7,8 +7,8 @@ const navItems = [
   { path: '/', label: '排行榜', icon: Trophy },
   { path: '/bets', label: '中奖记录', icon: Ticket },
   { path: '/matches', label: '比赛赛程', icon: Calendar },
+  { path: '/news', label: '热点新闻', icon: Newspaper },
   { path: '/calculator', label: '投注计算', icon: Calculator },
-  { path: '/users', label: '成员管理', icon: Users },
 ];
 
 const Header = () => {

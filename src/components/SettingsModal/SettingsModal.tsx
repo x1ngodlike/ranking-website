@@ -1,9 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useAppStore } from '@/store/useAppStore';
-import { X, Settings, Lock, LogOut, RefreshCw, Check, Eye, EyeOff, Trash2, Database, Brain, Newspaper } from 'lucide-react';
+import { X, Settings, Lock, LogOut, RefreshCw, Check, Eye, EyeOff, Trash2, Database, Brain, Newspaper, Users, Plus, Edit2, ExternalLink } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import BackupModal from '../BackupModal/BackupModal';
 import AIConfigModal from '../AIConfigModal/AIConfigModal';
+import EditUserModal from '../EditUserModal/EditUserModal';
+import Avatar from '../Avatar';
+import { AvatarPicker } from '../AvatarPicker/AvatarPicker';
+import type { User } from '@/types';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -18,6 +22,11 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
   const switchEnvironment = useAppStore((state) => state.switchEnvironment);
   const changeAdminPassword = useAppStore((state) => state.changeAdminPassword);
   const clearEnvironmentData = useAppStore((state) => state.clearEnvironmentData);
+  const users = useAppStore((state) => state.users);
+  const bets = useAppStore((state) => state.bets);
+  const addUserWithUpload = useAppStore((state) => state.addUserWithUpload);
+  const updateUser = useAppStore((state) => state.updateUser);
+  const removeUser = useAppStore((state) => state.removeUser);
 
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -35,6 +44,18 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
   const [showAIConfigModal, setShowAIConfigModal] = useState(false);
   const [newsCount, setNewsCount] = useState(0);
   const [isRefreshingNews, setIsRefreshingNews] = useState(false);
+
+  const [showAddUserForm, setShowAddUserForm] = useState(false);
+  const [newUserNickname, setNewUserNickname] = useState('');
+  const [newUserAvatar, setNewUserAvatar] = useState('⚽️');
+  const [newUserCustomImage, setNewUserCustomImage] = useState<string | null>(null);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+
+  const getUserStats = (userId: string) => {
+    const userBets = bets.filter((b) => b.userId === userId);
+    const totalWinAmount = userBets.reduce((sum, b) => sum + (b.winAmount ?? 0), 0);
+    return { totalBets: userBets.length, totalWinAmount };
+  };
 
   const fetchNewsCount = async () => {
     try {
@@ -61,6 +82,23 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
       console.error('刷新新闻失败:', e);
     }
     setIsRefreshingNews(false);
+  };
+
+  const handleAddUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newUserNickname.trim()) return;
+
+    let imageBlob: Blob | null = null;
+    if (newUserCustomImage && newUserCustomImage.startsWith('data:')) {
+      const response = await fetch(newUserCustomImage);
+      imageBlob = await response.blob();
+    }
+
+    await addUserWithUpload(newUserNickname.trim(), newUserAvatar, imageBlob);
+    setNewUserNickname('');
+    setNewUserAvatar('⚽️');
+    setNewUserCustomImage(null);
+    setShowAddUserForm(false);
   };
 
   useEffect(() => {
@@ -147,7 +185,7 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="card w-full max-w-md max-h-[90vh] overflow-y-auto"
+            className="card w-full max-w-lg max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between p-6 border-b border-neutral-200 dark:border-neutral-700">
@@ -263,6 +301,68 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                   </div>
 
                   <div className="pt-4 border-t border-neutral-200 dark:border-neutral-700">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="font-medium text-neutral-800 dark:text-neutral-200 flex items-center gap-2">
+                        <Users size={18} className="text-primary-500" />
+                        成员管理
+                      </h3>
+                      <button
+                        onClick={() => setShowAddUserForm(true)}
+                        className="text-sm text-primary-500 hover:text-primary-600 flex items-center gap-1"
+                      >
+                        <Plus size={16} />
+                        添加
+                      </button>
+                    </div>
+                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                      {users.map((user) => {
+                        const stats = getUserStats(user.id);
+                        return (
+                          <div key={user.id} className="flex items-center justify-between p-3 rounded-xl bg-neutral-50 dark:bg-neutral-800/50">
+                            <div className="flex items-center gap-3">
+                              <Avatar src={user.avatar} alt={user.nickname} size="sm" />
+                              <div>
+                                <p className="text-sm font-medium text-neutral-800 dark:text-neutral-200">
+                                  {user.nickname}
+                                  {user.isAdmin && <span className="ml-2 text-xs text-primary-500">管理员</span>}
+                                </p>
+                                <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                                  {stats.totalBets}条记录 · ¥{stats.totalWinAmount.toFixed(2)}
+                                </p>
+                              </div>
+                            </div>
+                            {!user.isAdmin && (
+                              <div className="flex items-center gap-1">
+                                <button
+                                  onClick={() => setEditingUser(user)}
+                                  className="p-1.5 rounded-lg text-neutral-400 hover:text-primary-500 hover:bg-primary-500/10 transition-colors"
+                                  title="编辑"
+                                >
+                                  <Edit2 size={14} />
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    if (confirm(`确定要移除 ${user.nickname} 吗？`)) {
+                                      removeUser(user.id);
+                                    }
+                                  }}
+                                  className="p-1.5 rounded-lg text-neutral-400 hover:text-loss-400 hover:bg-loss-500/10 transition-colors"
+                                  title="删除"
+                                >
+                                  <Trash2 size={14} />
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-2">
+                      共 {users.length} 位成员
+                    </p>
+                  </div>
+
+                  <div className="pt-4 border-t border-neutral-200 dark:border-neutral-700">
                     <div className="flex items-center justify-between">
                       <div>
                         <span className="text-sm text-neutral-600 dark:text-neutral-400">
@@ -287,7 +387,7 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                       <div>
                         <span className="text-sm text-neutral-600 dark:text-neutral-400 flex items-center gap-2">
                           <Newspaper size={16} className="text-primary-500" />
-                          世界杯热点新闻
+                          热点新闻
                         </span>
                         <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-1">
                           AI评价结合近期热点新闻玩梗吐槽，每30分钟自动更新
@@ -429,11 +529,76 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                 </>
               )}
             </div>
+
+            <AnimatePresence>
+              {showAddUserForm && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="fixed inset-0 z-[101] bg-black/50 flex items-center justify-center p-4"
+                  onClick={() => setShowAddUserForm(false)}
+                >
+                  <motion.div
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0.9, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="w-full max-w-md"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="card">
+                      <h3 className="font-display text-xl text-neutral-800 dark:text-neutral-200 mb-4">
+                        添加新成员
+                      </h3>
+                      <form onSubmit={handleAddUser}>
+                        <div className="mb-4">
+                          <label className="block text-sm text-neutral-600 dark:text-neutral-400 mb-2">
+                            昵称
+                          </label>
+                          <input
+                            type="text"
+                            value={newUserNickname}
+                            onChange={(e) => setNewUserNickname(e.target.value)}
+                            placeholder="输入昵称"
+                            className="w-full px-4 py-3 rounded-xl bg-white dark:bg-neutral-800 border border-primary/20 text-neutral-800 dark:text-neutral-200 focus:outline-none focus:border-primary/50 transition-colors"
+                            autoFocus
+                          />
+                        </div>
+                        <div className="mb-6">
+                          <AvatarPicker
+                            value={newUserAvatar}
+                            onChange={setNewUserAvatar}
+                            customImage={newUserCustomImage}
+                            onCustomImageChange={setNewUserCustomImage}
+                          />
+                        </div>
+                        <button
+                          type="submit"
+                          disabled={!newUserNickname.trim()}
+                          className="btn-primary w-full flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <Plus size={20} />
+                          添加成员
+                        </button>
+                      </form>
+                    </div>
+                  </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <AIConfigModal isOpen={showAIConfigModal} onClose={() => setShowAIConfigModal(false)} />
+            <BackupModal isOpen={showBackupModal} onClose={() => setShowBackupModal(false)} />
+            <EditUserModal
+              isOpen={editingUser !== null}
+              user={editingUser}
+              onClose={() => setEditingUser(null)}
+              onSave={(userId, nickname, avatar) => updateUser(userId, nickname, avatar)}
+            />
           </motion.div>
         </motion.div>
       )}
-      <AIConfigModal isOpen={showAIConfigModal} onClose={() => setShowAIConfigModal(false)} />
-      <BackupModal isOpen={showBackupModal} onClose={() => setShowBackupModal(false)} />
     </AnimatePresence>
   );
 };
