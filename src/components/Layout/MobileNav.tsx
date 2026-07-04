@@ -1,10 +1,11 @@
 import { useLocation, Link } from 'react-router-dom';
-import { Trophy, Ticket, Calendar, Users } from 'lucide-react';
+import { Trophy, Ticket, Calendar, Users, Calculator } from 'lucide-react';
 
 const navItems = [
   { path: '/', label: '排行榜', icon: Trophy },
   { path: '/bets', label: '中奖', icon: Ticket },
   { path: '/matches', label: '赛程', icon: Calendar },
+  { path: '/calculator', label: '计算', icon: Calculator },
   { path: '/users', label: '成员', icon: Users },
 ];
 
@@ -21,12 +22,12 @@ const MobileNav = () => {
             <Link
               key={item.path}
               to={item.path}
-              className={`flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-all ${
+              className={`flex flex-col items-center gap-1 px-2 py-2 rounded-xl transition-all ${
                 isActive ? 'text-primary-500' : 'text-neutral-500 dark:text-neutral-500'
               }`}
             >
-              <Icon size={22} />
-              <span className="text-xs font-medium">{item.label}</span>
+              <Icon size={20} />
+              <span className="text-[10px] font-medium">{item.label}</span>
             </Link>
           );
         })}

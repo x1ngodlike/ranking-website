@@ -10,6 +10,7 @@ const BetsPage = lazy(() => import('./pages/BetsPage'));
 const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 const MatchesPage = lazy(() => import('./pages/MatchesPage'));
 const UsersPage = lazy(() => import('./pages/UsersPage'));
+const CalculatorPage = lazy(() => import('./pages/CalculatorPage'));
 
 const PageLoader = () => (
   <motion.div
@@ -59,6 +60,14 @@ function AnimatedRoutes() {
             element={
               <Suspense fallback={<PageLoader />}>
                 <UsersPage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/calculator"
+            element={
+              <Suspense fallback={<PageLoader />}>
+                <CalculatorPage />
               </Suspense>
             }
           />
