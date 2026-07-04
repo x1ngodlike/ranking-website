@@ -195,9 +195,7 @@ const BackupModal = ({ isOpen, onClose }: BackupModalProps) => {
                             {backup.filename}
                           </span>
                           {backup.label === 'auto' && (
-                            <span className="text-xs px-1.5 py-0.5 rounded bg-primary-500/10 text-primary-600 dark:text-primary-400">
-                              自动
-                            </span>
+                            <span className="flex-shrink-0 text-xs px-1.5 py-0.5 rounded bg-primary-500/10 text-primary-600 dark:text-primary-400">自动</span>
                           )}
                         </div>
                         <div className="text-xs text-neutral-500 mt-1">

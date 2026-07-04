@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Newspaper, Clock, RefreshCw, ExternalLink, AlertCircle } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
+import { getAdminToken } from '@/utils/api';
 
 interface NewsItem {
   title: string;
@@ -41,7 +42,11 @@ const NewsPage = () => {
     try {
       // 管理员可以强制服务器拉取最新新闻，普通用户只重新获取缓存
       if (isAdminLoggedIn) {
-        const res = await fetch('/api/news/refresh', { method: 'POST' });
+        const token = getAdminToken();
+        const res = await fetch('/api/news/refresh', {
+          method: 'POST',
+          headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+        });
         const data = await res.json();
         if (data.success) {
           setNews(data.news || []);

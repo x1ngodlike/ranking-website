@@ -48,9 +48,7 @@ const BetsPage = () => {
         className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8"
       >
         <div>
-          <h1 className="font-display text-4xl text-gradient-gold mb-2">
-            中奖记录
-          </h1>
+          <h1 className="font-display text-4xl text-gradient-gold mb-2">中奖记录</h1>
           <p className="text-neutral-500 dark:text-neutral-500">记录每一次心跳加速的时刻</p>
         </div>
         <div className="flex items-center gap-3">

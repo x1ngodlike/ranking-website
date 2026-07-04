@@ -169,12 +169,8 @@ const RankingPage = () => {
         transition={{ duration: 0.6 }}
         className="text-center mb-8 md:mb-12"
       >
-        <h1 className="font-display text-4xl sm:text-5xl md:text-6xl text-gradient-gold mb-2 md:mb-3">
-          世界杯中奖排行榜
-        </h1>
-        <p className="text-neutral-500 dark:text-neutral-500 text-sm md:text-base">
-          群雄逐鹿，谁是真正的预言家？
-        </p>
+        <h1 className="font-display text-4xl sm:text-5xl md:text-6xl text-gradient-gold mb-2 md:mb-3">世界杯中奖排行榜</h1>
+        <p className="text-neutral-500 dark:text-neutral-500">群雄逐鹿，谁是真正的预言家？</p>
 
         <div className="flex items-center justify-center gap-3 sm:gap-5 md:gap-8 mt-5 md:mt-6">
           <div className="text-center">

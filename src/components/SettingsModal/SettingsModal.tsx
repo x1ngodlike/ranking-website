@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { X, Settings, Lock, LogOut, RefreshCw, Eye, EyeOff, Trash2, Database, Brain, Newspaper, Users, Globe, AlertTriangle, ChevronRight, Shield } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { getAdminToken } from '@/utils/api';
 import BackupModal from '../BackupModal/BackupModal';
 import AIConfigModal from '../AIConfigModal/AIConfigModal';
 import UsersModal from '../UsersModal/UsersModal';
@@ -54,7 +55,11 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
     setIsRefreshingNews(true);
     setNewsMessage('');
     try {
-      const res = await fetch('/api/news/refresh', { method: 'POST' });
+      const token = getAdminToken();
+      const res = await fetch('/api/news/refresh', {
+        method: 'POST',
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+      });
       const data = await res.json();
       if (data.success) {
         setNewsCount(data.count || 0);

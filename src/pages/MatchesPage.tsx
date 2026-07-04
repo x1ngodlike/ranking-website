@@ -192,11 +192,8 @@ const MatchesPage = () => {
         transition={{ duration: 0.5 }}
         className="text-center mb-6"
       >
-        <h1 className="font-display text-4xl text-gradient-gold mb-2">
-          比赛赛程
-        </h1>
-        <p className="text-neutral-500 dark:text-neutral-500">
-          共 {matches.length} 场比赛 ·{' '}
+        <h1 className="font-display text-4xl text-gradient-gold mb-2">比赛赛程</h1>
+        <p className="text-neutral-500 dark:text-neutral-500">共 {matches.length} 场比赛 ·{' '}
           {matches.filter((m) => m.status === 'finished').length} 场已完赛
           {liveCount > 0 && (
             <span className="text-profit-500">

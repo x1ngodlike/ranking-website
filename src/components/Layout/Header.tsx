@@ -54,17 +54,7 @@ const Header = () => {
             })}
           </nav>
 
-          <div className="flex items-center gap-3">
-            {environment === 'test' && (
-              <span className="hidden sm:flex items-center gap-1 px-2 py-1 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 text-xs font-medium">
-                🧪 测试环境
-              </span>
-            )}
-            {isAdminLoggedIn && (
-              <span className="hidden sm:flex items-center gap-1 px-2 py-1 rounded-full bg-primary-500/20 text-primary-500 text-xs font-medium">
-                👑 管理员
-              </span>
-            )}
+          <div className="flex items-center gap-2">
             <ThemeToggle />
             <button
               onClick={openSettings}
@@ -73,6 +63,20 @@ const Header = () => {
             >
               <Settings size={20} />
             </button>
+            {environment === 'test' ? (
+              <span className="hidden sm:flex items-center px-2 py-1 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 text-xs font-medium">
+                测试
+              </span>
+            ) : (
+              <span className="hidden sm:flex items-center px-2 py-1 rounded-full bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 text-xs font-medium">
+                正式
+              </span>
+            )}
+            {isAdminLoggedIn && (
+              <span className="hidden sm:flex items-center px-2 py-1 rounded-full bg-primary-500/20 text-primary-500 text-xs font-medium">
+                管理员
+              </span>
+            )}
           </div>
         </div>
       </div>
