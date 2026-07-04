@@ -25,7 +25,11 @@ const NewsPage = () => {
       if (data.success) {
         setNews(data.news || []);
       } else {
-        setError(data.message || '获取新闻失败');
+        if (data.message === '未授权，请先登录') {
+          setError('新闻服务需要管理员权限，请联系管理员配置');
+        } else {
+          setError(data.message || '获取新闻失败');
+        }
       }
     } catch (e) {
       setError('网络错误，无法获取新闻');
