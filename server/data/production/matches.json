@@ -1369,11 +1369,11 @@
     "stage": "knockout",
     "roundKey": "round_of_32",
     "originalStage": "LAST_32",
-    "homeScore": null,
-    "awayScore": null,
-    "homePenaltyScore": null,
-    "awayPenaltyScore": null,
-    "status": "upcoming"
+    "homeScore": 1,
+    "awayScore": 1,
+    "homePenaltyScore": 3,
+    "awayPenaltyScore": 4,
+    "status": "finished"
   },
   {
     "id": "api_537429",

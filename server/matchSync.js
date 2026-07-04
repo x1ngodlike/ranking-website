@@ -142,11 +142,15 @@ const apiMatchToLocal = (apiMatch) => {
     const pAway = penalties?.away ?? 0;
 
     if (ftHome !== null) {
-      // 只有当 penalties 存在且不为 null 时，才算有点球
-      // 否则显示 fullTime（含加时赛的总比分）
       if (penalties && penalties.home !== null && penalties.away !== null) {
-        homeScore = ftHome - etHome - pHome;
+        // 有点球：显示120分钟总比分[点球比分]
+        // 120分钟总比分 = extraTime（如果存在） 或 fullTime（如果没踢加时直接点球，少见）
+        homeScore = (extraTime && extraTime.home !== null) ? extraTime.home : ftHome;
+      } else if (extraTime && extraTime.home !== null) {
+        // 有加时赛但无点球：显示加时赛后总比分
+        homeScore = extraTime.home;
       } else {
+        // 常规比赛：显示90分钟比分
         homeScore = ftHome;
       }
     } else if (halfTime?.home !== null) {
@@ -155,7 +159,9 @@ const apiMatchToLocal = (apiMatch) => {
 
     if (ftAway !== null) {
       if (penalties && penalties.home !== null && penalties.away !== null) {
-        awayScore = ftAway - etAway - pAway;
+        awayScore = (extraTime && extraTime.away !== null) ? extraTime.away : ftAway;
+      } else if (extraTime && extraTime.away !== null) {
+        awayScore = extraTime.away;
       } else {
         awayScore = ftAway;
       }
