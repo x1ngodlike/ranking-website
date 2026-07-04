@@ -124,9 +124,13 @@ const apiMatchToLocal = (apiMatch) => {
   
   const extraTime = apiMatch.score.extraTime;
   const penalties = apiMatch.score.penalties;
+  const regularTime = apiMatch.score.regularTime;
+  const duration = apiMatch.score.duration;
   
   let homeScore = null;
   let awayScore = null;
+  let regularTimeHomeScore = null;
+  let regularTimeAwayScore = null;
   let homePenaltyScore = null;
   let awayPenaltyScore = null;
 
@@ -136,41 +140,68 @@ const apiMatchToLocal = (apiMatch) => {
     
     const ftHome = fullTime?.home ?? null;
     const ftAway = fullTime?.away ?? null;
+    const rtHome = regularTime?.home ?? null;
+    const rtAway = regularTime?.away ?? null;
     const etHome = extraTime?.home ?? 0;
     const etAway = extraTime?.away ?? 0;
-    const pHome = penalties?.home ?? 0;
-    const pAway = penalties?.away ?? 0;
+    const pHome = penalties?.home ?? null;
+    const pAway = penalties?.away ?? null;
 
-    if (ftHome !== null) {
-      if (penalties && penalties.home !== null && penalties.away !== null) {
-        // 有点球：显示120分钟总比分[点球比分]
-        // 120分钟总比分 = extraTime（如果存在） 或 fullTime（如果没踢加时直接点球，少见）
-        homeScore = (extraTime && extraTime.home !== null) ? extraTime.home : ftHome;
-      } else if (extraTime && extraTime.home !== null) {
-        // 有加时赛但无点球：显示加时赛后总比分
-        homeScore = extraTime.home;
-      } else {
-        // 常规比赛：显示90分钟比分
+    // 90分钟常规时间比分（体彩竞彩结算依据）
+    if (rtHome !== null) {
+      regularTimeHomeScore = rtHome;
+    } else if (ftHome !== null && duration !== 'PENALTY_SHOOTOUT' && duration !== 'EXTRA_TIME') {
+      regularTimeHomeScore = ftHome;
+    }
+    if (rtAway !== null) {
+      regularTimeAwayScore = rtAway;
+    } else if (ftAway !== null && duration !== 'PENALTY_SHOOTOUT' && duration !== 'EXTRA_TIME') {
+      regularTimeAwayScore = ftAway;
+    }
+
+    if (duration === 'PENALTY_SHOOTOUT') {
+      // 点球决胜：显示120分钟总比分[点球比分]
+      if (rtHome !== null) {
+        homeScore = rtHome + etHome;
+      } else if (ftHome !== null && pHome !== null) {
+        homeScore = ftHome - pHome;
+      } else if (ftHome !== null) {
         homeScore = ftHome;
       }
-    } else if (halfTime?.home !== null) {
-      homeScore = halfTime.home;
-    }
-
-    if (ftAway !== null) {
-      if (penalties && penalties.home !== null && penalties.away !== null) {
-        awayScore = (extraTime && extraTime.away !== null) ? extraTime.away : ftAway;
-      } else if (extraTime && extraTime.away !== null) {
-        awayScore = extraTime.away;
-      } else {
+      if (rtAway !== null) {
+        awayScore = rtAway + etAway;
+      } else if (ftAway !== null && pAway !== null) {
+        awayScore = ftAway - pAway;
+      } else if (ftAway !== null) {
         awayScore = ftAway;
       }
-    } else if (halfTime?.away !== null) {
-      awayScore = halfTime.away;
+      homePenaltyScore = pHome;
+      awayPenaltyScore = pAway;
+    } else if (duration === 'EXTRA_TIME') {
+      // 加时赛决胜：显示120分钟总比分
+      if (rtHome !== null) {
+        homeScore = rtHome + etHome;
+      } else if (ftHome !== null) {
+        homeScore = ftHome;
+      }
+      if (rtAway !== null) {
+        awayScore = rtAway + etAway;
+      } else if (ftAway !== null) {
+        awayScore = ftAway;
+      }
+    } else {
+      // 常规比赛：显示90分钟比分
+      if (ftHome !== null) {
+        homeScore = ftHome;
+      } else if (halfTime?.home !== null) {
+        homeScore = halfTime.home;
+      }
+      if (ftAway !== null) {
+        awayScore = ftAway;
+      } else if (halfTime?.away !== null) {
+        awayScore = halfTime.away;
+      }
     }
-
-    homePenaltyScore = penalties?.home ?? null;
-    awayPenaltyScore = penalties?.away ?? null;
   }
 
   return {
@@ -186,6 +217,8 @@ const apiMatchToLocal = (apiMatch) => {
     originalStage,
     homeScore,
     awayScore,
+    regularTimeHomeScore,
+    regularTimeAwayScore,
     homePenaltyScore,
     awayPenaltyScore,
     status,

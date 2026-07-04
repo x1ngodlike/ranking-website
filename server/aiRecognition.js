@@ -19,22 +19,33 @@ const buildPrompt = (matches, winAmount) => {
       matchList = `\n\n## 2026世界杯赛程参考（请对照此列表识别球队名称）\n${lines.join('\n')}`;
     }
 
-    // 已结束比赛比分
-    const finishedMatches = matches.filter(m => m.status === 'finished' && m.homeScore !== null);
+    // 已结束比赛比分（体彩竞彩按90分钟常规时间结算）
+    const finishedMatches = matches.filter(m => m.status === 'finished' && m.regularTimeHomeScore !== null && m.regularTimeHomeScore !== undefined);
     if (finishedMatches.length > 0) {
       const scoreLines = finishedMatches.map(m => {
         const home = m.homeTeam || '待定';
         const away = m.awayTeam || '待定';
-        const score = `${m.homeScore}${m.homePenaltyScore !== null ? `[${m.homePenaltyScore}]` : ''}-${m.awayScore}${m.awayPenaltyScore !== null ? `[${m.awayPenaltyScore}]` : ''}`;
-        let result;
-        if (m.homeScore > m.awayScore) result = '主队胜';
-        else if (m.homeScore < m.awayScore) result = '客队胜';
-        else if (m.homePenaltyScore !== null && m.awayPenaltyScore !== null) {
-          result = m.homePenaltyScore > m.awayPenaltyScore ? '主队胜(点球)' : '客队胜(点球)';
-        } else result = '平局';
-        return `- ${home} vs ${away}：${score} → ${result}`;
+        const rtScore = `${m.regularTimeHomeScore}-${m.regularTimeAwayScore}`;
+        // 90分钟赛果（体彩结算依据）
+        let rtResult;
+        if (m.regularTimeHomeScore > m.regularTimeAwayScore) rtResult = '主队胜(90分钟)';
+        else if (m.regularTimeHomeScore < m.regularTimeAwayScore) rtResult = '客队胜(90分钟)';
+        else rtResult = '平局(90分钟)';
+        // 显示完整比分（含加时/点球，便于参考）
+        let fullScore = rtScore;
+        if (m.homePenaltyScore !== null && m.homePenaltyScore !== undefined) {
+          // 有点球决胜
+          fullScore = `${m.homeScore}[${m.homePenaltyScore}]-${m.awayScore}[${m.awayPenaltyScore}]`;
+          const penaltyWinner = m.homePenaltyScore > m.awayPenaltyScore ? '主队胜(点球)' : '客队胜(点球)';
+          return `- ${home} vs ${away}：90分钟 ${rtScore}(${rtResult})，最终 ${fullScore}(${penaltyWinner}) → 体彩按90分钟算`;
+        } else if (m.homeScore !== m.regularTimeHomeScore || m.awayScore !== m.regularTimeAwayScore) {
+          // 有加时赛（比分不同）
+          fullScore = `${m.homeScore}-${m.awayScore}`;
+          return `- ${home} vs ${away}：90分钟 ${rtScore}(${rtResult})，加时后 ${fullScore} → 体彩按90分钟算`;
+        }
+        return `- ${home} vs ${away}：${rtScore} → ${rtResult}`;
       });
-      finishedScores = `\n\n## 已结束比赛比分（判断投注对错的依据）\n${scoreLines.join('\n')}`;
+      finishedScores = `\n\n## 已结束比赛比分（体彩竞彩按90分钟常规时间结算，加时赛/点球不算！）\n${scoreLines.join('\n')}`;
     }
   }
 
@@ -42,12 +53,13 @@ const buildPrompt = (matches, winAmount) => {
 ${matchList}${finishedScores}
 
 ## 竞彩足球玩法说明（必须严格遵守）
-中国体彩竞彩足球包含多种玩法，一张彩票可能包含不同玩法的混合投注：
+中国体彩竞彩足球包含多种玩法，一张彩票可能包含不同玩法的混合投注。
+**重要：所有玩法均按90分钟常规时间（含伤停补时）的比分结算，加时赛和点球大战不算！**
 
 ### 1. 胜平负 / 让球胜平负
-- "胜@X元" = 买主队赢（主队胜）
-- "平@X元" = 买平局
-- "负@X元" = 买主队输（即客队赢/客胜）
+- "胜@X元" = 买主队赢（90分钟主队胜）
+- "平@X元" = 买平局（90分钟打平）
+- "负@X元" = 买主队输（即90分钟客队赢/客胜）
 - 让球胜平负会在对阵中标注让球数，如"法国(-1) vs 瑞典"
 
 ### 2. 比分玩法（31个选项，主队比分在前）
@@ -76,7 +88,7 @@ ${winAmount ? `用户已确认实际中奖金额为：¥${winAmount}元（请以
 ## 简述要求
 1. 仔细识别图片中的**每一行投注选项**，一场比赛可能同时购买多个选项（复式投注），**多个选项之间用"+"号连接，不要遗漏任何一项**
 2. 列出各场对阵和投注选项，注意识别"+"号分隔的所有选项（如比分玩法"(2:1)@5.600元+(1:1)@4.700元"、胜平负玩法"胜@4.180元+平@3.430元"）
-3. **关键：对照上方"已结束比赛比分"，逐场判断投注对错（中/错），不要预设中奖**
+3. **关键：对照上方"已结束比赛比分"中90分钟的比分，逐场判断投注对错（中/错），加时赛/点球不算，不要预设中奖**
 4. 根据过关方式计算实际中奖情况（区分"最高可能奖金"和"实际兑奖金额"）
 5. 风格要求：风趣幽默、抽象搞笑，可以玩梗、吐槽、阴阳怪气，但信息必须准确
 6. 严格控制在150字以内

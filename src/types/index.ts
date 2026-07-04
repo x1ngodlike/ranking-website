@@ -19,8 +19,12 @@ export interface Match {
   stage: MatchStage;
   groupName?: string;
   roundKey?: string;
+  // 显示用比分：点球赛=120分钟比分，加时赛=120分钟比分，常规=90分钟比分
   homeScore: number | null;
   awayScore: number | null;
+  // 90分钟常规时间比分（体彩竞彩结算依据）
+  regularTimeHomeScore?: number | null;
+  regularTimeAwayScore?: number | null;
   homePenaltyScore?: number | null;
   awayPenaltyScore?: number | null;
   status: MatchStatus;
