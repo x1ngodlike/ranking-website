@@ -161,22 +161,29 @@ const apiMatchToLocal = (apiMatch) => {
 
     if (duration === 'PENALTY_SHOOTOUT') {
       // 点球决胜：显示120分钟总比分[点球比分]
+      // 120分钟总比分 = regularTime + extraTime
       if (rtHome !== null) {
         homeScore = rtHome + etHome;
-      } else if (ftHome !== null && pHome !== null) {
-        homeScore = ftHome - pHome;
       } else if (ftHome !== null) {
         homeScore = ftHome;
       }
       if (rtAway !== null) {
         awayScore = rtAway + etAway;
-      } else if (ftAway !== null && pAway !== null) {
-        awayScore = ftAway - pAway;
       } else if (ftAway !== null) {
         awayScore = ftAway;
       }
-      homePenaltyScore = pHome;
-      awayPenaltyScore = pAway;
+      // 点球比分 = fullTime - regularTime - extraTime
+      // （penalties 字段可能不准，用差值计算更可靠）
+      if (ftHome !== null && rtHome !== null) {
+        homePenaltyScore = ftHome - rtHome - etHome;
+      } else {
+        homePenaltyScore = pHome;
+      }
+      if (ftAway !== null && rtAway !== null) {
+        awayPenaltyScore = ftAway - rtAway - etAway;
+      } else {
+        awayPenaltyScore = pAway;
+      }
     } else if (duration === 'EXTRA_TIME') {
       // 加时赛决胜：显示120分钟总比分
       if (rtHome !== null) {
