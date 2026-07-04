@@ -49,15 +49,16 @@ const BetList = ({ bets, showUser = false, canDelete = false }: BetListProps) =>
 
     try {
       setRecognitionStatus('AI正在分析图片内容...');
-      
+
       const res = await api.recognizeBetImage(bet.imageUrl, bet.winAmount);
 
       if (res.success && res.result?.comment) {
         setRecognitionStatus('正在保存AI评价...');
-        
+
         try {
           await updateBet(bet.id, {
             aiComment: res.result.comment,
+            aiRecognizing: undefined,
           });
         } catch (e) {
           console.error('保存AI评价失败:', e);
@@ -67,11 +68,19 @@ const BetList = ({ bets, showUser = false, canDelete = false }: BetListProps) =>
       } else {
         setRecognitionError(prev => ({ ...prev, [bet.id]: res.message || '未能识别出图片信息' }));
         setRecognitionStatus('');
+        // 识别失败也清除识别中标记
+        if (bet.aiRecognizing) {
+          await updateBet(bet.id, { aiRecognizing: undefined });
+        }
       }
     } catch (error) {
       console.error('AI识别失败:', error);
       setRecognitionError(prev => ({ ...prev, [bet.id]: error instanceof Error ? error.message : 'AI识别失败' }));
       setRecognitionStatus('');
+      // 出错也清除识别中标记，避免永久卡住
+      if (bet.aiRecognizing) {
+        await updateBet(bet.id, { aiRecognizing: undefined });
+      }
     } finally {
       setTimeout(() => setRecognizingId(null), 500);
     }
@@ -203,11 +212,21 @@ const BetList = ({ bets, showUser = false, canDelete = false }: BetListProps) =>
 
             {/* AI识别中状态 - 新增记录自动识别 */}
             {bet.aiRecognizing && !isRecognizing && (
-              <div className="mt-2 p-2 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 flex items-center gap-2">
-                <Loader2 size={14} className="animate-spin text-blue-500" />
-                <span className="text-xs text-blue-700 dark:text-blue-300">
-                  AI识别中...
-                </span>
+              <div className="mt-2 p-2 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <Loader2 size={14} className="animate-spin text-blue-500" />
+                  <span className="text-xs text-blue-700 dark:text-blue-300">
+                    AI识别中...
+                  </span>
+                </div>
+                {canManage && (
+                  <button
+                    onClick={() => handleAIRecognize(bet)}
+                    className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 underline"
+                  >
+                    重新识别
+                  </button>
+                )}
               </div>
             )}
 
