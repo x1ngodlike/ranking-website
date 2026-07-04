@@ -1,10 +1,12 @@
 const fs = require('fs');
 const path = require('path');
 
-const buildPrompt = (matches, winAmount) => {
+const buildPrompt = (matches, winAmount, news) => {
   // 构建赛程参考列表，包含已结束比赛的比分
   let matchList = '';
   let finishedScores = '';
+  let newsSection = '';
+
   if (matches && matches.length > 0) {
     const lines = matches
       .filter(m => m.stage === 'knockout')
@@ -49,8 +51,16 @@ const buildPrompt = (matches, winAmount) => {
     }
   }
 
-  return `你是一个嘴碎但专业的体育彩票评论员，风格毒舌又搞笑。分析这张2026世界杯竞彩足球彩票截图，用150字以内中文写出简述。
-${matchList}${finishedScores}
+  if (news && news.length > 0) {
+    const newsLines = news.slice(0, 10).map(n => {
+      const date = n.pubDate ? new Date(n.pubDate).toLocaleDateString('zh-CN', { month: 'numeric', day: 'numeric' }) : '';
+      return `- ${date} ${n.title}`;
+    });
+    newsSection = `\n\n## 近期世界杯热点新闻（可结合玩梗吐槽）\n${newsLines.join('\n')}`;
+  }
+
+  return `你是一个专业的体育彩票评论员，风格毒舌又搞笑。分析这张2026世界杯竞彩足球彩票截图，用150字以内中文写出简述。
+${matchList}${finishedScores}${newsSection}
 
 ## 竞彩足球玩法说明（必须严格遵守）
 中国体彩竞彩足球包含多种玩法，一张彩票可能包含不同玩法的混合投注。
@@ -91,7 +101,9 @@ ${winAmount ? `用户已确认实际中奖金额为：¥${winAmount}元（请以
 3. **关键：对照上方"已结束比赛比分"中90分钟的比分，逐场判断投注对错（中/错），加时赛/点球不算，不要预设中奖**
 4. 根据过关方式计算实际中奖情况（区分"最高可能奖金"和"实际兑奖金额"）
 5. 风格要求：风趣幽默、抽象搞笑，可以玩梗、吐槽、阴阳怪气，但信息必须准确
-6. 严格控制在150字以内
+6. **可以结合相关球队/球员的知名梗、网络热梗、热门段子来吐槽或夸奖，让评价更有画面感和共鸣**
+7. **中奖金额多就狠狠夸，中奖少就使劲骂，反差越大越有意思**
+8. 严格控制在150字以内
 
 ## 返回格式
 严格返回以下JSON格式，不要任何其他内容：
@@ -100,7 +112,7 @@ ${winAmount ? `用户已确认实际中奖金额为：¥${winAmount}元（请以
 }`;
 };
 
-const recognizeBetImage = async (imagePath, imageUrl, aiConfig, matches, winAmount) => {
+const recognizeBetImage = async (imagePath, imageUrl, aiConfig, matches, winAmount, news) => {
   if (!aiConfig || !aiConfig.apiKey) {
     throw new Error('AI API密钥未配置');
   }
@@ -114,7 +126,7 @@ const recognizeBetImage = async (imagePath, imageUrl, aiConfig, matches, winAmou
     imageSource = { url: `data:image/jpeg;base64,${imageBuffer.toString('base64')}` };
   }
 
-  const prompt = buildPrompt(matches, winAmount);
+  const prompt = buildPrompt(matches, winAmount, news);
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 60000);

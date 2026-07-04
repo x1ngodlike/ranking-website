@@ -8,6 +8,7 @@ const fs = require('fs');
 const { syncMatches, hasLiveMatches } = require('./matchSync');
 const { initAIConfig, getAIConfig, saveAIConfig } = require('./aiConfig');
 const { recognizeBetImage } = require('./aiRecognition');
+const { initNewsService, fetchAllNews, getAllNews, getNewsForTeams } = require('./footballNews');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -877,7 +878,7 @@ app.post('/api/ai/recognize', async (req, res) => {
       return res.status(400).json({ success: false, message: '图片文件不存在' });
     }
 
-    const result = await recognizeBetImage(imagePath, imageUrl, aiConfig, readMatches(), winAmount);
+    const result = await recognizeBetImage(imagePath, imageUrl, aiConfig, readMatches(), winAmount, getAllNews());
     if (!result) {
       return res.json({ success: true, result: null, message: '未能识别出比赛信息' });
     }
@@ -886,6 +887,21 @@ app.post('/api/ai/recognize', async (req, res) => {
   } catch (error) {
     console.error('AI识别错误:', error);
     res.status(500).json({ success: false, message: error.message || 'AI识别失败' });
+  }
+});
+
+app.get('/api/news', (req, res) => {
+  const news = getAllNews();
+  res.json({ success: true, count: news.length, news });
+});
+
+app.post('/api/news/refresh', requireAuth, async (req, res) => {
+  try {
+    const news = await fetchAllNews();
+    res.json({ success: true, count: news.length, news });
+  } catch (error) {
+    console.error('刷新新闻失败:', error);
+    res.status(500).json({ success: false, message: error.message || '刷新新闻失败' });
   }
 });
 
@@ -1109,4 +1125,5 @@ app.listen(PORT, () => {
   console.log(`Data directory: ${DATA_DIR}`);
   console.log(`Upload directory: ${UPLOAD_DIR}`);
   console.log(`Backup directory: ${BACKUP_DIR}`);
+  initNewsService();
 });

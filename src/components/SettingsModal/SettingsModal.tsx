@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAppStore } from '@/store/useAppStore';
-import { X, Settings, Lock, LogOut, RefreshCw, Check, Eye, EyeOff, Trash2, Database, Brain } from 'lucide-react';
+import { X, Settings, Lock, LogOut, RefreshCw, Check, Eye, EyeOff, Trash2, Database, Brain, Newspaper } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import BackupModal from '../BackupModal/BackupModal';
 import AIConfigModal from '../AIConfigModal/AIConfigModal';
@@ -33,6 +33,41 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
   const [isClearingData, setIsClearingData] = useState(false);
   const [showBackupModal, setShowBackupModal] = useState(false);
   const [showAIConfigModal, setShowAIConfigModal] = useState(false);
+  const [newsCount, setNewsCount] = useState(0);
+  const [isRefreshingNews, setIsRefreshingNews] = useState(false);
+
+  const fetchNewsCount = async () => {
+    try {
+      const res = await fetch('/api/news');
+      const data = await res.json();
+      if (data.success) {
+        setNewsCount(data.count || 0);
+      }
+    } catch (e) {
+      console.error('获取新闻数量失败:', e);
+    }
+  };
+
+  const handleRefreshNews = async () => {
+    if (isRefreshingNews) return;
+    setIsRefreshingNews(true);
+    try {
+      const res = await fetch('/api/news/refresh', { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        setNewsCount(data.count || 0);
+      }
+    } catch (e) {
+      console.error('刷新新闻失败:', e);
+    }
+    setIsRefreshingNews(false);
+  };
+
+  useEffect(() => {
+    if (isOpen && isAdminLoggedIn) {
+      fetchNewsCount();
+    }
+  }, [isOpen, isAdminLoggedIn]);
 
   const handleLogin = async () => {
     setIsLoggingIn(true);
@@ -245,6 +280,31 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                         配置
                       </button>
                     </div>
+                  </div>
+
+                  <div className="pt-4 border-t border-neutral-200 dark:border-neutral-700">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="text-sm text-neutral-600 dark:text-neutral-400 flex items-center gap-2">
+                          <Newspaper size={16} className="text-primary-500" />
+                          世界杯热点新闻
+                        </span>
+                        <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-1">
+                          AI评价结合近期热点新闻玩梗吐槽，每30分钟自动更新
+                        </p>
+                      </div>
+                      <button
+                        onClick={handleRefreshNews}
+                        disabled={isRefreshingNews}
+                        className="text-sm text-primary-500 hover:text-primary-600 flex items-center gap-1 disabled:opacity-50"
+                      >
+                        <RefreshCw size={16} className={isRefreshingNews ? 'animate-spin' : ''} />
+                        {isRefreshingNews ? '刷新中' : '刷新'}
+                      </button>
+                    </div>
+                    <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-2">
+                      当前缓存：{newsCount} 条近3天新闻
+                    </p>
                   </div>
 
                   <div className="pt-4 border-t border-neutral-200 dark:border-neutral-700">
