@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { ExternalLink, Calculator } from 'lucide-react';
+import { ExternalLink } from 'lucide-react';
 
 const CALCULATOR_URL = 'https://m.sporttery.cn/mjc/jsq/zqspf/';
 
@@ -13,8 +13,7 @@ const CalculatorPage = () => {
         className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6"
       >
         <div>
-          <h1 className="font-display text-4xl text-gradient-gold mb-2 flex items-center gap-3">
-            <Calculator size={32} />
+          <h1 className="font-display text-4xl text-gradient-gold mb-2">
             奖金计算器
           </h1>
           <p className="text-neutral-500 dark:text-neutral-500">竞彩足球胜平负奖金计算（数据来源：中国体彩官方）</p>

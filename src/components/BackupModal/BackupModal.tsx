@@ -46,9 +46,7 @@ const BackupModal = ({ isOpen, onClose }: BackupModalProps) => {
   };
 
   useEffect(() => {
-    if (isOpen) {
-      loadBackups();
-    }
+    if (isOpen) loadBackups();
   }, [isOpen, environment]);
 
   const handleCreate = async () => {
@@ -57,18 +55,13 @@ const BackupModal = ({ isOpen, onClose }: BackupModalProps) => {
     setError('');
     const success = await createBackup(environment, 'manual');
     setOperating(null);
-    if (success) {
-      await loadBackups();
-    } else {
-      setError('创建备份失败');
-    }
+    if (success) await loadBackups();
+    else setError('创建备份失败');
   };
 
   const handleRestore = async (filename: string) => {
     if (operating) return;
-    if (!confirm('确定要还原此备份吗？当前数据将被覆盖，此操作不可恢复！')) {
-      return;
-    }
+    if (!confirm('确定要还原此备份吗？当前数据将被覆盖！')) return;
     setOperating(filename);
     setError('');
     const success = await restoreBackup(environment, filename);
@@ -83,18 +76,13 @@ const BackupModal = ({ isOpen, onClose }: BackupModalProps) => {
 
   const handleDelete = async (filename: string) => {
     if (operating) return;
-    if (!confirm('确定要删除此备份吗？此操作不可恢复！')) {
-      return;
-    }
+    if (!confirm('确定要删除此备份吗？')) return;
     setOperating(filename);
     setError('');
     const success = await deleteBackup(environment, filename);
     setOperating(null);
-    if (success) {
-      await loadBackups();
-    } else {
-      setError('删除失败');
-    }
+    if (success) await loadBackups();
+    else setError('删除失败');
   };
 
   const handleDownload = async (filename: string) => {
@@ -128,52 +116,52 @@ const BackupModal = ({ isOpen, onClose }: BackupModalProps) => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-[110] p-4"
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[110] p-4"
           onClick={onClose}
         >
           <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.9, opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="card w-full max-w-2xl max-h-[90vh] flex flex-col"
+            initial={{ scale: 0.95, opacity: 0, y: 10 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.95, opacity: 0, y: 10 }}
+            transition={{ duration: 0.2, ease: [0.34, 1.56, 0.64, 1] }}
+            className="bg-white dark:bg-neutral-900 rounded-2xl w-full max-w-lg max-h-[85vh] flex flex-col shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between p-6 border-b border-neutral-200 dark:border-neutral-700">
+            <div className="flex items-center justify-between p-5 border-b border-neutral-100 dark:border-neutral-800">
               <div className="flex items-center gap-3">
-                <Database className="text-primary-500" size={24} />
+                <div className="w-9 h-9 rounded-xl bg-primary-500/10 flex items-center justify-center">
+                  <Database className="text-primary-500" size={20} />
+                </div>
                 <div>
-                  <h2 className="font-display text-xl text-neutral-800 dark:text-neutral-200">
-                    备份与还原
-                  </h2>
-                  <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
-                    {environment === 'production' ? '正式环境' : '测试环境'} · 自动备份每15分钟执行一次，最多保留50份
+                  <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">备份与还原</h2>
+                  <p className="text-xs text-neutral-500">
+                    {environment === 'production' ? '正式环境' : '测试环境'} · 自动备份每15分钟
                   </p>
                 </div>
               </div>
               <button
                 onClick={onClose}
-                className="p-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors"
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
               >
-                <X size={20} />
+                <X size={18} />
               </button>
             </div>
 
-            <div className="p-6 flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto p-5">
               <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-400">
-                  <Clock size={16} />
+                <div className="flex items-center gap-2 text-sm text-neutral-500">
+                  <Clock size={14} />
                   <span>共 {backups.length} 个备份</span>
                 </div>
                 <button
                   onClick={handleCreate}
                   disabled={!!operating}
-                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary-500 text-white hover:bg-primary-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-primary-500 text-white text-sm font-medium hover:bg-primary-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {operating === 'create' ? (
-                    <Loader2 size={16} className="animate-spin" />
+                    <Loader2 size={14} className="animate-spin" />
                   ) : (
-                    <Save size={16} />
+                    <Save size={14} />
                   )}
                   立即备份
                 </button>
@@ -189,9 +177,9 @@ const BackupModal = ({ isOpen, onClose }: BackupModalProps) => {
                   加载中...
                 </div>
               ) : backups.length === 0 ? (
-                <div className="text-center py-12 text-neutral-500 dark:text-neutral-400">
-                  <Database size={40} className="mx-auto mb-3 opacity-50" />
-                  <p>暂无备份</p>
+                <div className="text-center py-12 text-neutral-400">
+                  <Database size={32} className="mx-auto mb-3 opacity-30" />
+                  <p className="text-sm">暂无备份</p>
                   <p className="text-xs mt-1">点击「立即备份」创建第一个备份</p>
                 </div>
               ) : (
@@ -199,50 +187,50 @@ const BackupModal = ({ isOpen, onClose }: BackupModalProps) => {
                   {backups.map((backup) => (
                     <div
                       key={backup.filename}
-                      className="flex items-center justify-between p-3 rounded-xl border border-neutral-200 dark:border-neutral-700 hover:border-primary-500/50 transition-colors"
+                      className="flex items-center justify-between p-3 rounded-xl border border-neutral-100 dark:border-neutral-700/60 hover:border-primary-500/30 transition-colors"
                     >
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium text-neutral-800 dark:text-neutral-200 truncate">
+                          <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100 truncate">
                             {backup.filename}
                           </span>
                           {backup.label === 'auto' && (
-                            <span className="text-xs px-1.5 py-0.5 rounded bg-primary-500/10 text-primary-500">
+                            <span className="text-xs px-1.5 py-0.5 rounded bg-primary-500/10 text-primary-600 dark:text-primary-400">
                               自动
                             </span>
                           )}
                         </div>
-                        <div className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+                        <div className="text-xs text-neutral-500 mt-1">
                           {formatDate(backup.createdAt)} · {formatFileSize(backup.size)}
                         </div>
                       </div>
                       <div className="flex items-center gap-1 ml-3">
                         <button
                           onClick={() => handleDownload(backup.filename)}
-                          className="p-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-500 hover:text-primary-500 transition-colors"
-                          title="下载备份信息"
+                          className="w-7 h-7 rounded-lg flex items-center justify-center text-neutral-400 hover:text-primary-500 hover:bg-primary-500/10 transition-colors"
+                          title="下载"
                         >
-                          <Download size={16} />
+                          <Download size={14} />
                         </button>
                         <button
                           onClick={() => handleRestore(backup.filename)}
                           disabled={!!operating}
-                          className="p-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-500 hover:text-primary-500 transition-colors disabled:opacity-50"
+                          className="w-7 h-7 rounded-lg flex items-center justify-center text-neutral-400 hover:text-primary-500 hover:bg-primary-500/10 transition-colors disabled:opacity-50"
                           title="还原"
                         >
                           {operating === backup.filename ? (
-                            <Loader2 size={16} className="animate-spin" />
+                            <Loader2 size={14} className="animate-spin" />
                           ) : (
-                            <RotateCcw size={16} />
+                            <RotateCcw size={14} />
                           )}
                         </button>
                         <button
                           onClick={() => handleDelete(backup.filename)}
                           disabled={!!operating}
-                          className="p-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-500 hover:text-red-500 transition-colors disabled:opacity-50"
+                          className="w-7 h-7 rounded-lg flex items-center justify-center text-neutral-400 hover:text-red-500 hover:bg-red-500/10 transition-colors disabled:opacity-50"
                           title="删除"
                         >
-                          <Trash2 size={16} />
+                          <Trash2 size={14} />
                         </button>
                       </div>
                     </div>
@@ -251,9 +239,9 @@ const BackupModal = ({ isOpen, onClose }: BackupModalProps) => {
               )}
             </div>
 
-            <div className="p-4 border-t border-neutral-200 dark:border-neutral-700">
-              <p className="text-xs text-neutral-500 dark:text-neutral-400">
-                备份文件存储于服务器 <code className="px-1 py-0.5 rounded bg-neutral-100 dark:bg-neutral-800">/app/data/backups</code> 目录
+            <div className="p-5 border-t border-neutral-100 dark:border-neutral-800">
+              <p className="text-xs text-neutral-400">
+                备份存储于服务器 <code className="px-1 py-0.5 rounded bg-neutral-100 dark:bg-neutral-800 text-neutral-500">/app/data/backups</code> 目录
               </p>
             </div>
           </motion.div>

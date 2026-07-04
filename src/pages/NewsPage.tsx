@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Newspaper, Clock, RefreshCw, ExternalLink, AlertCircle } from 'lucide-react';
+import { useAppStore } from '@/store/useAppStore';
 
 interface NewsItem {
   title: string;
@@ -16,6 +17,7 @@ const NewsPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState('');
+  const isAdminLoggedIn = useAppStore((state) => state.isAdminLoggedIn);
 
   const fetchNews = async () => {
     setError('');
@@ -25,11 +27,7 @@ const NewsPage = () => {
       if (data.success) {
         setNews(data.news || []);
       } else {
-        if (data.message === '未授权，请先登录') {
-          setError('新闻服务需要管理员权限，请联系管理员配置');
-        } else {
-          setError(data.message || '获取新闻失败');
-        }
+        setError(data.message || '获取新闻失败');
       }
     } catch (e) {
       setError('网络错误，无法获取新闻');
@@ -39,13 +37,19 @@ const NewsPage = () => {
   const handleRefresh = async () => {
     if (isRefreshing) return;
     setIsRefreshing(true);
+    setError('');
     try {
-      const res = await fetch('/api/news/refresh', { method: 'POST' });
-      const data = await res.json();
-      if (data.success) {
-        setNews(data.news || []);
+      // 管理员可以强制服务器拉取最新新闻，普通用户只重新获取缓存
+      if (isAdminLoggedIn) {
+        const res = await fetch('/api/news/refresh', { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          setNews(data.news || []);
+        } else {
+          setError(data.message || '刷新失败');
+        }
       } else {
-        setError(data.message || '刷新失败');
+        await fetchNews();
       }
     } catch (e) {
       setError('刷新失败');
@@ -81,8 +85,7 @@ const NewsPage = () => {
         className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8"
       >
         <div>
-          <h1 className="font-display text-4xl text-gradient-gold mb-2 flex items-center gap-3">
-            <Newspaper className="text-primary-500" />
+          <h1 className="font-display text-4xl text-gradient-gold mb-2">
             热点新闻
           </h1>
           <p className="text-neutral-500 dark:text-neutral-500">
@@ -94,14 +97,16 @@ const NewsPage = () => {
             <Clock size={16} />
             {news.length} 条新闻
           </span>
-          <button
-            onClick={handleRefresh}
-            disabled={isRefreshing}
-            className="btn-outline flex items-center gap-2"
-          >
-            <RefreshCw size={18} className={isRefreshing ? 'animate-spin' : ''} />
-            {isRefreshing ? '刷新中' : '刷新'}
-          </button>
+          {isAdminLoggedIn && (
+            <button
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              className="btn-outline flex items-center gap-2"
+            >
+              <RefreshCw size={18} className={isRefreshing ? 'animate-spin' : ''} />
+              {isRefreshing ? '刷新中' : '刷新'}
+            </button>
+          )}
         </div>
       </motion.div>
 
