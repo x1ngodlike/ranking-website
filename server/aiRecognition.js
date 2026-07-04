@@ -105,72 +105,83 @@ const recognizeBetImage = async (imagePath, imageUrl, aiConfig, matches, winAmou
     throw new Error('AI API密钥未配置');
   }
 
-  // 优先使用官网URL方式（更高效，请求体更小）
   let imageSource;
   if (aiConfig.siteUrl && imageUrl) {
     const baseUrl = aiConfig.siteUrl.replace(/\/+$/, '');
     imageSource = { url: `${baseUrl}${imageUrl}` };
   } else {
-    // fallback: 读取文件转base64
     const imageBuffer = fs.readFileSync(imagePath);
     imageSource = { url: `data:image/jpeg;base64,${imageBuffer.toString('base64')}` };
   }
 
   const prompt = buildPrompt(matches, winAmount);
 
-  const response = await fetch(aiConfig.apiEndpoint, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${aiConfig.apiKey}`,
-    },
-    body: JSON.stringify({
-      model: aiConfig.model,
-      messages: [
-        {
-          role: 'user',
-          content: [
-            { type: 'text', text: prompt },
-            {
-              type: 'image_url',
-              image_url: {
-                ...imageSource,
-                detail: 'high',
-              },
-            },
-          ],
-        },
-      ],
-      max_tokens: 500,
-      temperature: 0.3,
-      response_format: { type: 'json_object' },
-    }),
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 60000);
 
-  if (!response.ok) {
-    const err = await response.json().catch(() => ({}));
-    throw new Error(err.error?.message || `AI识别失败: ${response.status}`);
-  }
-
-  const data = await response.json();
-  const content = data.choices?.[0]?.message?.content || '';
-
-  if (!content) return null;
-
-  let result;
   try {
-    result = JSON.parse(content);
-  } catch {
-    const jsonMatch = content.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) return null;
-    result = JSON.parse(jsonMatch[0]);
+    const response = await fetch(aiConfig.apiEndpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${aiConfig.apiKey}`,
+      },
+      body: JSON.stringify({
+        model: aiConfig.model,
+        messages: [
+          {
+            role: 'user',
+            content: [
+              { type: 'text', text: prompt },
+              {
+                type: 'image_url',
+                image_url: {
+                  ...imageSource,
+                  detail: 'high',
+                },
+              },
+            ],
+          },
+        ],
+        max_tokens: 500,
+        temperature: 0.3,
+        response_format: { type: 'json_object' },
+      }),
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.error?.message || `AI识别失败: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content || '';
+
+    if (!content) return null;
+
+    let result;
+    try {
+      result = JSON.parse(content);
+    } catch {
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) return null;
+      result = JSON.parse(jsonMatch[0]);
+    }
+
+    if (!result.comment) return null;
+
+    return {
+      comment: result.comment.trim(),
+    };
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      throw new Error('AI识别超时，请稍后重试');
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeoutId);
   }
-
-  if (!result.comment) return null;
-
-  return {
-    comment: result.comment.trim(),
-  };
 };
 
 module.exports = {
