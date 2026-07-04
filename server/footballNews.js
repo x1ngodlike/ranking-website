@@ -9,6 +9,31 @@ const NEWS_SOURCES = [
     name: '懂球帝',
     url: 'https://api.dongqiudi.com/app/tabs/iphone/1.json',
     type: 'dqd_api',
+    displayName: '懂球帝',
+  },
+  {
+    name: '懂球帝英超',
+    url: 'https://api.dongqiudi.com/app/tabs/iphone/3.json',
+    type: 'dqd_api',
+    displayName: '英超',
+  },
+  {
+    name: '懂球帝意甲',
+    url: 'https://api.dongqiudi.com/app/tabs/iphone/4.json',
+    type: 'dqd_api',
+    displayName: '意甲',
+  },
+  {
+    name: '懂球帝西甲',
+    url: 'https://api.dongqiudi.com/app/tabs/iphone/5.json',
+    type: 'dqd_api',
+    displayName: '西甲',
+  },
+  {
+    name: '懂球帝德甲',
+    url: 'https://api.dongqiudi.com/app/tabs/iphone/6.json',
+    type: 'dqd_api',
+    displayName: '德甲',
   },
 ];
 
@@ -106,6 +131,52 @@ const parseDQDNews = (data) => {
   return items;
 };
 
+const decodeHTML = (str) => {
+  if (!str) return '';
+  return str
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/\s+/g, ' ')
+    .trim();
+};
+
+const parseRSS = (xml) => {
+  const items = [];
+  const itemRegex = /<item>[\s\S]*?<\/item>/gi;
+  const itemMatches = xml.match(itemRegex);
+
+  if (!itemMatches) return items;
+
+  for (const itemXml of itemMatches) {
+    const titleMatch = itemXml.match(/<title>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/title>/i);
+    const linkMatch = itemXml.match(/<link>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/link>/i);
+    const descMatch = itemXml.match(/<description>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/description>/i);
+    const pubDateMatch = itemXml.match(/<pubDate>([\s\S]*?)<\/pubDate>/i);
+
+    if (!titleMatch) continue;
+
+    const title = decodeHTML(titleMatch[1]).trim();
+    const link = linkMatch ? decodeHTML(linkMatch[1]).trim() : '';
+    const description = descMatch ? decodeHTML(descMatch[1]).replace(/<[^>]+>/g, '').trim().slice(0, 200) : '';
+
+    let pubDate;
+    if (pubDateMatch) {
+      const parsed = new Date(pubDateMatch[1].trim());
+      pubDate = isNaN(parsed.getTime()) ? new Date().toISOString() : parsed.toISOString();
+    } else {
+      pubDate = new Date().toISOString();
+    }
+
+    items.push({ title, link, pubDate, description });
+  }
+
+  return items;
+};
+
 const isWorldCupRelated = (item) => {
   const text = (item.title + item.description).toLowerCase();
   return WORLD_CUP_KEYWORDS.some(kw => text.includes(kw.toLowerCase()));
@@ -123,8 +194,8 @@ const fetchSource = async (source) => {
 
     const response = await fetch(source.url, {
       headers: {
-        'User-Agent': 'Dongqiudi/6.8.0 (iPhone; iOS 15.0; Scale/3.00)',
-        'Accept': 'application/json',
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': source.type === 'rss' ? 'application/rss+xml, application/xml, text/xml' : 'application/json',
       },
       signal: controller.signal,
     });
@@ -136,10 +207,14 @@ const fetchSource = async (source) => {
       return [];
     }
 
-    const data = await response.json();
-
     if (source.type === 'dqd_api') {
+      const data = await response.json();
       return parseDQDNews(data);
+    }
+
+    if (source.type === 'rss') {
+      const xml = await response.text();
+      return parseRSS(xml);
     }
 
     return [];
@@ -156,7 +231,7 @@ const fetchAllNews = async () => {
   for (const source of NEWS_SOURCES) {
     const items = await fetchSource(source);
     items.forEach(item => {
-      item.source = source.name;
+      item.source = source.displayName || source.name;
     });
     allItems.push(...items);
   }

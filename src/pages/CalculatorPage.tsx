@@ -5,25 +5,26 @@ const CALCULATOR_URL = 'https://m.sporttery.cn/mjc/jsq/zqspf/';
 
 const CalculatorPage = () => {
   return (
-    <div className="max-w-3xl mx-auto">
+    <div className="max-w-3xl mx-auto px-4 sm:px-0">
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6"
+        className="flex items-center justify-between gap-3 mb-4"
       >
         <div>
-          <h1 className="font-display text-4xl text-gradient-gold mb-2">奖金计算器</h1>
-          <p className="text-neutral-500 dark:text-neutral-500">竞彩足球胜平负奖金计算（数据来源：中国体彩官方）</p>
+          <h1 className="font-display text-2xl sm:text-4xl text-gradient-gold mb-1">奖金计算器</h1>
+          <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-500">竞彩足球胜平负奖金计算</p>
         </div>
         <a
           href={CALCULATOR_URL}
           target="_blank"
           rel="noopener noreferrer"
-          className="btn-outline flex items-center gap-2 self-start md:self-auto"
+          className="btn-outline flex items-center gap-1.5 text-xs sm:text-sm flex-shrink-0 px-3 py-2"
         >
-          <ExternalLink size={18} />
-          新窗口打开
+          <ExternalLink size={14} />
+          <span className="sm:inline">新窗口打开</span>
+          <span className="sm:hidden">打开</span>
         </a>
       </motion.div>
 
@@ -33,7 +34,10 @@ const CalculatorPage = () => {
         transition={{ duration: 0.5, delay: 0.1 }}
         className="flex justify-center"
       >
-        <div className="w-full max-w-md border border-neutral-200 dark:border-neutral-700 rounded-xl overflow-hidden shadow-lg" style={{ height: '750px' }}>
+        <div
+          className="w-full max-w-md border border-neutral-200 dark:border-neutral-700 rounded-xl overflow-hidden shadow-lg"
+          style={{ height: 'calc(100vh - 180px)', maxHeight: '600px' }}
+        >
           <iframe
             src={CALCULATOR_URL}
             title="竞彩足球胜平负奖金计算器"
