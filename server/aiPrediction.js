@@ -5,7 +5,6 @@ const { getNewsForTeams } = require('./footballNews');
 
 const DATA_DIR = path.join(__dirname, 'data');
 const PREDICTIONS_FILE = path.join(DATA_DIR, 'predictions.json');
-const MAX_HISTORY_DAYS = 30;
 
 const readPredictions = () => {
   try {
@@ -38,11 +37,17 @@ const getDateString = (date) => {
   return `${y}-${m}-${day}`;
 };
 
+const findMatchByTeams = (matches, homeTeam, awayTeam) => {
+  return matches.find(m => 
+    m.homeTeam === homeTeam && m.awayTeam === awayTeam
+  );
+};
+
 const savePrediction = (predictions, matches) => {
   const records = readPredictions();
   const today = getDateString(new Date());
 
-  const upcomingMatches = matches.filter(m => m.status === 'scheduled' || m.status === 'timed');
+  const upcomingMatches = matches.filter(m => m.status === 'scheduled' || m.status === 'timed' || m.status === 'upcoming');
   const matchMap = new Map();
   upcomingMatches.forEach(m => {
     if (m.matchNumber) matchMap.set(m.matchNumber, m);
@@ -52,12 +57,15 @@ const savePrediction = (predictions, matches) => {
     date: today,
     createdAt: new Date().toISOString(),
     predictions: predictions.map(p => {
-      const match = matchMap.get(p.matchNumber) || {};
+      let match = matchMap.get(p.matchNumber);
+      if (!match) {
+        match = findMatchByTeams(upcomingMatches, p.homeTeam, p.awayTeam) || {};
+      }
       return {
         ...p,
         matchTime: match.matchTime || null,
         stage: match.stage || '',
-        group: match.group || '',
+        group: match.groupName || match.group || '',
         actualHomeScore: null,
         actualAwayScore: null,
         actualResult: null,
@@ -73,9 +81,7 @@ const savePrediction = (predictions, matches) => {
     records.unshift(record);
   }
 
-  const cutoff = Date.now() - MAX_HISTORY_DAYS * 24 * 60 * 60 * 1000;
-  const filtered = records.filter(r => new Date(r.createdAt).getTime() >= cutoff);
-  writePredictions(filtered);
+  writePredictions(records);
 
   console.log(`[Predict] 保存预测记录 ${today}，共 ${predictions.length} 场`);
   return record;
@@ -101,7 +107,10 @@ const updatePredictionResults = (matches) => {
   for (const record of records) {
     for (const pred of record.predictions) {
       if (pred.isCorrect !== null) continue;
-      const match = finishedMatches.find(m => m.matchNumber === pred.matchNumber);
+      let match = finishedMatches.find(m => m.matchNumber === pred.matchNumber);
+      if (!match) {
+        match = findMatchByTeams(finishedMatches, pred.homeTeam, pred.awayTeam);
+      }
       if (!match) continue;
 
       pred.actualHomeScore = match.regularTimeHomeScore;
@@ -128,17 +137,17 @@ const buildPredictionPrompt = (matches, news) => {
   let newsSection = '';
 
   if (matches && matches.length > 0) {
-    const upcomingMatches = matches.filter(m => m.status === 'scheduled' || m.status === 'timed');
+    const upcomingMatches = matches.filter(m => m.status === 'scheduled' || m.status === 'timed' || m.status === 'upcoming');
     const finishedMatches = matches.filter(m => m.status === 'finished' && m.regularTimeHomeScore !== null && m.regularTimeHomeScore !== undefined);
 
     if (upcomingMatches.length > 0) {
-      const lines = upcomingMatches.map(m => {
-        const num = m.matchNumber || '';
+      const lines = upcomingMatches.map((m, index) => {
+        const num = m.matchNumber || (index + 1);
         const home = m.homeTeam || '待定';
         const away = m.awayTeam || '待定';
         const time = m.matchTime ? new Date(m.matchTime).toLocaleString('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
         const stage = m.stage || '';
-        const group = m.group ? `(${m.group})` : '';
+        const group = m.groupName ? `(${m.groupName})` : (m.group ? `(${m.group})` : '');
         return `- 第${num}场 ${home} vs ${away} ${group} [${time}] [${stage}]`;
       });
       matchList = `\n\n## 待预测比赛（共${upcomingMatches.length}场）\n${lines.join('\n')}`;
@@ -204,7 +213,7 @@ const predictMatches = async (matches) => {
     throw new Error('AI API密钥未配置，请先在设置中配置');
   }
 
-  const upcomingMatches = matches.filter(m => m.status === 'scheduled' || m.status === 'timed');
+  const upcomingMatches = matches.filter(m => m.status === 'scheduled' || m.status === 'timed' || m.status === 'upcoming');
   if (upcomingMatches.length === 0) {
     return { predictions: [] };
   }
