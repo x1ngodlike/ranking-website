@@ -37,6 +37,42 @@ const getDateString = (date) => {
   return `${y}-${m}-${day}`;
 };
 
+const getBeijingDate = (date) => {
+  const d = date instanceof Date ? date : new Date(date);
+  const beijingTime = new Date(d.getTime() + 8 * 60 * 60 * 1000);
+  const y = beijingTime.getUTCFullYear();
+  const m = String(beijingTime.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(beijingTime.getUTCDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+};
+
+const getBeijingDateTimeStr = (date) => {
+  const d = date instanceof Date ? date : new Date(date);
+  const beijingTime = new Date(d.getTime() + 8 * 60 * 60 * 1000);
+  const month = beijingTime.getUTCMonth() + 1;
+  const day = beijingTime.getUTCDate();
+  const hour = String(beijingTime.getUTCHours()).padStart(2, '0');
+  const minute = String(beijingTime.getUTCMinutes()).padStart(2, '0');
+  return `${month}月${day}日 ${hour}:${minute}`;
+};
+
+const getTomorrowBeijingDate = () => {
+  const now = new Date();
+  const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+  return getBeijingDate(tomorrow);
+};
+
+const getTomorrowMatches = (matches) => {
+  const tomorrowDate = getTomorrowBeijingDate();
+  return matches
+    .filter(m => m.status === 'scheduled' || m.status === 'timed' || m.status === 'upcoming')
+    .filter(m => {
+      if (!m.matchTime) return false;
+      return getBeijingDate(m.matchTime) === tomorrowDate;
+    })
+    .sort((a, b) => new Date(a.matchTime).getTime() - new Date(b.matchTime).getTime());
+};
+
 const findMatchByTeams = (matches, homeTeam, awayTeam) => {
   return matches.find(m => 
     m.homeTeam === homeTeam && m.awayTeam === awayTeam
@@ -45,7 +81,7 @@ const findMatchByTeams = (matches, homeTeam, awayTeam) => {
 
 const savePrediction = (predictions, matches) => {
   const records = readPredictions();
-  const today = getDateString(new Date());
+  const today = getBeijingDate(new Date());
 
   const upcomingMatches = matches.filter(m => m.status === 'scheduled' || m.status === 'timed' || m.status === 'upcoming');
   const matchMap = new Map();
@@ -137,20 +173,20 @@ const buildPredictionPrompt = (matches, news) => {
   let newsSection = '';
 
   if (matches && matches.length > 0) {
-    const upcomingMatches = matches.filter(m => m.status === 'scheduled' || m.status === 'timed' || m.status === 'upcoming');
+    const upcomingMatches = getTomorrowMatches(matches);
     const finishedMatches = matches.filter(m => m.status === 'finished' && m.regularTimeHomeScore !== null && m.regularTimeHomeScore !== undefined);
 
     if (upcomingMatches.length > 0) {
       const lines = upcomingMatches.map((m, index) => {
-        const num = m.matchNumber || (index + 1);
+        const num = index + 1;
         const home = m.homeTeam || '待定';
         const away = m.awayTeam || '待定';
-        const time = m.matchTime ? new Date(m.matchTime).toLocaleString('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+        const time = m.matchTime ? getBeijingDateTimeStr(m.matchTime) : '';
         const stage = m.stage || '';
-        const group = m.groupName ? `(${m.groupName})` : (m.group ? `(${m.group})` : '');
-        return `- 第${num}场 ${home} vs ${away} ${group} [${time}] [${stage}]`;
+        const group = m.groupName ? `(${m.groupName})` : '';
+        return `- 第${num}场 ${home} vs ${away} ${group} [${time} 北京时间] [${stage}]`;
       });
-      matchList = `\n\n## 待预测比赛（共${upcomingMatches.length}场）\n${lines.join('\n')}`;
+      matchList = `\n\n## 明日比赛（共${upcomingMatches.length}场，北京时间）\n${lines.join('\n')}`;
     }
 
     if (finishedMatches.length > 0) {
@@ -204,7 +240,7 @@ const predictMatches = async (matches) => {
     throw new Error('AI API密钥未配置，请先在设置中配置');
   }
 
-  const upcomingMatches = matches.filter(m => m.status === 'scheduled' || m.status === 'timed' || m.status === 'upcoming');
+  const upcomingMatches = getTomorrowMatches(matches);
   if (upcomingMatches.length === 0) {
     return { predictions: [] };
   }
