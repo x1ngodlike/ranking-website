@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ExternalLink, Sparkles, Calculator, Star, RefreshCw, AlertCircle, History, ChevronLeft, Check, X } from 'lucide-react';
+import { ExternalLink, Sparkles, Calculator, Star, RefreshCw, AlertCircle, History, ChevronLeft, Check, X, Lock } from 'lucide-react';
+import { useAppStore } from '@/store/useAppStore';
 
 const CALCULATOR_URL = 'https://m.sporttery.cn/mjc/jsq/zqspf/';
 
@@ -32,6 +33,7 @@ const formatDate = (dateStr: string) => {
 };
 
 const CalculatorPage = () => {
+  const isAdminLoggedIn = useAppStore((state) => state.isAdminLoggedIn);
   const [activeTab, setActiveTab] = useState<'calculator' | 'prediction'>('calculator');
   const [view, setView] = useState<'current' | 'history'>('current');
   const [predictions, setPredictions] = useState<Prediction[]>([]);
@@ -191,10 +193,10 @@ const CalculatorPage = () => {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="flex items-center justify-between gap-3 mb-4"
+        className="flex items-center justify-between gap-3 mb-3"
       >
         <div>
-          <h1 className="font-display text-2xl sm:text-4xl text-gradient-gold mb-1">奖金计算器</h1>
+          <h1 className="font-display text-xl sm:text-4xl text-gradient-gold mb-0.5">奖金计算器</h1>
           <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-500">竞彩足球胜平负奖金计算</p>
         </div>
         <a
@@ -209,10 +211,10 @@ const CalculatorPage = () => {
         </a>
       </motion.div>
 
-      <div className="flex gap-2 mb-4">
+      <div className="flex gap-2 mb-3">
         <button
           onClick={() => setActiveTab('calculator')}
-          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium transition-all ${
+          className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-medium transition-all ${
             activeTab === 'calculator'
               ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/25'
               : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400'
@@ -223,7 +225,7 @@ const CalculatorPage = () => {
         </button>
         <button
           onClick={() => setActiveTab('prediction')}
-          className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium transition-all ${
+          className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-medium transition-all ${
             activeTab === 'prediction'
               ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/25'
               : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400'
@@ -246,13 +248,13 @@ const CalculatorPage = () => {
           >
             <div
               className="w-full max-w-md border border-neutral-200 dark:border-neutral-700 rounded-xl overflow-hidden shadow-lg"
-              style={{ height: 'calc(100vh - 260px)', maxHeight: '600px' }}
+              style={{ height: 'calc(100vh - 220px)', maxHeight: '560px', minHeight: '320px' }}
             >
               <iframe
                 src={CALCULATOR_URL}
                 title="竞彩足球胜平负奖金计算器"
                 className="w-full h-full"
-                style={{ border: 'none', width: 'calc(100% + 17px)' }}
+                style={{ border: 'none' }}
                 sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
               />
             </div>
@@ -267,7 +269,7 @@ const CalculatorPage = () => {
             exit={{ opacity: 0, scale: 0.98 }}
             transition={{ duration: 0.3 }}
             className="space-y-3"
-            style={{ maxHeight: 'calc(100vh - 260px)', overflowY: 'auto' }}
+            style={{ maxHeight: 'calc(100vh - 220px)', overflowY: 'auto' }}
           >
             {error && (
               <div className="card p-4 bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-900/50 flex items-center gap-3">
@@ -292,14 +294,16 @@ const CalculatorPage = () => {
                         历史
                       </button>
                     )}
-                    <button
-                      onClick={fetchPredictions}
-                      disabled={isLoading}
-                      className="flex items-center gap-1.5 text-sm text-primary-500 hover:text-primary-600 disabled:opacity-50"
-                    >
-                      <RefreshCw size={14} className={isLoading ? 'animate-spin' : ''} />
-                      刷新
-                    </button>
+                    {isAdminLoggedIn && (
+                      <button
+                        onClick={fetchPredictions}
+                        disabled={isLoading}
+                        className="flex items-center gap-1.5 text-sm text-primary-500 hover:text-primary-600 disabled:opacity-50"
+                      >
+                        <RefreshCw size={14} className={isLoading ? 'animate-spin' : ''} />
+                        刷新
+                      </button>
+                    )}
                   </div>
                 </div>
 
@@ -313,10 +317,19 @@ const CalculatorPage = () => {
                 {!isLoading && currentPredictions.length === 0 && !error && (
                   <div className="card p-8 text-center">
                     <Sparkles size={32} className="mx-auto mb-3 text-neutral-300 dark:text-neutral-600" />
-                    <p className="text-neutral-500 dark:text-neutral-400 text-sm mb-4">暂无预测数据</p>
-                    <button onClick={fetchPredictions} className="btn-primary text-sm px-4 py-2">
-                      开始预测
-                    </button>
+                    {isAdminLoggedIn ? (
+                      <>
+                        <p className="text-neutral-500 dark:text-neutral-400 text-sm mb-4">暂无预测数据</p>
+                        <button onClick={fetchPredictions} className="btn-primary text-sm px-4 py-2">
+                          开始预测
+                        </button>
+                      </>
+                    ) : (
+                      <p className="text-neutral-500 dark:text-neutral-400 text-sm flex items-center justify-center gap-1.5">
+                        <Lock size={14} />
+                        暂无预测数据
+                      </p>
+                    )}
                   </div>
                 )}
 

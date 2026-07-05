@@ -1150,6 +1150,84 @@ if (IS_PRODUCTION) {
   console.log('Match auto-sync disabled (development mode)');
 }
 
+// ========== 自动预测功能 ==========
+// 北京时间每天凌晨1点（前一天比赛已结束），自动预测明天的比赛
+const AUTO_PREDICT_HOUR_BJ = 1; // 北京时间凌晨1点
+
+const getBeijingNow = () => {
+  const now = new Date();
+  return new Date(now.getTime() + 8 * 60 * 60 * 1000);
+};
+
+const getMsUntilNextPredict = () => {
+  const bjNow = getBeijingNow();
+  const bjTomorrow = new Date(bjNow);
+  bjTomorrow.setUTCDate(bjNow.getUTCDate() + 1);
+  bjTomorrow.setUTCHours(AUTO_PREDICT_HOUR_BJ, 0, 0, 0);
+  return bjTomorrow.getTime() - bjNow.getTime();
+};
+
+let autoPredictTimer = null;
+
+const runAutoPredict = async () => {
+  try {
+    console.log('[AutoPredict] Starting auto prediction...');
+    const env = 'production';
+    const matches = readMatches(env);
+
+    // 先更新已有预测的结果
+    try {
+      updatePredictionResults(matches);
+    } catch (e) {
+      console.error('[AutoPredict] 更新预测结果失败:', e.message);
+    }
+
+    const aiConfig = getAIConfig();
+    if (!aiConfig || !aiConfig.apiKey) {
+      console.warn('[AutoPredict] AI API密钥未配置，跳过自动预测');
+      scheduleNextAutoPredict();
+      return;
+    }
+
+    const result = await predictMatches(matches);
+    console.log(`[AutoPredict] 预测完成，共 ${result.predictions.length} 场比赛`);
+  } catch (e) {
+    console.error('[AutoPredict] 自动预测失败:', e.message);
+  }
+  scheduleNextAutoPredict();
+};
+
+const scheduleNextAutoPredict = () => {
+  if (autoPredictTimer) clearTimeout(autoPredictTimer);
+  const ms = getMsUntilNextPredict();
+  const hours = (ms / 1000 / 60 / 60).toFixed(2);
+  console.log(`[AutoPredict] Next prediction in ${hours}h (at ${AUTO_PREDICT_HOUR_BJ}:00 Beijing time)`);
+  autoPredictTimer = setTimeout(runAutoPredict, ms);
+};
+
+if (IS_PRODUCTION) {
+  // 启动后5分钟首次检查（如果当天还没预测过）
+  setTimeout(async () => {
+    try {
+      const latest = getLatestPrediction();
+      const bjToday = getBeijingNow().toISOString().substring(0, 10);
+      if (!latest || latest.date !== bjToday) {
+        console.log('[AutoPredict] 启动时检测到今日未预测，开始首次预测...');
+        await runAutoPredict();
+      } else {
+        console.log('[AutoPredict] 今日已预测过，等待定时任务');
+        scheduleNextAutoPredict();
+      }
+    } catch (e) {
+      console.error('[AutoPredict] 启动预测失败:', e.message);
+      scheduleNextAutoPredict();
+    }
+  }, 5 * 60 * 1000);
+  console.log('Auto-predict enabled');
+} else {
+  console.log('Auto-predict disabled (development mode)');
+}
+
 app.get('/api/proxy/football/:path(*)', async (req, res) => {
   await proxyFootballApi(req, res, 'GET');
 });

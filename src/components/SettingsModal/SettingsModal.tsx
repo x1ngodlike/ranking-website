@@ -6,6 +6,7 @@ import { getAdminToken } from '@/utils/api';
 import BackupModal from '../BackupModal/BackupModal';
 import AIConfigModal from '../AIConfigModal/AIConfigModal';
 import UsersModal from '../UsersModal/UsersModal';
+import PasswordModal from '../PasswordModal/PasswordModal';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -18,24 +19,18 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
   const adminLogin = useAppStore((state) => state.adminLogin);
   const adminLogout = useAppStore((state) => state.adminLogout);
   const switchEnvironment = useAppStore((state) => state.switchEnvironment);
-  const changeAdminPassword = useAppStore((state) => state.changeAdminPassword);
   const clearEnvironmentData = useAppStore((state) => state.clearEnvironmentData);
 
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loginError, setLoginError] = useState('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
-  const [showPasswordForm, setShowPasswordForm] = useState(false);
-  const [oldPassword, setOldPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [passwordChangeMsg, setPasswordChangeMsg] = useState('');
-  const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [isSwitchingEnv, setIsSwitchingEnv] = useState(false);
   const [isClearingData, setIsClearingData] = useState(false);
   const [showBackupModal, setShowBackupModal] = useState(false);
   const [showAIConfigModal, setShowAIConfigModal] = useState(false);
   const [showUsersModal, setShowUsersModal] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [newsCount, setNewsCount] = useState(0);
   const [isRefreshingNews, setIsRefreshingNews] = useState(false);
   const [newsMessage, setNewsMessage] = useState('');
@@ -94,7 +89,6 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
 
   const handleLogout = () => {
     adminLogout();
-    setShowPasswordForm(false);
   };
 
   const handleSwitchEnv = async (env: 'production' | 'test') => {
@@ -102,30 +96,6 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
     setIsSwitchingEnv(true);
     await switchEnvironment(env);
     setIsSwitchingEnv(false);
-  };
-
-  const handleChangePassword = async () => {
-    if (newPassword !== confirmPassword) {
-      setPasswordChangeMsg('两次输入的新密码不一致');
-      return;
-    }
-    if (newPassword.length < 4) {
-      setPasswordChangeMsg('新密码至少4位');
-      return;
-    }
-    setIsChangingPassword(true);
-    setPasswordChangeMsg('');
-    const success = await changeAdminPassword(oldPassword, newPassword);
-    setIsChangingPassword(false);
-    if (success) {
-      setPasswordChangeMsg('密码修改成功');
-      setOldPassword('');
-      setNewPassword('');
-      setConfirmPassword('');
-      setTimeout(() => { setPasswordChangeMsg(''); setShowPasswordForm(false); }, 1500);
-    } else {
-      setPasswordChangeMsg('旧密码错误或修改失败');
-    }
   };
 
   const handleClearData = async () => {
@@ -317,7 +287,7 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
 
                   {/* 修改密码 */}
                   <button
-                    onClick={() => setShowPasswordForm(!showPasswordForm)}
+                    onClick={() => setShowPasswordModal(true)}
                     className="w-full flex items-center justify-between p-3.5 rounded-xl border border-neutral-100 dark:border-neutral-700/60 hover:bg-neutral-50 dark:hover:bg-neutral-800/40 transition-colors"
                   >
                     <div className="flex items-center gap-3">
@@ -326,39 +296,8 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                       </div>
                       <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100">修改密码</span>
                     </div>
-                    <ChevronRight size={16} className={`text-neutral-400 transition-transform ${showPasswordForm ? 'rotate-90' : ''}`} />
+                    <ChevronRight size={16} className="text-neutral-400" />
                   </button>
-
-                  <AnimatePresence>
-                    {showPasswordForm && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.2 }}
-                        className="overflow-hidden"
-                      >
-                        <div className="p-4 rounded-xl border border-neutral-100 dark:border-neutral-700/60 bg-neutral-50 dark:bg-neutral-800/40 space-y-3">
-                          <input type="password" value={oldPassword} onChange={(e) => setOldPassword(e.target.value)} placeholder="旧密码" disabled={isChangingPassword} className={inputClass} />
-                          <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="新密码" disabled={isChangingPassword} className={inputClass} />
-                          <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="确认新密码" disabled={isChangingPassword} className={inputClass} />
-                          {passwordChangeMsg && (
-                            <p className={`text-xs flex items-center gap-1 ${passwordChangeMsg.includes('成功') ? 'text-green-600 dark:text-green-400' : 'text-red-500'}`}>
-                              <AlertTriangle size={12} /> {passwordChangeMsg}
-                            </p>
-                          )}
-                          <div className="flex gap-2">
-                            <button onClick={handleChangePassword} disabled={isChangingPassword} className="flex-1 py-2 rounded-xl bg-primary-500 text-white text-sm font-medium hover:bg-primary-600 transition-colors disabled:opacity-50">
-                              {isChangingPassword ? '修改中...' : '确认修改'}
-                            </button>
-                            <button onClick={() => { setShowPasswordForm(false); setOldPassword(''); setNewPassword(''); setConfirmPassword(''); setPasswordChangeMsg(''); }} className="flex-1 py-2 rounded-xl border border-neutral-200 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 text-sm font-medium hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors">
-                              取消
-                            </button>
-                          </div>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
 
                   {/* 清除数据 */}
                   <button
@@ -393,6 +332,7 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
           <BackupModal isOpen={showBackupModal} onClose={() => setShowBackupModal(false)} />
           <AIConfigModal isOpen={showAIConfigModal} onClose={() => setShowAIConfigModal(false)} />
           <UsersModal isOpen={showUsersModal} onClose={() => setShowUsersModal(false)} />
+          <PasswordModal isOpen={showPasswordModal} onClose={() => setShowPasswordModal(false)} />
         </motion.div>
       )}
     </AnimatePresence>
