@@ -154,53 +154,44 @@ const buildPredictionPrompt = (matches, news) => {
     }
 
     if (finishedMatches.length > 0) {
-      const recentFinished = finishedMatches.slice(-20);
+      const recentFinished = finishedMatches.slice(-10);
       const scoreLines = recentFinished.map(m => {
         const home = m.homeTeam || '待定';
         const away = m.awayTeam || '待定';
         const rtScore = `${m.regularTimeHomeScore}-${m.regularTimeAwayScore}`;
-        let rtResult;
-        if (m.regularTimeHomeScore > m.regularTimeAwayScore) rtResult = '主队胜';
-        else if (m.regularTimeHomeScore < m.regularTimeAwayScore) rtResult = '客队胜';
-        else rtResult = '平局';
-        return `- ${home} vs ${away}：${rtScore}（${rtResult}，90分钟）`;
+        return `- ${home} ${rtScore} ${away}`;
       });
-      finishedScores = `\n\n## 近期已结束比赛比分参考（按90分钟常规时间算）\n${scoreLines.join('\n')}`;
+      finishedScores = `\n\n## 近期赛果参考(90分钟)\n${scoreLines.join('\n')}`;
     }
   }
 
   if (news && news.length > 0) {
-    const newsLines = news.map(n => `- [${n.source}] ${n.title}`);
-    newsSection = `\n\n## 相关球队近期新闻动态\n${newsLines.join('\n')}`;
+    const limitedNews = news.slice(0, 8);
+    const newsLines = limitedNews.map(n => `- [${n.source}] ${n.title}`);
+    newsSection = `\n\n## 相关球队新闻\n${newsLines.join('\n')}`;
   }
 
-  return `你是一位专业的足球赛事分析师和足彩预测专家。请根据以下信息，对即将进行的2026世界杯比赛进行比分预测分析。
+  return `你是足球赛事预测专家。根据以下信息预测2026世界杯比赛比分（仅90分钟常规时间）。
 
-## 预测要求
-1. 仅预测**90分钟常规时间（含伤停补时）**的比分，不考虑加时赛和点球大战
-2. 综合考虑球队实力、近期状态、历史交锋、伤病情况、战术打法等因素
-3. 风格要求：专业严谨但不失幽默，可以适当玩梗、吐槽，要有画面感
-4. 每场比赛给出：
-   - 预测比分（90分钟）
-   - 胜平负预测
-   - 简要分析理由（50字以内，风趣幽默）
-   - 信心指数（1-5星，5星最高）
-5. 比分要合理，符合足球比赛的常规比分范围
-6. 重点关注进攻火力强的球队和防守稳固的球队之间的对决特点${matchList}${finishedScores}${newsSection}
+## 要求
+1. 仅预测90分钟常规时间比分
+2. 风格：专业严谨带点幽默
+3. 每场给出：预测比分、胜平负、简短分析(30字内)、信心指数(1-5星)
+4. 比分合理，符合足球常规范围${matchList}${finishedScores}${newsSection}
 
 ## 返回格式
-严格返回以下JSON格式，不要任何其他内容：
+严格返回JSON，不要其他内容：
 {
   "predictions": [
     {
       "matchNumber": 场次编号,
-      "homeTeam": "主队名称",
-      "awayTeam": "客队名称",
-      "homeScore": 主队预测进球数(数字),
-      "awayScore": 客队预测进球数(数字),
-      "result": "胜/平/负（从主队角度）",
-      "analysis": "分析理由，风趣幽默，50字以内",
-      "confidence": 信心指数(1-5)
+      "homeTeam": "主队",
+      "awayTeam": "客队",
+      "homeScore": 数字,
+      "awayScore": 数字,
+      "result": "胜/平/负",
+      "analysis": "分析，30字内",
+      "confidence": 1-5
     }
   ]
 }`;
@@ -228,7 +219,7 @@ const predictMatches = async (matches) => {
   const prompt = buildPredictionPrompt(matches, relatedNews);
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 60000);
+  const timeoutId = setTimeout(() => controller.abort(), 90000);
 
   try {
     const response = await fetch(aiConfig.apiEndpoint, {
@@ -245,7 +236,7 @@ const predictMatches = async (matches) => {
             content: prompt,
           },
         ],
-        max_tokens: 2000,
+        max_tokens: 1200,
         temperature: 0.7,
         response_format: { type: 'json_object' },
       }),
