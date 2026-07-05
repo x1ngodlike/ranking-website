@@ -9,6 +9,7 @@ const { syncMatches, hasLiveMatches } = require('./matchSync');
 const { initAIConfig, getAIConfig, saveAIConfig } = require('./aiConfig');
 const { recognizeBetImage } = require('./aiRecognition');
 const { initNewsService, fetchAllNews, getAllNews, getNewsForTeams } = require('./footballNews');
+const { predictMatches, getPredictionHistory, getLatestPrediction, updatePredictionResults } = require('./aiPrediction');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -902,6 +903,54 @@ app.post('/api/news/refresh', requireAuth, async (req, res) => {
   } catch (error) {
     console.error('刷新新闻失败:', error);
     res.status(500).json({ success: false, message: error.message || '刷新新闻失败' });
+  }
+});
+
+app.get('/api/ai/predict', async (req, res) => {
+  try {
+    const environment = req.query.environment || 'production';
+    const matches = readMatches(environment);
+
+    try {
+      updatePredictionResults(matches);
+    } catch (e) {
+      console.error('[Predict] 更新预测结果失败:', e.message);
+    }
+
+    const result = await predictMatches(matches);
+    res.json({ success: true, ...result });
+  } catch (error) {
+    console.error('AI预测失败:', error);
+    res.status(500).json({ success: false, message: error.message || 'AI预测失败' });
+  }
+});
+
+app.get('/api/ai/predict/history', (req, res) => {
+  try {
+    const history = getPredictionHistory();
+    res.json({ success: true, history });
+  } catch (error) {
+    console.error('获取预测历史失败:', error);
+    res.status(500).json({ success: false, message: error.message || '获取预测历史失败' });
+  }
+});
+
+app.get('/api/ai/predict/latest', (req, res) => {
+  try {
+    const environment = req.query.environment || 'production';
+    const matches = readMatches(environment);
+
+    try {
+      updatePredictionResults(matches);
+    } catch (e) {
+      console.error('[Predict] 更新预测结果失败:', e.message);
+    }
+
+    const latest = getLatestPrediction();
+    res.json({ success: true, prediction: latest });
+  } catch (error) {
+    console.error('获取最新预测失败:', error);
+    res.status(500).json({ success: false, message: error.message || '获取最新预测失败' });
   }
 });
 
