@@ -1,8 +1,8 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import BetForm from '@/components/BetForm/BetForm';
 import BetList from '@/components/BetList/BetList';
-import { Plus, Filter, Trophy, Calendar, RefreshCw } from 'lucide-react';
+import { Plus, Filter, Trophy, Calendar, RefreshCw, XCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '@/utils/api';
 
@@ -11,7 +11,8 @@ const BetsPage = () => {
   const [filterUserId, setFilterUserId] = useState<string>('all');
   const [showFilters, setShowFilters] = useState(false);
   const [isUpdatingAll, setIsUpdatingAll] = useState(false);
-  const [updateProgress, setUpdateProgress] = useState<{ current: number; total: number; success: number; failed: number; currentBet?: string } | null>(null);
+  const [updateProgress, setUpdateProgress] = useState<{ current: number; total: number; success: number; failed: number; currentBet?: string; cancelled?: boolean } | null>(null);
+  const cancelUpdateRef = useRef(false);
 
   const bets = useAppStore((state) => state.bets);
   const users = useAppStore((state) => state.users);
@@ -47,7 +48,6 @@ const BetsPage = () => {
   }, [bets]);
 
   const handleUpdateAllAiComments = async () => {
-    // 按最新时间排序，只更新有图片的记录
     const betsWithImages = sortedBets.filter(bet => bet.imageUrl);
     const total = betsWithImages.length;
     
@@ -56,14 +56,18 @@ const BetsPage = () => {
       return;
     }
     
+    cancelUpdateRef.current = false;
     setIsUpdatingAll(true);
     setUpdateProgress({ current: 0, total, success: 0, failed: 0 });
     
     let success = 0;
     let failed = 0;
     
-    // 逐条更新，从最新的开始
     for (let i = 0; i < betsWithImages.length; i++) {
+      if (cancelUpdateRef.current) {
+        break;
+      }
+      
       const bet = betsWithImages[i];
       const user = users.find(u => u.id === bet.userId);
       const betName = user ? `${user.nickname} - ${bet.date}` : bet.date;
@@ -86,12 +90,15 @@ const BetsPage = () => {
       setUpdateProgress({ current: i + 1, total, success, failed, currentBet: betName });
     }
     
-    // 最终结果显示
-    setUpdateProgress({ current: total, total, success, failed });
+    const wasCancelled = cancelUpdateRef.current;
+    setUpdateProgress({ current: Math.min(success + failed, total), total, success, failed, cancelled: wasCancelled });
     setIsUpdatingAll(false);
     
-    // 刷新数据确保同步
     await refreshData();
+  };
+
+  const handleCancelUpdate = () => {
+    cancelUpdateRef.current = true;
   };
 
   return (
@@ -115,14 +122,16 @@ const BetsPage = () => {
             筛选
           </button>
           {isAdminLoggedIn && (
-            <button
-              onClick={handleUpdateAllAiComments}
-              disabled={isUpdatingAll}
-              className="btn-outline flex items-center gap-2"
-            >
-              <RefreshCw size={18} className={isUpdatingAll ? 'animate-spin' : ''} />
-              {isUpdatingAll ? '更新中...' : '更新全部AI评价'}
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleUpdateAllAiComments}
+                disabled={isUpdatingAll}
+                className="btn-outline flex items-center gap-2"
+              >
+                <RefreshCw size={18} className={isUpdatingAll ? 'animate-spin' : ''} />
+                {isUpdatingAll ? '更新中...' : '更新全部AI评价'}
+              </button>
+            </div>
           )}
           <button
             onClick={() => setShowForm(true)}
@@ -142,11 +151,22 @@ const BetsPage = () => {
         >
           <div className="flex items-center justify-between mb-2">
             <span className="font-medium">
-              {isUpdatingAll ? '正在更新...' : '更新完成'}
+              {updateProgress.cancelled ? '已终止' : isUpdatingAll ? '正在更新...' : '更新完成'}
             </span>
-            <span className="text-sm">
-              进度: {updateProgress.current}/{updateProgress.total}
-            </span>
+            <div className="flex items-center gap-3">
+              <span className="text-sm">
+                进度: {updateProgress.current}/{updateProgress.total}
+              </span>
+              {isUpdatingAll && (
+                <button
+                  onClick={handleCancelUpdate}
+                  className="flex items-center gap-1 text-sm px-3 py-1 rounded-md bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
+                >
+                  <XCircle size={16} />
+                  终止
+                </button>
+              )}
+            </div>
           </div>
           {updateProgress.total > 0 && (
             <div className="w-full h-2 bg-blue-200 dark:bg-blue-800 rounded-full overflow-hidden mb-2">
