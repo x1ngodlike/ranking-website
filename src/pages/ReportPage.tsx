@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, ChevronUp, X, Share2 } from 'lucide-react';
+import { ChevronDown, ChevronUp, X } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { generateReportData, formatDateCN, formatMoney, type ReportData } from '@/utils/reportData';
 import { getTeamFlag } from '@/utils/aiParser';
@@ -767,7 +767,7 @@ function Page10CPBadges({ data }: { data: ReportData }) {
   );
 }
 
-function Page11Ending({ data, onShare }: { data: ReportData; onShare: () => void }) {
+function Page11Ending({ data }: { data: ReportData }) {
   return (
     <PageContainer>
       <motion.div
@@ -826,17 +826,6 @@ function Page11Ending({ data, onShare }: { data: ReportData; onShare: () => void
           </span>
         </div>
       </motion.div>
-
-      <motion.button
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 1.3, duration: 0.5 }}
-        onClick={onShare}
-        className="flex items-center gap-2 bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-900 font-bold px-8 py-3 rounded-full hover:from-amber-400 hover:to-yellow-400 transition-all"
-      >
-        <Share2 size={18} />
-        生成分享海报
-      </motion.button>
 
       <motion.p
         initial={{ y: 20, opacity: 0 }}
@@ -960,7 +949,7 @@ export default function ReportPage() {
     <Page08AIComment key="8" data={reportData} />,
     <Page09Streak key="9" data={reportData} />,
     <Page10CPBadges key="10" data={reportData} />,
-    <Page11Ending key="11" data={reportData} onShare={() => {}} />,
+    <Page11Ending key="11" data={reportData} />,
   ];
 
   return (
