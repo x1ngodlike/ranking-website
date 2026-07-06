@@ -11,6 +11,7 @@ const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 const MatchesPage = lazy(() => import('./pages/MatchesPage'));
 const NewsPage = lazy(() => import('./pages/NewsPage'));
 const CalculatorPage = lazy(() => import('./pages/CalculatorPage'));
+const ReportPage = lazy(() => import('./pages/ReportPage'));
 
 const PageLoader = () => (
   <motion.div
@@ -72,6 +73,14 @@ function AnimatedRoutes() {
             }
           />
         </Route>
+        <Route
+          path="/report/:userId"
+          element={
+            <Suspense fallback={<PageLoader />}>
+              <ReportPage />
+            </Suspense>
+          }
+        />
       </Routes>
     </AnimatePresence>
   );

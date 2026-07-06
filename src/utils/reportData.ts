@@ -1,0 +1,267 @@
+import type { User, Bet, RankingItem, UserBadge } from '../types';
+import { calculateRankings } from './calculations';
+import {
+  calculateTeamStats,
+  calculatePlayTypeStats,
+  getBestAIComment,
+  getTotalWinMatches,
+  getTeamFlag,
+  type TeamStats,
+  type PlayTypeStats,
+} from './aiParser';
+
+export interface ReportData {
+  user: User;
+  nickname: string;
+  avatar: string;
+
+  totalBets: number;
+  totalWinAmount: number;
+  winDays: number;
+  totalWinMatches: number;
+
+  firstWin: {
+    date: string;
+    amount: number;
+  } | null;
+
+  bestDay: {
+    date: string;
+    winCount: number;
+    profit: number;
+  } | null;
+
+  biggestWin: {
+    date: string;
+    amount: number;
+    note?: string;
+    imageUrl?: string;
+  } | null;
+
+  maxStreak: number;
+  streakStartDate?: string;
+  streakEndDate?: string;
+
+  bestCP?: {
+    userId: string;
+    nickname: string;
+    avatar: string;
+    commonWinDays: number;
+  };
+
+  topBadges: UserBadge[];
+
+  teamStats: TeamStats[];
+  favoriteTeam?: TeamStats;
+
+  playTypeStats: PlayTypeStats[];
+  favoritePlayType?: PlayTypeStats;
+
+  bestAIComment: string | null;
+
+  rank: number;
+  totalUsers: number;
+
+  title: string;
+  titleEmoji: string;
+  titleDesc: string;
+}
+
+const TITLES = [
+  { key: 'profit', title: '金库霸主', emoji: '🏆', desc: '这个夏天，你是真正的赢家' },
+  { key: 'wins', title: '精准射手', emoji: '🎯', desc: '你的眼光，比裁判还准' },
+  { key: 'streak', title: '连胜达人', emoji: '🔥', desc: '好运来了，挡都挡不住' },
+  { key: 'days', title: '常青树', emoji: '🌲', desc: '每一天都有新的惊喜' },
+  { key: 'cp', title: '最佳搭档', emoji: '🤝', desc: '两个人的运气，双倍的快乐' },
+  { key: 'burst', title: '闪电猎手', emoji: '⚡', desc: '一击制胜，说的就是你' },
+  { key: 'explorer', title: '足球探险家', emoji: '🧭', desc: '每一支球队都有你的足迹' },
+  { key: 'rookie', title: '幸运新星', emoji: '⭐', desc: '初出茅庐，未来可期' },
+];
+
+function formatDate(dateStr: string): string {
+  const d = new Date(dateStr);
+  const m = d.getMonth() + 1;
+  const day = d.getDate();
+  return `${m}月${day}日`;
+}
+
+function determineTitle(
+  ranking: RankingItem,
+  teamStats: TeamStats[],
+  allRankings: RankingItem[]
+): { title: string; emoji: string; desc: string } {
+  const profitRank = allRankings.findIndex((r) => r.userId === ranking.userId) + 1;
+
+  if (profitRank === 1) {
+    return TITLES[0];
+  }
+
+  if (ranking.totalBets >= 20) {
+    return TITLES[1];
+  }
+
+  if (ranking.maxStreak >= 3) {
+    return TITLES[2];
+  }
+
+  if (ranking.winDays >= 7) {
+    return TITLES[3];
+  }
+
+  if (ranking.bestCP && ranking.bestCP.commonWinDays >= 3) {
+    return TITLES[4];
+  }
+
+  if (ranking.biggestWin >= 1000) {
+    return TITLES[5];
+  }
+
+  if (teamStats.length >= 6) {
+    return TITLES[6];
+  }
+
+  return TITLES[7];
+}
+
+export function generateReportData(
+  user: User,
+  users: User[],
+  bets: Bet[]
+): ReportData {
+  const userBets = bets.filter((b) => b.userId === user.id);
+  const winBets = userBets.filter((b) => (b.winAmount ?? 0) > 0);
+  const rankings = calculateRankings(users, bets, 'totalWin');
+  const userRanking = rankings.find((r) => r.userId === user.id);
+
+  const rank = rankings.findIndex((r) => r.userId === user.id) + 1;
+
+  const sortedWinBets = [...winBets].sort(
+    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+  );
+  const firstWin = sortedWinBets.length > 0
+    ? {
+        date: sortedWinBets[0].date,
+        amount: sortedWinBets[0].winAmount ?? 0,
+      }
+    : null;
+
+  const dailyStats: Record<string, { wins: number; profit: number }> = {};
+  userBets.forEach((bet) => {
+    const date = bet.date;
+    if (!dailyStats[date]) {
+      dailyStats[date] = { wins: 0, profit: 0 };
+    }
+    if ((bet.winAmount ?? 0) > 0) {
+      dailyStats[date].wins += 1;
+      dailyStats[date].profit += bet.winAmount ?? 0;
+    }
+  });
+
+  let bestDay: ReportData['bestDay'] = null;
+  let maxDayProfit = 0;
+  Object.entries(dailyStats).forEach(([date, stats]) => {
+    if (stats.profit > maxDayProfit) {
+      maxDayProfit = stats.profit;
+      bestDay = {
+        date,
+        winCount: stats.wins,
+        profit: stats.profit,
+      };
+    }
+  });
+
+  let biggestWin: ReportData['biggestWin'] = null;
+  if (winBets.length > 0) {
+    const biggest = winBets.reduce((max, bet) =>
+      (bet.winAmount ?? 0) > (max.winAmount ?? 0) ? bet : max
+    );
+    biggestWin = {
+      date: biggest.date,
+      amount: biggest.winAmount ?? 0,
+      note: biggest.note,
+      imageUrl: biggest.imageUrl,
+    };
+  }
+
+  const winDates = Object.keys(dailyStats)
+    .filter((d) => dailyStats[d].wins > 0)
+    .sort();
+  let maxStreak = 0;
+  let currentStreak = 0;
+  let streakStartIdx = 0;
+  let bestStreakStart = 0;
+  let bestStreakEnd = 0;
+
+  for (let i = 0; i < winDates.length; i++) {
+    if (i === 0) {
+      currentStreak = 1;
+      streakStartIdx = 0;
+    } else {
+      const prev = new Date(winDates[i - 1]);
+      const curr = new Date(winDates[i]);
+      const diff = Math.floor((curr.getTime() - prev.getTime()) / (1000 * 60 * 60 * 24));
+      if (diff === 1) {
+        currentStreak++;
+      } else {
+        currentStreak = 1;
+        streakStartIdx = i;
+      }
+    }
+    if (currentStreak > maxStreak) {
+      maxStreak = currentStreak;
+      bestStreakStart = streakStartIdx;
+      bestStreakEnd = i;
+    }
+  }
+
+  const teamStats = calculateTeamStats(userBets);
+  const favoriteTeam = teamStats.length > 0 ? teamStats[0] : undefined;
+
+  const playTypeStats = calculatePlayTypeStats(userBets);
+  const favoritePlayType = playTypeStats.length > 0 ? playTypeStats[0] : undefined;
+
+  const bestAIComment = getBestAIComment(userBets);
+
+  const totalWinMatches = getTotalWinMatches(userBets);
+
+  const titleInfo = determineTitle(userRanking!, teamStats, rankings);
+
+  return {
+    user,
+    nickname: user.nickname,
+    avatar: user.avatar,
+    totalBets: userBets.length,
+    totalWinAmount: userRanking?.totalWinAmount ?? 0,
+    winDays: userRanking?.winDays ?? 0,
+    totalWinMatches,
+    firstWin,
+    bestDay,
+    biggestWin,
+    maxStreak,
+    streakStartDate: winDates[bestStreakStart],
+    streakEndDate: winDates[bestStreakEnd],
+    bestCP: userRanking?.bestCP,
+    topBadges: userRanking?.topBadges ?? [],
+    teamStats,
+    favoriteTeam,
+    playTypeStats,
+    favoritePlayType,
+    bestAIComment,
+    rank,
+    totalUsers: users.length,
+    title: titleInfo.title,
+    titleEmoji: titleInfo.emoji,
+    titleDesc: titleInfo.desc,
+  };
+}
+
+export function formatDateCN(dateStr: string): string {
+  return formatDate(dateStr);
+}
+
+export function formatMoney(amount: number): string {
+  if (amount >= 10000) {
+    return (amount / 10000).toFixed(2) + '万';
+  }
+  return amount.toFixed(0);
+}
