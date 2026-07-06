@@ -11,12 +11,13 @@ const BetsPage = () => {
   const [filterUserId, setFilterUserId] = useState<string>('all');
   const [showFilters, setShowFilters] = useState(false);
   const [isUpdatingAll, setIsUpdatingAll] = useState(false);
-  const [updateResult, setUpdateResult] = useState<string | null>(null);
+  const [updateProgress, setUpdateProgress] = useState<{ current: number; total: number; success: number; failed: number; currentBet?: string } | null>(null);
 
   const bets = useAppStore((state) => state.bets);
   const users = useAppStore((state) => state.users);
   const isAdminLoggedIn = useAppStore((state) => state.isAdminLoggedIn);
   const environment = useAppStore((state) => state.environment);
+  const updateBet = useAppStore((state) => state.updateBet);
   const refreshData = useAppStore((state) => state.refreshData);
 
   const sortedBets = useMemo(() => {
@@ -46,20 +47,51 @@ const BetsPage = () => {
   }, [bets]);
 
   const handleUpdateAllAiComments = async () => {
-    setIsUpdatingAll(true);
-    setUpdateResult(null);
-    try {
-      const result = await api.updateAllAiComments(environment);
-      if (result.success) {
-        setUpdateResult(result.message || `更新完成：成功 ${result.updated} 条`);
-        await refreshData();
-      } else {
-        setUpdateResult(result.message || '更新失败');
-      }
-    } catch (e) {
-      setUpdateResult('更新失败：' + (e instanceof Error ? e.message : '未知错误'));
+    // 按最新时间排序，只更新有图片的记录
+    const betsWithImages = sortedBets.filter(bet => bet.imageUrl);
+    const total = betsWithImages.length;
+    
+    if (total === 0) {
+      setUpdateProgress({ current: 0, total: 0, success: 0, failed: 0 });
+      return;
     }
+    
+    setIsUpdatingAll(true);
+    setUpdateProgress({ current: 0, total, success: 0, failed: 0 });
+    
+    let success = 0;
+    let failed = 0;
+    
+    // 逐条更新，从最新的开始
+    for (let i = 0; i < betsWithImages.length; i++) {
+      const bet = betsWithImages[i];
+      const user = users.find(u => u.id === bet.userId);
+      const betName = user ? `${user.nickname} - ${bet.date}` : bet.date;
+      
+      setUpdateProgress({ current: i + 1, total, success, failed, currentBet: betName });
+      
+      try {
+        const result = await api.recognizeBetImage(bet.imageUrl!, bet.winAmount);
+        if (result.success && result.result?.comment) {
+          updateBet(bet.id, { aiComment: result.result.comment });
+          success++;
+        } else {
+          failed++;
+        }
+      } catch (e) {
+        console.error(`更新记录 ${bet.id} 失败:`, e);
+        failed++;
+      }
+      
+      setUpdateProgress({ current: i + 1, total, success, failed, currentBet: betName });
+    }
+    
+    // 最终结果显示
+    setUpdateProgress({ current: total, total, success, failed });
     setIsUpdatingAll(false);
+    
+    // 刷新数据确保同步
+    await refreshData();
   };
 
   return (
@@ -102,13 +134,37 @@ const BetsPage = () => {
         </div>
       </motion.div>
 
-      {updateResult && (
+      {updateProgress && (
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-4 p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 text-sm"
+          className="mb-4 p-4 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300"
         >
-          {updateResult}
+          <div className="flex items-center justify-between mb-2">
+            <span className="font-medium">
+              {isUpdatingAll ? '正在更新...' : '更新完成'}
+            </span>
+            <span className="text-sm">
+              进度: {updateProgress.current}/{updateProgress.total}
+            </span>
+          </div>
+          {updateProgress.total > 0 && (
+            <div className="w-full h-2 bg-blue-200 dark:bg-blue-800 rounded-full overflow-hidden mb-2">
+              <div 
+                className="h-full bg-blue-500 transition-all duration-300"
+                style={{ width: `${(updateProgress.current / updateProgress.total) * 100}%` }}
+              />
+            </div>
+          )}
+          <div className="flex gap-4 text-sm">
+            <span className="text-green-600 dark:text-green-400">成功: {updateProgress.success}</span>
+            <span className="text-red-600 dark:text-red-400">失败: {updateProgress.failed}</span>
+          </div>
+          {updateProgress.currentBet && isUpdatingAll && (
+            <div className="mt-2 text-xs text-blue-600 dark:text-blue-400 truncate">
+              当前: {updateProgress.currentBet}
+            </div>
+          )}
         </motion.div>
       )}
 
