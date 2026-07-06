@@ -181,6 +181,13 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ imageUrl, winAmount }),
     }, false),
+
+  updateAllAiComments: (environment: string) =>
+    request<{ success: boolean; message?: string; updated?: number; failed?: number; total?: number }>(
+      `/api/ai/update-all?environment=${encodeURIComponent(environment)}`,
+      { method: 'POST' },
+      true
+    ),
 };
 
 export interface BackupContent {
