@@ -2,16 +2,22 @@ import { useState, useMemo } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import BetForm from '@/components/BetForm/BetForm';
 import BetList from '@/components/BetList/BetList';
-import { Plus, Filter, Trophy, Calendar } from 'lucide-react';
+import { Plus, Filter, Trophy, Calendar, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { api } from '@/utils/api';
 
 const BetsPage = () => {
   const [showForm, setShowForm] = useState(false);
   const [filterUserId, setFilterUserId] = useState<string>('all');
   const [showFilters, setShowFilters] = useState(false);
+  const [isUpdatingAll, setIsUpdatingAll] = useState(false);
+  const [updateResult, setUpdateResult] = useState<string | null>(null);
 
   const bets = useAppStore((state) => state.bets);
   const users = useAppStore((state) => state.users);
+  const isAdminLoggedIn = useAppStore((state) => state.isAdminLoggedIn);
+  const environment = useAppStore((state) => state.environment);
+  const refreshData = useAppStore((state) => state.refreshData);
 
   const sortedBets = useMemo(() => {
     return [...bets].sort(
@@ -39,6 +45,23 @@ const BetsPage = () => {
     };
   }, [bets]);
 
+  const handleUpdateAllAiComments = async () => {
+    setIsUpdatingAll(true);
+    setUpdateResult(null);
+    try {
+      const result = await api.updateAllAiComments(environment);
+      if (result.success) {
+        setUpdateResult(result.message || `更新完成：成功 ${result.updated} 条`);
+        await refreshData();
+      } else {
+        setUpdateResult(result.message || '更新失败');
+      }
+    } catch (e) {
+      setUpdateResult('更新失败：' + (e instanceof Error ? e.message : '未知错误'));
+    }
+    setIsUpdatingAll(false);
+  };
+
   return (
     <div className="max-w-5xl mx-auto">
       <motion.div
@@ -59,6 +82,16 @@ const BetsPage = () => {
             <Filter size={18} />
             筛选
           </button>
+          {isAdminLoggedIn && (
+            <button
+              onClick={handleUpdateAllAiComments}
+              disabled={isUpdatingAll}
+              className="btn-outline flex items-center gap-2"
+            >
+              <RefreshCw size={18} className={isUpdatingAll ? 'animate-spin' : ''} />
+              {isUpdatingAll ? '更新中...' : '更新全部AI评价'}
+            </button>
+          )}
           <button
             onClick={() => setShowForm(true)}
             className="btn-gold flex items-center gap-2"
@@ -68,6 +101,16 @@ const BetsPage = () => {
           </button>
         </div>
       </motion.div>
+
+      {updateResult && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-4 p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 text-sm"
+        >
+          {updateResult}
+        </motion.div>
+      )}
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}

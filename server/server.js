@@ -891,6 +891,67 @@ app.post('/api/ai/recognize', async (req, res) => {
   }
 });
 
+// 批量更新所有中奖记录的AI评价（管理员权限）
+app.post('/api/ai/update-all', requireAuth, async (req, res) => {
+  try {
+    const environment = req.query.environment || 'production';
+    const data = readData(environment);
+    const bets = data.bets || [];
+    const aiConfig = getAIConfig();
+    
+    if (!aiConfig.apiKey) {
+      return res.status(400).json({ success: false, message: 'AI API密钥未配置' });
+    }
+    
+    // 只更新有图片的记录
+    const betsWithImages = bets.filter(bet => bet.imageUrl);
+    const total = betsWithImages.length;
+    
+    if (total === 0) {
+      return res.json({ success: true, message: '没有需要更新的记录', updated: 0, total: 0 });
+    }
+    
+    let updated = 0;
+    let failed = 0;
+    
+    // 逐条更新
+    for (const bet of betsWithImages) {
+      try {
+        const imagePath = path.join(UPLOAD_DIR, bet.imageUrl.replace(/^\/uploads\//, ''));
+        if (!fs.existsSync(imagePath)) {
+          failed++;
+          continue;
+        }
+        
+        const result = await recognizeBetImage(imagePath, bet.imageUrl, aiConfig, readMatches(environment), bet.winAmount, getAllNews());
+        if (result && result.comment) {
+          bet.aiComment = result.comment;
+          updated++;
+        } else {
+          failed++;
+        }
+      } catch (e) {
+        console.error(`更新记录 ${bet.id} AI评价失败:`, e.message);
+        failed++;
+      }
+    }
+    
+    // 保存更新后的数据
+    writeData(environment, data);
+    
+    res.json({ 
+      success: true, 
+      message: `更新完成：成功 ${updated} 条，失败 ${failed} 条`, 
+      updated, 
+      failed, 
+      total 
+    });
+  } catch (error) {
+    console.error('批量更新AI评价错误:', error);
+    res.status(500).json({ success: false, message: error.message || '批量更新失败' });
+  }
+});
+
 app.get('/api/news', (req, res) => {
   const news = getAllNews();
   res.json({ success: true, count: news.length, news });
