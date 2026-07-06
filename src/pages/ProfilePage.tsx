@@ -1,17 +1,18 @@
 import { useMemo, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useAppStore } from '@/store/useAppStore';
 import { calculateRankings, getDailyWinAmount } from '@/utils/calculations';
 import { ProfitChart } from '@/components/Charts/ProfitChart';
 import BetList from '@/components/BetList/BetList';
 import BetForm from '@/components/BetForm/BetForm';
 import BadgeDisplay from '@/components/BadgeDisplay/BadgeDisplay';
-import { ArrowLeft, TrendingUp, Trophy, DollarSign, Calendar, Plus, Award, Flame, Heart } from 'lucide-react';
+import { ArrowLeft, TrendingUp, Trophy, DollarSign, Calendar, Plus, Award, Flame, Heart, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Avatar from '@/components/Avatar';
 
 const ProfilePage = () => {
   const { userId } = useParams<{ userId: string }>();
+  const navigate = useNavigate();
   const users = useAppStore((state) => state.users);
   const bets = useAppStore((state) => state.bets);
   const [showForm, setShowForm] = useState(false);
@@ -107,6 +108,14 @@ const ProfilePage = () => {
                 </p>
               </div>
             </div>
+
+            <button
+              onClick={() => navigate(`/report/${userId}`)}
+              className="mt-5 inline-flex items-center gap-2 bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-900 font-bold px-5 py-2.5 rounded-full hover:from-amber-400 hover:to-yellow-400 transition-all shadow-lg shadow-amber-500/20"
+            >
+              <Sparkles size={18} />
+              生成我的中奖报告
+            </button>
           </div>
         </div>
       </motion.div>
