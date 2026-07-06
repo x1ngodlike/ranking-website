@@ -930,6 +930,16 @@ export default function ReportPage() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleKeyDown]);
 
+  // 动态设置标题，便于微信分享时展示用户昵称
+  useEffect(() => {
+    if (reportData) {
+      document.title = `${reportData.nickname}的世界杯中奖报告`;
+    }
+    return () => {
+      document.title = '世界杯中奖排行榜';
+    };
+  }, [reportData]);
+
   if (!user || !reportData) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center text-white">
