@@ -204,7 +204,7 @@ const BetList = ({ bets, showUser = false, canDelete = false }: BetListProps) =>
                     AI评价
                   </span>
                 </div>
-                <p className="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed">
+                <p className="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed whitespace-pre-wrap">
                   {bet.aiComment}
                 </p>
               </div>
