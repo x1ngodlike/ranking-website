@@ -88,6 +88,24 @@ export interface ReportData {
   rank: number;
   totalUsers: number;
 
+  topUsers: Array<{
+    userId: string;
+    nickname: string;
+    avatar: string;
+    totalWinAmount: number;
+  }>;
+
+  groupStats: {
+    avgWinAmount: number;
+    maxSingleWin: number;
+    avgWinMatches: number;
+    beatCount: number;
+    lostCount: number;
+  };
+
+  socialTitle: string;
+  socialTitleEmoji: string;
+
   title: string;
   titleEmoji: string;
   titleDesc: string;
@@ -238,6 +256,50 @@ function determineTitle(
   return TITLES[10];
 }
 
+function determineSocialTitle(
+  rank: number,
+  totalUsers: number,
+  userRanking: RankingItem,
+  playTypeStats: PlayTypeStats[]
+): { title: string; emoji: string } {
+  if (totalUsers === 0) {
+    return { title: '独行侠', emoji: '🦸' };
+  }
+
+  const rankPercent = ((totalUsers - rank + 1) / totalUsers) * 100;
+
+  if (rank === 1) {
+    return { title: '群内财神', emoji: '👑' };
+  }
+
+  if (rankPercent >= 90) {
+    return { title: '万中无一', emoji: '💎' };
+  }
+
+  if (rankPercent >= 70) {
+    return { title: '胜率王者', emoji: '🏆' };
+  }
+
+  if (userRanking.maxStreak >= 5) {
+    return { title: '连胜狂魔', emoji: '🔥' };
+  }
+
+  const totalGoalsType = playTypeStats.find(p => p.type === '总进球数');
+  if (totalGoalsType && totalGoalsType.totalCount >= 10) {
+    return { title: '进球数专家', emoji: '⚽' };
+  }
+
+  if (rankPercent >= 50) {
+    return { title: '实力玩家', emoji: '🎯' };
+  }
+
+  if (rankPercent >= 30) {
+    return { title: '潜力新星', emoji: '⭐' };
+  }
+
+  return { title: '重在参与', emoji: '🌱' };
+}
+
 export function generateReportData(
   user: User,
   users: User[],
@@ -355,6 +417,40 @@ export function generateReportData(
     rankings
   );
 
+  const topUsers = rankings.slice(0, 3).map(r => ({
+    userId: r.userId,
+    nickname: r.nickname,
+    avatar: r.avatar,
+    totalWinAmount: r.totalWinAmount,
+  }));
+
+  const totalWinAmounts = rankings.map(r => r.totalWinAmount);
+  const avgWinAmount = totalWinAmounts.length > 0
+    ? totalWinAmounts.reduce((sum, a) => sum + a, 0) / totalWinAmounts.length
+    : 0;
+  const maxSingleWin = rankings.reduce((max, r) => Math.max(max, r.biggestWin), 0);
+
+  const totalWinMatchesPerUser = rankings.map(r => {
+    const rb = bets.filter(b => b.userId === r.userId);
+    return getTotalWinMatches(rb);
+  });
+  const avgWinMatches = totalWinMatchesPerUser.length > 0
+    ? totalWinMatchesPerUser.reduce((sum, a) => sum + a, 0) / totalWinMatchesPerUser.length
+    : 0;
+
+  const beatCount = users.length - rank;
+  const lostCount = rank - 1;
+
+  const groupStats = {
+    avgWinAmount,
+    maxSingleWin,
+    avgWinMatches,
+    beatCount,
+    lostCount,
+  };
+
+  const socialTitleInfo = determineSocialTitle(rank, users.length, userRanking!, playTypeStats);
+
   return {
     user,
     nickname: user.nickname,
@@ -383,6 +479,10 @@ export function generateReportData(
     betterStage,
     rank,
     totalUsers: users.length,
+    topUsers,
+    groupStats,
+    socialTitle: socialTitleInfo.title,
+    socialTitleEmoji: socialTitleInfo.emoji,
     title: titleInfo.title,
     titleEmoji: titleInfo.emoji,
     titleDesc: titleInfo.desc,

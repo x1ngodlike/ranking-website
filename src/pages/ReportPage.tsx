@@ -935,8 +935,6 @@ function Page09Streak({ data }: { data: ReportData }) {
 }
 
 function Page11SocialCompare({ data }: { data: ReportData }) {
-  const rankPercent = data.totalUsers > 0 ? ((data.totalUsers - data.rank + 1) / data.totalUsers) * 100 : 0;
-
   return (
     <PageContainer>
       <motion.div
@@ -945,7 +943,7 @@ function Page11SocialCompare({ data }: { data: ReportData }) {
         transition={{ delay: 0.2, type: 'spring' }}
         className="text-5xl mb-4"
       >
-        🏆
+        {data.socialTitleEmoji}
       </motion.div>
       <motion.h2
         initial={{ y: 20, opacity: 0 }}
@@ -953,80 +951,130 @@ function Page11SocialCompare({ data }: { data: ReportData }) {
         transition={{ delay: 0.3, duration: 0.5 }}
         className="text-xl font-bold mb-2"
       >
-        和朋友们比一比
+        你在群内排名
       </motion.h2>
-
       <motion.div
-        initial={{ y: 30, opacity: 0, scale: 0.9 }}
+        initial={{ y: 30, opacity: 0, scale: 0.8 }}
         animate={{ y: 0, opacity: 1, scale: 1 }}
         transition={{ delay: 0.5, type: 'spring' }}
-        className="bg-white/10 backdrop-blur-sm rounded-2xl p-5 w-full max-w-sm mb-6"
+        className="text-center mb-6"
       >
-        <div className="flex items-center justify-between mb-4">
-          <div className="text-left">
-            <div className="text-white/60 text-sm">群内排名</div>
-            <div className="text-3xl font-bold text-amber-300">
-              第 {data.rank} 名
-            </div>
-          </div>
-          <div className="text-right">
-            <div className="text-white/60 text-sm">超越比例</div>
-            <div className="text-3xl font-bold text-green-400">
-              {rankPercent.toFixed(0)}%
-            </div>
-          </div>
+        <div className="text-4xl font-bold text-amber-300 mb-2">
+          第 {data.rank} 名
         </div>
-
-        <div className="h-3 bg-white/10 rounded-full overflow-hidden">
-          <motion.div
-            initial={{ width: 0 }}
-            animate={{ width: `${rankPercent}%` }}
-            transition={{ delay: 0.8, duration: 1, ease: 'easeOut' }}
-            className="h-full bg-gradient-to-r from-amber-500 via-yellow-400 to-green-400 rounded-full"
-          />
-        </div>
-        <div className="flex justify-between mt-2 text-[10px] text-white/50">
-          <span>垫底</span>
-          <span>第1名</span>
+        <div className="text-lg font-semibold text-white/80">
+          【{data.socialTitle}】
         </div>
       </motion.div>
-
-      <motion.p
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.7, duration: 0.5 }}
-        className="text-white/60 text-sm mb-6"
-      >
-        你超越了 <span className="text-amber-300 font-bold">{data.totalUsers - data.rank}</span> 位群友
-      </motion.p>
 
       <motion.div
         initial={{ y: 30, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.9, duration: 0.5 }}
-        className="w-full max-w-sm"
+        transition={{ delay: 0.7, duration: 0.5 }}
+        className="w-full max-w-sm mb-6"
       >
-        <p className="text-white/60 text-xs mb-3 text-left">关键数据</p>
-        <div className="grid grid-cols-2 gap-3">
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 1, type: 'spring' }}
-            className="bg-white/10 rounded-xl p-3 text-center"
-          >
-            <div className="text-2xl mb-1">🎯</div>
-            <div className="text-lg font-bold text-amber-300">{data.totalWinMatches}</div>
-            <div className="text-[10px] text-white/50">猜中场次</div>
-          </motion.div>
+        <p className="text-white/60 text-xs mb-3 text-left">👑 TOP3 大佬</p>
+        <div className="flex justify-between items-end gap-2">
+          {data.topUsers.map((user, i) => (
+            <motion.div
+              key={user.userId}
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.8 + i * 0.15, type: 'spring' }}
+              className="flex-1 flex flex-col items-center"
+              style={{ marginBottom: `${(2 - i) * 12}px` }}
+            >
+              <div className={`w-12 h-12 rounded-full flex items-center justify-center text-xl mb-2 ${
+                i === 0 ? 'bg-gradient-to-br from-amber-400 to-yellow-500' :
+                i === 1 ? 'bg-gradient-to-br from-gray-300 to-gray-400' :
+                'bg-gradient-to-br from-amber-700 to-amber-800'
+              }`}>
+                {user.avatar || '👤'}
+              </div>
+              <div className="text-xs text-white/80 truncate w-full text-center mb-1">
+                {user.nickname}
+              </div>
+              <div className="text-sm font-bold text-green-400">
+                ¥{formatMoney(user.totalWinAmount)}
+              </div>
+              <div className={`text-[10px] text-white/50 mt-1 ${i === 0 ? 'text-amber-400' : ''}`}>
+                {['冠军', '亚军', '季军'][i]}
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </motion.div>
+
+      <motion.div
+        initial={{ y: 30, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 1, duration: 0.5 }}
+        className="w-full max-w-sm mb-6"
+      >
+        <p className="text-white/60 text-xs mb-3 text-left">📊 群内数据</p>
+        <div className="grid grid-cols-3 gap-2">
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 1.1, type: 'spring' }}
             className="bg-white/10 rounded-xl p-3 text-center"
           >
-            <div className="text-2xl mb-1">🔥</div>
-            <div className="text-lg font-bold text-orange-400">{data.maxStreak}</div>
-            <div className="text-[10px] text-white/50">最长连胜</div>
+            <div className="text-lg font-bold text-amber-300">
+              ¥{formatMoney(data.groupStats.avgWinAmount)}
+            </div>
+            <div className="text-[10px] text-white/50 mt-1">平均中奖</div>
+          </motion.div>
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 1.2, type: 'spring' }}
+            className="bg-white/10 rounded-xl p-3 text-center"
+          >
+            <div className="text-lg font-bold text-red-400">
+              ¥{formatMoney(data.groupStats.maxSingleWin)}
+            </div>
+            <div className="text-[10px] text-white/50 mt-1">最高单注</div>
+          </motion.div>
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 1.3, type: 'spring' }}
+            className="bg-white/10 rounded-xl p-3 text-center"
+          >
+            <div className="text-lg font-bold text-blue-400">
+              {data.groupStats.avgWinMatches.toFixed(0)}
+            </div>
+            <div className="text-[10px] text-white/50 mt-1">人均猜中</div>
+          </motion.div>
+        </div>
+      </motion.div>
+
+      <motion.div
+        initial={{ y: 30, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 1.4, duration: 0.5 }}
+        className="w-full max-w-sm bg-white/10 backdrop-blur-sm rounded-2xl p-4"
+      >
+        <p className="text-white/60 text-xs mb-3 text-left">⚔️ 胜负关系</p>
+        <div className="flex justify-between items-center">
+          <motion.div
+            initial={{ x: -20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: 1.5, duration: 0.5 }}
+            className="text-center"
+          >
+            <div className="text-2xl font-bold text-green-400">{data.groupStats.beatCount}</div>
+            <div className="text-[10px] text-white/50">击败人数</div>
+          </motion.div>
+          <div className="text-2xl">💥</div>
+          <motion.div
+            initial={{ x: 20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: 1.6, duration: 0.5 }}
+            className="text-center"
+          >
+            <div className="text-2xl font-bold text-red-400">{data.groupStats.lostCount}</div>
+            <div className="text-[10px] text-white/50">被压制</div>
           </motion.div>
         </div>
       </motion.div>
@@ -1034,10 +1082,10 @@ function Page11SocialCompare({ data }: { data: ReportData }) {
       <motion.p
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 1.3, duration: 0.5 }}
+        transition={{ delay: 2, duration: 0.5 }}
         className="text-white/50 text-sm mt-8"
       >
-        继续加油，冲击更高排名！
+        {data.rank === 1 ? '继续保持，你就是群内传说！' : '继续加油，冲击更高排名！'}
       </motion.p>
     </PageContainer>
   );
@@ -1323,12 +1371,12 @@ export default function ReportPage() {
     <Page03Overview key="3" data={reportData} />,
     <Page04WealthCurve key="4" data={reportData} />,
     <Page06TimePattern key="5" data={reportData} />,
-    <Page07FavoriteTeam key="6" data={reportData} />,
-    <Page08PlayType key="7" data={reportData} />,
-    <Page06BestDay key="8" data={reportData} />,
-    <Page07BiggestWin key="9" data={reportData} />,
-    <Page09Streak key="10" data={reportData} />,
-    <Page08AIComment key="11" data={reportData} />,
+    <Page06BestDay key="6" data={reportData} />,
+    <Page07BiggestWin key="7" data={reportData} />,
+    <Page08AIComment key="8" data={reportData} />,
+    <Page08PlayType key="9" data={reportData} />,
+    <Page07FavoriteTeam key="10" data={reportData} />,
+    <Page09Streak key="11" data={reportData} />,
     <Page11SocialCompare key="12" data={reportData} />,
     <Page10CPBadges key="13" data={reportData} />,
     <Page11Ending key="14" data={reportData} />,
