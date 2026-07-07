@@ -604,7 +604,7 @@ function Page08PlayType({ data }: { data: ReportData }) {
         {favorite.type}你猜中了 {favorite.winCount} 场
       </motion.p>
 
-      {mvp && mvp.type !== favorite.type && (
+      {mvp && (
         <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -612,7 +612,10 @@ function Page08PlayType({ data }: { data: ReportData }) {
           className="bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border border-emerald-400/30 rounded-xl px-4 py-2 mb-4 max-w-sm"
         >
           <span className="text-emerald-300 text-sm">
-            💰 MVP玩法：{mvp.type}，帮你赚了 ¥{formatMoney(mvp.winAmount)}
+            💰 {mvp.type === favorite.type
+              ? `靠${mvp.type}赚了 ¥${formatMoney(mvp.winAmount)}`
+              : `MVP玩法：${mvp.type}，帮你赚了 ¥${formatMoney(mvp.winAmount)}`
+            }
           </span>
         </motion.div>
       )}
