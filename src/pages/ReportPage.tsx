@@ -563,7 +563,6 @@ function Page08PlayType({ data }: { data: ReportData }) {
 
   const playTypeEmojis: Record<string, string> = {
     '胜平负': '⚖️',
-    '让球胜平负': '🎚️',
     '比分': '🔢',
     '总进球数': '⚽',
     '半全场': '⏱️',

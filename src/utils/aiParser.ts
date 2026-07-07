@@ -17,7 +17,6 @@ export interface ParsedAIComment {
 
 const PLAY_TYPES = [
   '胜平负',
-  '让球胜平负',
   '比分',
   '总进球数',
   '半全场',
@@ -167,7 +166,7 @@ function detectPlayType(text: string): string {
     }
 
     if (option.includes('让')) {
-      return '让球胜平负';
+      return '胜平负';
     }
 
     if (option.match(/^[胜负平]$/)) {
