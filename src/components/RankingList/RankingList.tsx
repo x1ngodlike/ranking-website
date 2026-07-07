@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom';
 import type { RankingItem, RankingSortType } from '@/types';
-import { formatCurrency } from '@/utils/helpers';
 import { motion } from 'framer-motion';
 import Avatar from '@/components/Avatar';
 import { RARITY_STYLES, BadgeRarity } from '@/utils/badges';

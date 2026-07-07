@@ -13,8 +13,6 @@ interface AvatarPickerProps {
   customImage?: string | null;
   onCustomImageChange?: (image: string | null) => void;
   label?: string;
-  showPicker?: boolean;
-  onTogglePicker?: () => void;
 }
 
 export const AvatarPicker = ({
@@ -23,8 +21,6 @@ export const AvatarPicker = ({
   customImage,
   onCustomImageChange,
   label = '头像',
-  showPicker = true,
-  onTogglePicker,
 }: AvatarPickerProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);

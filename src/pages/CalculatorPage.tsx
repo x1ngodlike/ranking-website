@@ -55,7 +55,7 @@ const CalculatorPage = () => {
       if (data.success && data.prediction) {
         setPredictions(data.prediction.predictions || []);
       }
-    } catch (e) {
+    } catch {
       // 静默失败
     }
   };
@@ -67,7 +67,7 @@ const CalculatorPage = () => {
       if (data.success) {
         setHistory(data.history || []);
       }
-    } catch (e) {
+    } catch {
       // 静默失败
     }
   };
@@ -84,7 +84,7 @@ const CalculatorPage = () => {
       } else {
         setError(data.message || '预测失败');
       }
-    } catch (e) {
+    } catch {
       setError('预测失败，请稍后重试');
     }
     setIsLoading(false);
@@ -103,7 +103,6 @@ const CalculatorPage = () => {
   const renderPredictionCard = (pred: Prediction, index: number) => {
     const hasResult = pred.isCorrect !== null && pred.isCorrect !== undefined;
     const isCorrect = pred.isCorrect === true;
-    const isWrong = pred.isCorrect === false;
 
     return (
       <motion.div

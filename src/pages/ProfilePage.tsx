@@ -6,7 +6,7 @@ import { ProfitChart } from '@/components/Charts/ProfitChart';
 import BetList from '@/components/BetList/BetList';
 import BetForm from '@/components/BetForm/BetForm';
 import BadgeDisplay from '@/components/BadgeDisplay/BadgeDisplay';
-import { ArrowLeft, TrendingUp, Trophy, DollarSign, Calendar, Plus, Award, Flame, Heart, Sparkles } from 'lucide-react';
+import { ArrowLeft, TrendingUp, Trophy, Plus, Flame, Heart, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Avatar from '@/components/Avatar';
 

@@ -5,7 +5,6 @@ import {
   calculatePlayTypeStats,
   getBestAIComment,
   getTotalWinMatches,
-  getTeamFlag,
   parseAIComment,
   type TeamStats,
   type PlayTypeStats,

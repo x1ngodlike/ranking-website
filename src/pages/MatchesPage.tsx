@@ -55,7 +55,6 @@ const MatchesPage = () => {
   const matches = useAppStore((state) => state.matches);
   const currentUserId = useAppStore((state) => state.currentUserId);
   const users = useAppStore((state) => state.users);
-  const bets = useAppStore((state) => state.bets);
   const apiConfig = useAppStore((state) => state.apiConfig);
   const isRefreshing = useAppStore((state) => state.isRefreshing);
   const lastRefreshTime = useAppStore((state) => state.lastRefreshTime);
@@ -152,6 +151,7 @@ const MatchesPage = () => {
       setRefreshError(null);
       await syncMatchesFromApi();
     } catch {
+      // 静默失败
     }
   }, [isRefreshing, apiConfig.apiKey, syncMatchesFromApi, setRefreshError]);
 
@@ -169,9 +169,6 @@ const MatchesPage = () => {
   );
   const selectedDateLiveCount = selectedDateMatches.filter(
     (m) => m.status === 'live'
-  ).length;
-  const selectedDateFinishedCount = selectedDateMatches.filter(
-    (m) => m.status === 'finished'
   ).length;
 
   const getDateMatchCount = (dateKey: string): number => {

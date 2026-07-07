@@ -17,7 +17,6 @@ const EditUserModal = ({ isOpen, user, onClose, onSave }: EditUserModalProps) =>
   const [avatar, setAvatar] = useState(avatarOptions[0]);
   const [customImage, setCustomImage] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [showPickerDropdown, setShowPickerDropdown] = useState(false);
 
   useEffect(() => {
     if (isOpen && user) {
@@ -29,7 +28,6 @@ const EditUserModal = ({ isOpen, user, onClose, onSave }: EditUserModalProps) =>
         setAvatar('');
         setCustomImage(user.avatar);
       }
-      setShowPickerDropdown(false);
     }
   }, [isOpen, user]);
 
@@ -113,8 +111,6 @@ const EditUserModal = ({ isOpen, user, onClose, onSave }: EditUserModalProps) =>
                 onChange={setAvatar}
                 customImage={customImage}
                 onCustomImageChange={setCustomImage}
-                showPicker={false}
-                onTogglePicker={() => setShowPickerDropdown(!showPickerDropdown)}
               />
 
               <button

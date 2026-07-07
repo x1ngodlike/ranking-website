@@ -139,19 +139,6 @@ const updateApiConfigFromData = (set: any, data: any) => {
   }
 };
 
-const updateAutoRefreshConfig = (
-  set: any,
-  autoRefresh: boolean
-) => {
-  set((s: AppState) => ({
-    apiConfig: {
-      ...s.apiConfig,
-      autoRefresh,
-    },
-  }));
-  saveApiConfigToStorage({ autoRefresh });
-};
-
 const handleRefreshError = (set: any, error: unknown, defaultMessage: string) => {
   const message = error instanceof Error ? error.message : defaultMessage;
   set({ isRefreshing: false, refreshError: message });

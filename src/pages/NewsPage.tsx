@@ -15,7 +15,7 @@ interface NewsItem {
 
 const NewsPage = () => {
   const [news, setNews] = useState<NewsItem[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState('');
   const isAdminLoggedIn = useAppStore((state) => state.isAdminLoggedIn);
@@ -31,7 +31,7 @@ const NewsPage = () => {
       } else {
         setError(data.message || '获取新闻失败');
       }
-    } catch (e) {
+    } catch {
       setError('网络错误，无法获取新闻');
     }
   };
@@ -57,7 +57,7 @@ const NewsPage = () => {
       } else {
         await fetchNews();
       }
-    } catch (e) {
+    } catch {
       setError('刷新失败');
     }
     setIsRefreshing(false);

@@ -2,10 +2,10 @@ import { useState, useEffect } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { generateId } from '@/utils/helpers';
 import { api } from '@/utils/api';
-import { X, Calendar, Image as ImageIcon, Plus } from 'lucide-react';
+import { X, Calendar } from 'lucide-react';
 import Avatar from '@/components/Avatar';
 import ImageUploader from '@/components/ImageUploader/ImageUploader';
-import type { Bet, User } from '@/types';
+import type { Bet } from '@/types';
 
 interface BetFormProps {
   onClose?: () => void;
@@ -90,8 +90,6 @@ const BetForm = ({ onClose, preSelectedUserId, bet }: BetFormProps) => {
       }
     }
   };
-
-  const selectedUser = users.find((u) => u.id === selectedUserId);
 
   return (
     <div className={designVersion === 'v2' ? 'rounded-xl border border-[var(--v2-border)] bg-[var(--v2-bg-card)] p-6 max-h-[90vh] overflow-y-auto' : 'card p-6 max-h-[90vh] overflow-y-auto'}>

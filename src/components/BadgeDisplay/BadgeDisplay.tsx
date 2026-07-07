@@ -9,20 +9,12 @@ interface EarnedBadge {
   earnedAt: string;
 }
 
-interface BadgeStats {
-  totalProfit: number;
-  totalWins: number;
-  maxDailyWins: number;
-  maxDailyProfit: number;
-}
-
 interface BadgeDisplayProps {
   userId: string;
 }
 
 export default function BadgeDisplay({ userId }: BadgeDisplayProps) {
   const [earnedBadges, setEarnedBadges] = useState<EarnedBadge[]>([]);
-  const [stats, setStats] = useState<BadgeStats | null>(null);
   const [loading, setLoading] = useState(true);
   const environment = useAppStore((state) => state.environment);
   const designVersion = useAppStore((s) => s.designVersion);
@@ -35,7 +27,6 @@ export default function BadgeDisplay({ userId }: BadgeDisplayProps) {
         const result = await res.json();
         if (result.success) {
           setEarnedBadges(result.badges || []);
-          setStats(result.stats);
         }
       } catch (e) {
         console.error('Failed to fetch badges:', e);

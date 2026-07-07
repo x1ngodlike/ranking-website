@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Trophy, Ticket, Calendar, Users, Settings, Calculator, Newspaper } from 'lucide-react';
+import { Trophy, Ticket, Calendar, Settings, Calculator, Newspaper } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import ThemeToggle from '@/components/ThemeToggle/ThemeToggle';
 import DesignVersionToggle from '@/components/DesignVersionToggle/DesignVersionToggle';

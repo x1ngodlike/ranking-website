@@ -3,8 +3,6 @@ import { useAppStore } from '@/store/useAppStore';
 import type { Match } from '@/types';
 import { formatDate } from '@/utils/helpers';
 
-interface KnockoutBracketProps {}
-
 const KNOCKOUT_ROUNDS = [
   { key: 'round_of_32', name: '1/16决赛', count: 16 },
   { key: 'round_of_16', name: '1/8决赛', count: 8 },
@@ -13,15 +11,6 @@ const KNOCKOUT_ROUNDS = [
   { key: 'final', name: '决赛', count: 1 },
   { key: 'third_place', name: '季军赛', count: 1 },
 ];
-
-const ROUND_ORDER = {
-  'round_of_32': 1,
-  'round_of_16': 2,
-  'quarter_final': 3,
-  'semi_final': 4,
-  'final': 5,
-  'third_place': 6,
-};
 
 const getRoundKey = (match: Match): string => {
   if (match.roundKey) return match.roundKey;

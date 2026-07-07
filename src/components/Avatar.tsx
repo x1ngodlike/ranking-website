@@ -25,7 +25,6 @@ export const isImageAvatar = (avatar: string): boolean => {
 };
 
 // 全局懒加载观察器
-const lazyImageCache = new WeakMap<HTMLImageElement, boolean>();
 let sharedObserver: IntersectionObserver | null = null;
 
 const getObserver = (): IntersectionObserver | null => {

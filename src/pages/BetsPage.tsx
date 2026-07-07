@@ -17,7 +17,6 @@ const BetsPage = () => {
   const bets = useAppStore((state) => state.bets);
   const users = useAppStore((state) => state.users);
   const isAdminLoggedIn = useAppStore((state) => state.isAdminLoggedIn);
-  const environment = useAppStore((state) => state.environment);
   const updateBet = useAppStore((state) => state.updateBet);
   const refreshData = useAppStore((state) => state.refreshData);
   const designVersion = useAppStore((s) => s.designVersion);
