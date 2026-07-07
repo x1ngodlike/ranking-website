@@ -27,7 +27,7 @@ const pageVariants = {
 
 /* ── 每页背景图映射（14页全覆盖） ── */
 const PAGE_BGS: Record<number, string> = {
-  0:  '/report/world-cup-stars-bg.jpg', // 封面（球星）
+  0:  '/report/world-cup-heroes-cover.jpg', // 封面（球星竖屏）
   1:  '/report/first-win-bg.jpg',    // 开门红
   2:  '/report/overview-bg.jpg',     // 总览
   3:  '/report/goal-net.jpg',        // 财富曲线
