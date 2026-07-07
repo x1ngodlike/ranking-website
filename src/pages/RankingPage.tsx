@@ -26,6 +26,7 @@ const RankingPage = () => {
   const matches = useAppStore((state) => state.matches);
   const bets = useAppStore((state) => state.bets);
   const refreshData = useAppStore((state) => state.refreshData);
+  const designVersion = useAppStore((state) => state.designVersion);
 
   const [activeTab, setActiveTab] = useState<TabType>('totalWin');
 
@@ -167,30 +168,51 @@ const RankingPage = () => {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="text-center mb-8 md:mb-12"
+        className="text-center mb-8 md:mb-12 px-4"
       >
-        <h1 className="font-display text-4xl sm:text-5xl md:text-6xl text-gradient-gold mb-2 md:mb-3">世界杯中奖排行榜</h1>
-        <p className="text-neutral-500 dark:text-neutral-500">群雄逐鹿，谁是真正的预言家？</p>
+        {designVersion === 'v2' ? (
+          <img src="/title.png" alt="世界杯中奖排行榜" className="mx-auto w-[260px] sm:w-[400px] md:w-[600px] h-auto py-2" />
+        ) : (
+          <h1 className="font-display text-4xl sm:text-5xl md:text-6xl text-gradient-gold">世界杯中奖排行榜</h1>
+        )}
+        <p className={
+          designVersion === 'v2'
+            ? 'font-v2-body text-sm text-[var(--v2-text-secondary)] mt-3'
+            : 'text-neutral-500 dark:text-neutral-500'
+        }>群雄逐鹿，谁是真正的预言家？</p>
 
         <div className="flex items-center justify-center gap-3 sm:gap-5 md:gap-8 mt-5 md:mt-6">
           <div className="text-center">
-            <p className="font-display text-xl sm:text-2xl md:text-3xl text-primary-500">{rankings.length}</p>
-            <p className="text-xs sm:text-sm md:text-sm text-neutral-500 dark:text-neutral-500">参赛人数</p>
+            <p className={
+              designVersion === 'v2'
+                ? 'font-v2-mono text-xl md:text-2xl font-bold text-v2-primary-500 dark:text-v2-primary-400'
+                : 'font-display text-xl sm:text-2xl md:text-3xl text-primary-500'
+            }>{rankings.length}</p>
+            <p className={designVersion === 'v2' ? 'font-v2-body text-xs text-[var(--v2-text-secondary)]' : 'text-xs sm:text-sm md:text-sm text-neutral-500 dark:text-neutral-500'}>参赛人数</p>
           </div>
-          <div className="w-px h-7 sm:h-9 md:h-10 bg-primary/20" />
           <div className="text-center">
-            <p className="font-display text-xl sm:text-2xl md:text-3xl text-primary-500">{bets.length}</p>
-            <p className="text-xs sm:text-sm md:text-sm text-neutral-500 dark:text-neutral-500">记录总数</p>
+            <p className={
+              designVersion === 'v2'
+                ? 'font-v2-mono text-xl md:text-2xl font-bold text-v2-primary-500 dark:text-v2-primary-400'
+                : 'font-display text-xl sm:text-2xl md:text-3xl text-primary-500'
+            }>{bets.length}</p>
+            <p className={designVersion === 'v2' ? 'font-v2-body text-xs text-[var(--v2-text-secondary)]' : 'text-xs sm:text-sm md:text-sm text-neutral-500 dark:text-neutral-500'}>记录总数</p>
           </div>
-          <div className="w-px h-7 sm:h-9 md:h-10 bg-primary/20" />
           <div className="text-center">
-            <p className="font-display text-xl sm:text-2xl md:text-3xl text-primary-500">{finishedMatches}/{remainingMatches}</p>
-            <p className="text-xs sm:text-sm md:text-sm text-neutral-500 dark:text-neutral-500">已赛/剩余场次</p>
+            <p className={
+              designVersion === 'v2'
+                ? 'font-v2-mono text-xl md:text-2xl font-bold text-v2-primary-500 dark:text-v2-primary-400'
+                : 'font-display text-xl sm:text-2xl md:text-3xl text-primary-500'
+            }>{finishedMatches}/{remainingMatches}</p>
+            <p className={designVersion === 'v2' ? 'font-v2-body text-xs text-[var(--v2-text-secondary)]' : 'text-xs sm:text-sm md:text-sm text-neutral-500 dark:text-neutral-500'}>已赛/剩余场次</p>
           </div>
-          <div className="w-px h-7 sm:h-9 md:h-10 bg-primary/20" />
           <div className="text-center">
-            <p className="font-display text-xl sm:text-2xl md:text-3xl text-amber-600 dark:text-gold-400">¥{totalWinAmount.toFixed(2)}</p>
-            <p className="text-xs sm:text-sm md:text-sm text-neutral-500 dark:text-neutral-500">中奖总额</p>
+            <p className={
+              designVersion === 'v2'
+                ? 'font-v2-mono text-xl md:text-2xl font-bold text-profit-500'
+                : 'font-display text-xl sm:text-2xl md:text-3xl text-amber-600 dark:text-gold-400'
+            }>¥{totalWinAmount.toFixed(2)}</p>
+            <p className={designVersion === 'v2' ? 'font-v2-body text-xs text-[var(--v2-text-secondary)]' : 'text-xs sm:text-sm md:text-sm text-neutral-500 dark:text-neutral-500'}>中奖总额</p>
           </div>
         </div>
       </motion.div>
@@ -224,11 +246,19 @@ const RankingPage = () => {
               <button
                 key={tab.type}
                 onClick={handleClick}
-                className={`flex items-center gap-2 px-4 sm:px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
-                  isActive
-                    ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/30'
-                    : 'bg-neutral-50 dark:bg-neutral-800/50 text-neutral-600 dark:text-neutral-400 hover:text-primary-500 hover:bg-neutral-100 dark:hover:bg-neutral-700/50'
-                }`}
+                className={
+                  designVersion === 'v2'
+                    ? `flex items-center gap-2 px-4 sm:px-5 py-2 rounded-lg text-sm font-v2-body font-medium transition-all duration-300 ${
+                        isActive
+                          ? 'bg-v2-primary-500/15 text-v2-primary-600 dark:bg-v2-primary-500/20 dark:text-v2-primary-400'
+                          : 'bg-[var(--v2-bg-muted)] text-[var(--v2-text-secondary)] hover:text-v2-primary-500 hover:bg-v2-primary-500/8'
+                      }`
+                    : `flex items-center gap-2 px-4 sm:px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
+                        isActive
+                          ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/30'
+                          : 'bg-neutral-50 dark:bg-neutral-800/50 text-neutral-600 dark:text-neutral-400 hover:text-primary-500 hover:bg-neutral-100 dark:hover:bg-neutral-700/50'
+                      }`
+                }
               >
                 <Icon size={16} />
                 <span className="hidden sm:inline">{tab.label}</span>

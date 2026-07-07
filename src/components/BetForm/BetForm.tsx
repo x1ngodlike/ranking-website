@@ -17,6 +17,7 @@ const BetForm = ({ onClose, preSelectedUserId, bet }: BetFormProps) => {
   const users = useAppStore((state) => state.users);
   const addBet = useAppStore((state) => state.addBet);
   const updateBet = useAppStore((state) => state.updateBet);
+  const designVersion = useAppStore((s) => s.designVersion);
 
   const isEditMode = !!bet;
 
@@ -93,15 +94,15 @@ const BetForm = ({ onClose, preSelectedUserId, bet }: BetFormProps) => {
   const selectedUser = users.find((u) => u.id === selectedUserId);
 
   return (
-    <div className="card p-6 max-h-[90vh] overflow-y-auto">
+    <div className={designVersion === 'v2' ? 'rounded-xl border border-[var(--v2-border)] bg-[var(--v2-bg-card)] p-6 max-h-[90vh] overflow-y-auto' : 'card p-6 max-h-[90vh] overflow-y-auto'}>
       <div className="flex items-center justify-between mb-6">
-        <h3 className="font-display text-xl text-neutral-800 dark:text-neutral-200">
+        <h3 className={designVersion === 'v2' ? 'font-v2-display font-semibold text-[var(--v2-text)] text-xl' : 'font-display text-xl text-neutral-800 dark:text-neutral-200'}>
           {isEditMode ? '编辑记录' : '记录中奖'}
         </h3>
         {onClose && (
           <button
             onClick={onClose}
-            className="p-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-500 dark:text-neutral-400 transition-colors"
+            className={`p-2 transition-colors ${designVersion === 'v2' ? 'rounded-lg hover:bg-[var(--v2-bg-muted)] text-[var(--v2-text-muted)]' : 'rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-500 dark:text-neutral-400'}`}
           >
             <X size={20} />
           </button>
@@ -110,7 +111,7 @@ const BetForm = ({ onClose, preSelectedUserId, bet }: BetFormProps) => {
 
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
-          <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-3">
+          <label className={`block mb-3 ${designVersion === 'v2' ? 'font-v2-body text-sm font-medium text-[var(--v2-text-secondary)]' : 'text-sm font-medium text-neutral-700 dark:text-neutral-300'}`}>
             选择用户
           </label>
           <div className="grid grid-cols-5 gap-2">
@@ -121,10 +122,14 @@ const BetForm = ({ onClose, preSelectedUserId, bet }: BetFormProps) => {
                   key={user.id}
                   type="button"
                   onClick={() => setSelectedUserId(user.id)}
-                  className={`flex flex-col items-center gap-1.5 p-2 rounded-xl transition-all ${
+                  className={`flex flex-col items-center gap-1.5 p-2 transition-all ${
                     isSelected
-                      ? 'bg-primary-500/10 border-2 border-primary-500'
-                      : 'bg-white dark:bg-neutral-800 border-2 border-transparent hover:border-primary-500/30'
+                      ? designVersion === 'v2'
+                        ? 'bg-v2-primary-500/10 border-2 border-v2-primary-500 rounded-lg'
+                        : 'bg-primary-500/10 border-2 border-primary-500 rounded-xl'
+                      : designVersion === 'v2'
+                        ? 'bg-[var(--v2-bg)] border-2 border-transparent hover:border-v2-primary-500/30 rounded-lg'
+                        : 'bg-white dark:bg-neutral-800 border-2 border-transparent hover:border-primary-500/30 rounded-xl'
                   }`}
                 >
                   <Avatar src={user.avatar} alt={user.nickname} size="sm" />
@@ -145,27 +150,27 @@ const BetForm = ({ onClose, preSelectedUserId, bet }: BetFormProps) => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+          <label className={`block mb-2 ${designVersion === 'v2' ? 'font-v2-body text-sm font-medium text-[var(--v2-text-secondary)]' : 'text-sm font-medium text-neutral-700 dark:text-neutral-300'}`}>
             日期
           </label>
           <div className="relative">
-            <Calendar size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
+            <Calendar size={18} className={`absolute left-3 top-1/2 -translate-y-1/2 ${designVersion === 'v2' ? 'text-[var(--v2-text-muted)]' : 'text-neutral-400'}`} />
             <input
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-neutral-800 dark:text-neutral-200 focus:outline-none focus:border-primary-500/50 transition-colors"
+              className={designVersion === 'v2' ? 'w-full pl-10 pr-4 py-2.5 rounded-lg border border-[var(--v2-border)] bg-[var(--v2-bg)] text-[var(--v2-text)] text-sm font-v2-body focus:border-v2-primary-500 focus:outline-none transition-colors' : 'w-full pl-10 pr-4 py-3 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-neutral-800 dark:text-neutral-200 focus:outline-none focus:border-primary-500/50 transition-colors'}
               required
             />
           </div>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+          <label className={`block mb-2 ${designVersion === 'v2' ? 'font-v2-body text-sm font-medium text-[var(--v2-text-secondary)]' : 'text-sm font-medium text-neutral-700 dark:text-neutral-300'}`}>
             中奖金额 (元)
           </label>
           <div className="relative">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 font-medium">
+            <span className={`absolute left-4 top-1/2 -translate-y-1/2 font-medium ${designVersion === 'v2' ? 'text-[var(--v2-text-muted)]' : 'text-neutral-400'}`}>
               ¥
             </span>
             <input
@@ -175,28 +180,28 @@ const BetForm = ({ onClose, preSelectedUserId, bet }: BetFormProps) => {
               placeholder="请输入中奖金额，没中填0"
               min="0"
               step="0.01"
-              className="w-full pl-8 pr-4 py-3 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-neutral-800 dark:text-neutral-200 focus:outline-none focus:border-primary-500/50 transition-colors"
+              className={designVersion === 'v2' ? 'w-full pl-8 pr-4 py-2.5 rounded-lg border border-[var(--v2-border)] bg-[var(--v2-bg)] text-[var(--v2-text)] text-sm font-v2-body focus:border-v2-primary-500 focus:outline-none transition-colors' : 'w-full pl-8 pr-4 py-3 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-neutral-800 dark:text-neutral-200 focus:outline-none focus:border-primary-500/50 transition-colors'}
               required
             />
           </div>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-            备注 <span className="text-neutral-400 font-normal">(可选)</span>
+          <label className={`block mb-2 ${designVersion === 'v2' ? 'font-v2-body text-sm font-medium text-[var(--v2-text-secondary)]' : 'text-sm font-medium text-neutral-700 dark:text-neutral-300'}`}>
+            备注 {designVersion === 'v2' ? <span className="text-[var(--v2-text-muted)] font-normal">(可选)</span> : <span className="text-neutral-400 font-normal">(可选)</span>}
           </label>
           <input
             type="text"
             value={note}
             onChange={(e) => setNote(e.target.value)}
             placeholder="例如：3串1命中"
-            className="w-full px-4 py-3 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-neutral-800 dark:text-neutral-200 focus:outline-none focus:border-primary-500/50 transition-colors"
+            className={designVersion === 'v2' ? 'w-full px-4 py-2.5 rounded-lg border border-[var(--v2-border)] bg-[var(--v2-bg)] text-[var(--v2-text)] text-sm font-v2-body focus:border-v2-primary-500 focus:outline-none transition-colors' : 'w-full px-4 py-3 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-neutral-800 dark:text-neutral-200 focus:outline-none focus:border-primary-500/50 transition-colors'}
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-            上传图片 <span className="text-neutral-400 font-normal">(可选)</span>
+          <label className={`block mb-2 ${designVersion === 'v2' ? 'font-v2-body text-sm font-medium text-[var(--v2-text-secondary)]' : 'text-sm font-medium text-neutral-700 dark:text-neutral-300'}`}>
+            上传图片 {designVersion === 'v2' ? <span className="text-[var(--v2-text-muted)] font-normal">(可选)</span> : <span className="text-neutral-400 font-normal">(可选)</span>}
           </label>
           <ImageUploader value={imageUrl} onChange={setImageUrl} />
         </div>
@@ -204,7 +209,7 @@ const BetForm = ({ onClose, preSelectedUserId, bet }: BetFormProps) => {
         <button
           type="submit"
           disabled={!selectedUserId || !winAmount}
-          className="w-full btn-gold py-3 disabled:opacity-50 disabled:cursor-not-allowed"
+          className={`w-full py-3 disabled:opacity-50 disabled:cursor-not-allowed ${designVersion === 'v2' ? 'rounded-lg bg-v2-primary-500 text-white font-v2-body font-semibold hover:bg-v2-primary-600 transition-colors' : 'btn-gold'}`}
         >
           {isEditMode ? '保存修改' : '确认记录'}
         </button>

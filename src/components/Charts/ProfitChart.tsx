@@ -12,6 +12,7 @@ import {
 } from 'chart.js';
 import { Line, Doughnut } from 'react-chartjs-2';
 import type { ChartOptions } from 'chart.js';
+import { useAppStore } from '@/store/useAppStore';
 
 ChartJS.register(
   CategoryScale,
@@ -30,6 +31,7 @@ interface ProfitChartProps {
 }
 
 export const ProfitChart = ({ data }: ProfitChartProps) => {
+  const designVersion = useAppStore((s) => s.designVersion);
   const chartData = {
     labels: data.map((d) => d.date),
     datasets: [
@@ -102,14 +104,14 @@ export const ProfitChart = ({ data }: ProfitChartProps) => {
 
   if (data.length === 0) {
     return (
-      <div className="h-64 flex items-center justify-center text-neutral-500 dark:text-neutral-500">
+      <div className={`h-64 flex items-center justify-center text-neutral-500 dark:text-neutral-500 ${designVersion === 'v2' ? 'rounded-xl border border-[var(--v2-border)] bg-[var(--v2-bg-card)]' : ''}`}>
         暂无数据
       </div>
     );
   }
 
   return (
-    <div className="h-64">
+    <div className={`h-64 ${designVersion === 'v2' ? 'rounded-xl border border-[var(--v2-border)] bg-[var(--v2-bg-card)]' : ''}`}>
       <Line data={chartData} options={options} />
     </div>
   );
@@ -122,6 +124,7 @@ interface WinRateChartProps {
 }
 
 export const WinRateChart = ({ won, lost, pending }: WinRateChartProps) => {
+  const designVersion = useAppStore((s) => s.designVersion);
   const data = {
     labels: ['赢', '输', '待结算'],
     datasets: [
@@ -161,7 +164,7 @@ export const WinRateChart = ({ won, lost, pending }: WinRateChartProps) => {
   };
 
   return (
-    <div className="h-48">
+    <div className={`h-48 ${designVersion === 'v2' ? 'rounded-xl border border-[var(--v2-border)] bg-[var(--v2-bg-card)]' : ''}`}>
       <Doughnut data={data} options={options} />
     </div>
   );

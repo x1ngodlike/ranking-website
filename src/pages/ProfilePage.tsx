@@ -15,6 +15,7 @@ const ProfilePage = () => {
   const navigate = useNavigate();
   const users = useAppStore((state) => state.users);
   const bets = useAppStore((state) => state.bets);
+  const designVersion = useAppStore((s) => s.designVersion);
   const [showForm, setShowForm] = useState(false);
 
   const rankings = useMemo(
@@ -74,14 +75,14 @@ const ProfilePage = () => {
       >
         <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
           <div className="relative">
-            <Avatar src={user.avatar} alt={user.nickname} size="xl" className="border-2 border-primary/30" />
-            <div className="absolute -bottom-2 -right-2 w-10 h-10 rounded-full bg-gold-500 text-neutral-900 dark:text-neutral-100 flex items-center justify-center font-bold text-lg shadow-lg">
+            <Avatar src={user.avatar} alt={user.nickname} size="xl" className={designVersion === 'v2' ? 'border-2 border-primary/30 ring-2 ring-gray-400' : 'border-2 border-primary/30'} />
+            <div className={`absolute -bottom-2 -right-2 w-10 h-10 rounded-full bg-gold-500 text-neutral-900 dark:text-neutral-100 flex items-center justify-center font-bold text-lg shadow-lg ${designVersion === 'v2' ? 'font-v2-mono' : ''}`}>
               #{rankIndex + 1}
             </div>
           </div>
 
           <div className="flex-1">
-            <h1 className="font-display text-4xl text-blue-600 dark:text-blue-400 mb-1">
+            <h1 className={designVersion === 'v2' ? 'font-v2-display font-bold text-2xl md:text-3xl text-[var(--v2-text)] mb-1' : 'font-display text-4xl text-blue-600 dark:text-blue-400 mb-1'}>
               {user.nickname}
             </h1>
             <p className="text-neutral-500 dark:text-neutral-500">
@@ -90,20 +91,20 @@ const ProfilePage = () => {
 
             <div className="flex items-center gap-6 mt-4 flex-wrap">
               <div>
-                <p className="text-sm text-neutral-500 dark:text-neutral-500">中奖总额</p>
-                <p className="font-display text-3xl text-amber-600 dark:text-gold-400">
+                <p className={designVersion === 'v2' ? 'font-v2-body text-xs text-[var(--v2-text-secondary)]' : 'text-sm text-neutral-500 dark:text-neutral-500'}>中奖总额</p>
+                <p className={designVersion === 'v2' ? 'font-v2-mono font-bold text-xl md:text-2xl text-profit-500' : 'font-display text-3xl text-amber-600 dark:text-gold-400'}>
                   ¥{ranking.totalWinAmount.toFixed(2)}
                 </p>
               </div>
               <div>
-                <p className="text-sm text-neutral-500 dark:text-neutral-500">平均中奖</p>
-                <p className="font-display text-3xl text-blue-600 dark:text-blue-400">
+                <p className={designVersion === 'v2' ? 'font-v2-body text-xs text-[var(--v2-text-secondary)]' : 'text-sm text-neutral-500 dark:text-neutral-500'}>平均中奖</p>
+                <p className={designVersion === 'v2' ? 'font-v2-mono font-bold text-xl md:text-2xl text-v2-primary-500 dark:text-v2-primary-400' : 'font-display text-3xl text-blue-600 dark:text-blue-400'}>
                   ¥{ranking.avgWin.toFixed(2)}
                 </p>
               </div>
               <div>
-                <p className="text-sm text-neutral-500 dark:text-neutral-500">记录总数</p>
-                <p className="font-display text-3xl text-neutral-800 dark:text-neutral-200">
+                <p className={designVersion === 'v2' ? 'font-v2-body text-xs text-[var(--v2-text-secondary)]' : 'text-sm text-neutral-500 dark:text-neutral-500'}>记录总数</p>
+                <p className={designVersion === 'v2' ? 'font-v2-mono font-bold text-xl md:text-2xl text-v2-primary-500 dark:text-v2-primary-400' : 'font-display text-3xl text-neutral-800 dark:text-neutral-200'}>
                   {ranking.totalBets}
                 </p>
               </div>
@@ -126,47 +127,47 @@ const ProfilePage = () => {
         transition={{ duration: 0.5, delay: 0.2 }}
         className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"
       >
-        <div className="card p-4">
-          <div className="flex items-center gap-2 text-amber-600 dark:text-gold-400 mb-2">
+        <div className={designVersion === 'v2' ? 'rounded-xl p-4 border border-[var(--v2-border)] bg-[var(--v2-bg-card)]' : 'card p-4'}>
+          <div className={`flex items-center gap-2 ${designVersion === 'v2' ? 'text-profit-500' : 'text-amber-600 dark:text-gold-400'} mb-2`}>
             <Trophy size={20} />
-            <span className="text-sm">最大中奖</span>
+            <span className={designVersion === 'v2' ? 'font-v2-body text-xs text-[var(--v2-text-secondary)]' : 'text-sm'}>最大中奖</span>
           </div>
-          <p className="font-display text-2xl text-amber-600 dark:text-gold-400">
+          <p className={designVersion === 'v2' ? 'font-v2-mono font-bold text-xl md:text-2xl text-profit-500' : 'font-display text-2xl text-amber-600 dark:text-gold-400'}>
             ¥{ranking.biggestWin.toFixed(2)}
           </p>
         </div>
-        <div className="card p-4">
-          <div className="flex items-center gap-2 text-profit-500 mb-2">
+        <div className={designVersion === 'v2' ? 'rounded-xl p-4 border border-[var(--v2-border)] bg-[var(--v2-bg-card)]' : 'card p-4'}>
+          <div className={`flex items-center gap-2 text-profit-500 mb-2`}>
             <TrendingUp size={20} />
-            <span className="text-sm">中奖天数</span>
+            <span className={designVersion === 'v2' ? 'font-v2-body text-xs text-[var(--v2-text-secondary)]' : 'text-sm'}>中奖天数</span>
           </div>
-          <p className="font-display text-2xl text-profit-500">
+          <p className={designVersion === 'v2' ? 'font-v2-mono font-bold text-xl md:text-2xl text-profit-500' : 'font-display text-2xl text-profit-500'}>
             {ranking.winDays}
           </p>
         </div>
-        <div className="card p-4">
-          <div className="flex items-center gap-2 text-orange-500 dark:text-orange-400 mb-2">
+        <div className={designVersion === 'v2' ? 'rounded-xl p-4 border border-[var(--v2-border)] bg-[var(--v2-bg-card)]' : 'card p-4'}>
+          <div className={`flex items-center gap-2 ${designVersion === 'v2' ? 'text-orange-500' : 'text-orange-500 dark:text-orange-400'} mb-2`}>
             <Flame size={20} />
-            <span className="text-sm">连胜天数</span>
+            <span className={designVersion === 'v2' ? 'font-v2-body text-xs text-[var(--v2-text-secondary)]' : 'text-sm'}>连胜天数</span>
           </div>
-          <p className="font-display text-2xl text-neutral-800 dark:text-neutral-200">
+          <p className={designVersion === 'v2' ? 'font-v2-mono font-bold text-xl md:text-2xl text-orange-500' : 'font-display text-2xl text-neutral-800 dark:text-neutral-200'}>
             {ranking.maxStreak}
           </p>
         </div>
-        <div className="card p-4">
-          <div className="flex items-center gap-2 text-rose-500 dark:text-rose-400 mb-2">
+        <div className={designVersion === 'v2' ? 'rounded-xl p-4 border border-[var(--v2-border)] bg-[var(--v2-bg-card)]' : 'card p-4'}>
+          <div className={`flex items-center gap-2 text-rose-500 dark:text-rose-400 mb-2`}>
             <Heart size={20} />
-            <span className="text-sm">最佳CP</span>
+            <span className={designVersion === 'v2' ? 'font-v2-body text-xs text-[var(--v2-text-secondary)]' : 'text-sm'}>最佳CP</span>
           </div>
           {ranking.bestCP ? (
             <div className="flex items-center gap-2">
               <Avatar src={ranking.bestCP.avatar} alt={ranking.bestCP.nickname} size="sm" />
-              <span className="font-display text-xl text-neutral-800 dark:text-neutral-200">
+              <span className={designVersion === 'v2' ? 'font-v2-body font-semibold text-base text-[var(--v2-text)]' : 'font-display text-xl text-neutral-800 dark:text-neutral-200'}>
                 {ranking.bestCP.nickname}
               </span>
             </div>
           ) : (
-            <p className="font-display text-xl text-neutral-400">暂无</p>
+            <p className={designVersion === 'v2' ? 'font-v2-body text-base text-[var(--v2-text-muted)]' : 'font-display text-xl text-neutral-400'}>暂无</p>
           )}
         </div>
       </motion.div>
@@ -176,14 +177,11 @@ const ProfilePage = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.25 }}
-        className="card mb-8"
+        className={designVersion === 'v2' ? 'rounded-xl p-5 border border-[var(--v2-border)] bg-[var(--v2-bg-card)] mb-8' : 'card mb-8'}
       >
-        <div className="flex items-center gap-2 mb-4">
-          <Award size={20} className="text-amber-500" />
-          <h3 className="font-display text-xl text-blue-600 dark:text-blue-400">
-            成就徽章
-          </h3>
-        </div>
+        <h3 className={designVersion === 'v2' ? 'font-v2-display font-semibold text-lg text-[var(--v2-text)]' : 'font-display text-xl text-blue-600 dark:text-blue-400'}>
+          成就徽章
+        </h3>
         <BadgeDisplay userId={userId || ''} />
       </motion.div>
 
@@ -191,9 +189,9 @@ const ProfilePage = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.3 }}
-        className="card mb-8"
+        className={designVersion === 'v2' ? 'rounded-xl p-5 border border-[var(--v2-border)] bg-[var(--v2-bg-card)] mb-8' : 'card mb-8'}
       >
-        <h3 className="font-display text-xl text-blue-600 dark:text-blue-400 mb-4">
+        <h3 className={designVersion === 'v2' ? 'font-v2-display font-semibold text-lg text-[var(--v2-text)] mb-4' : 'font-display text-xl text-blue-600 dark:text-blue-400 mb-4'}>
           中奖走势
         </h3>
         <ProfitChart data={dailyData} />
@@ -205,12 +203,12 @@ const ProfilePage = () => {
         transition={{ duration: 0.5, delay: 0.4 }}
       >
         <div className="flex items-center justify-between mb-4">
-          <h2 className="font-display text-2xl text-blue-600 dark:text-blue-400">
+          <h2 className={designVersion === 'v2' ? 'font-v2-display font-bold text-2xl md:text-3xl text-[var(--v2-text)]' : 'font-display text-2xl text-blue-600 dark:text-blue-400'}>
             中奖记录
           </h2>
           <button
             onClick={() => setShowForm(true)}
-            className="btn-gold flex items-center gap-2 text-sm py-2"
+            className={`flex items-center gap-2 ${designVersion === 'v2' ? 'px-5 py-2.5 rounded-lg bg-profit-500 text-white font-v2-body font-bold text-sm hover:bg-profit-600 active:scale-[0.98] transition-all shadow-sm shadow-profit-500/25' : 'btn-gold'}`}
           >
             <Plus size={16} />
             新增记录

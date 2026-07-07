@@ -20,6 +20,7 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
   const adminLogout = useAppStore((state) => state.adminLogout);
   const switchEnvironment = useAppStore((state) => state.switchEnvironment);
   const clearEnvironmentData = useAppStore((state) => state.clearEnvironmentData);
+  const designVersion = useAppStore((s) => s.designVersion);
 
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -107,7 +108,7 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
     else alert('清除失败，请重试');
   };
 
-  const inputClass = 'w-full px-3 py-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400 focus:outline-none focus:border-primary-500/50 transition-all text-sm';
+  const inputClass = `w-full px-3 py-2.5 ${designVersion === 'v2' ? 'rounded-lg border border-[var(--v2-border)] bg-[var(--v2-bg)] text-[var(--v2-text)]' : 'rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100'} placeholder:text-neutral-400 focus:outline-none focus:border-primary-500/50 transition-all text-sm`;
 
   return (
     <AnimatePresence>
@@ -125,7 +126,7 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.95, opacity: 0, y: 10 }}
             transition={{ duration: 0.2, ease: [0.34, 1.56, 0.64, 1] }}
-            className="bg-white dark:bg-neutral-900 rounded-2xl w-full max-w-lg max-h-[85vh] flex flex-col shadow-2xl"
+            className={`${designVersion === 'v2' ? 'bg-[var(--v2-bg-card)] border border-[var(--v2-border)] rounded-xl' : 'bg-white dark:bg-neutral-900 rounded-2xl'} w-full max-w-lg max-h-[85vh] flex flex-col shadow-2xl`}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
@@ -135,7 +136,7 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                   <Settings className="text-primary-500" size={20} />
                 </div>
                 <div className="flex items-center gap-2">
-                  <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">设置</h2>
+                  <h2 className={`text-lg font-semibold ${designVersion === 'v2' ? 'font-v2-display text-[var(--v2-text)]' : 'text-neutral-900 dark:text-neutral-100'}`}>设置</h2>
                   {isAdminLoggedIn && (
                     <span className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 border border-green-200 dark:border-green-900/40">
                       <Shield size={10} />
@@ -183,7 +184,7 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                   <button
                     onClick={handleLogin}
                     disabled={isLoggingIn || !password.trim()}
-                    className="w-full py-2.5 rounded-xl bg-primary-500 text-white text-sm font-medium hover:bg-primary-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className={`w-full py-2.5 ${designVersion === 'v2' ? 'rounded-lg' : 'rounded-xl'} bg-primary-500 text-white text-sm font-medium hover:bg-primary-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
                   >
                     {isLoggingIn ? '登录中...' : '登录'}
                   </button>
@@ -192,9 +193,9 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                 /* Settings List */
                 <div className="space-y-2">
                   {/* 环境切换 */}
-                  <div className="flex items-center justify-between p-3.5 rounded-xl border border-neutral-100 dark:border-neutral-700/60 hover:bg-neutral-50 dark:hover:bg-neutral-800/40 transition-colors">
+                  <div className={`flex items-center justify-between p-3.5 ${designVersion === 'v2' ? 'rounded-xl border border-[var(--v2-border)] hover:bg-[var(--v2-bg-muted)]' : 'rounded-xl border border-neutral-100 dark:border-neutral-700/60 hover:bg-neutral-50 dark:hover:bg-neutral-800/40'} transition-colors`}>
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-neutral-600 dark:text-neutral-400">
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${designVersion === 'v2' ? 'bg-[var(--v2-bg-muted)] text-[var(--v2-text)]' : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400'}`}>
                         <RefreshCw size={16} />
                       </div>
                       <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100">运行环境</span>
@@ -205,7 +206,7 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                           key={env}
                           onClick={() => handleSwitchEnv(env)}
                           disabled={isSwitchingEnv}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                          className={`px-3 py-1.5 ${designVersion === 'v2' ? 'rounded-lg' : 'rounded-lg'} text-xs font-medium transition-all ${
                             environment === env
                               ? 'bg-primary-500 text-white'
                               : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-700'
@@ -220,10 +221,10 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                   {/* 成员管理 */}
                   <button
                     onClick={() => setShowUsersModal(true)}
-                    className="w-full flex items-center justify-between p-3.5 rounded-xl border border-neutral-100 dark:border-neutral-700/60 hover:bg-neutral-50 dark:hover:bg-neutral-800/40 transition-colors"
+                    className={`w-full flex items-center justify-between p-3.5 ${designVersion === 'v2' ? 'rounded-xl border border-[var(--v2-border)] hover:bg-[var(--v2-bg-muted)]' : 'rounded-xl border border-neutral-100 dark:border-neutral-700/60 hover:bg-neutral-50 dark:hover:bg-neutral-800/40'} transition-colors`}
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-neutral-600 dark:text-neutral-400">
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${designVersion === 'v2' ? 'bg-[var(--v2-bg-muted)] text-[var(--v2-text)]' : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400'}`}>
                         <Users size={16} />
                       </div>
                       <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100">成员管理</span>
@@ -234,10 +235,10 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                   {/* AI 识别配置 */}
                   <button
                     onClick={() => setShowAIConfigModal(true)}
-                    className="w-full flex items-center justify-between p-3.5 rounded-xl border border-neutral-100 dark:border-neutral-700/60 hover:bg-neutral-50 dark:hover:bg-neutral-800/40 transition-colors"
+                    className={`w-full flex items-center justify-between p-3.5 ${designVersion === 'v2' ? 'rounded-xl border border-[var(--v2-border)] hover:bg-[var(--v2-bg-muted)]' : 'rounded-xl border border-neutral-100 dark:border-neutral-700/60 hover:bg-neutral-50 dark:hover:bg-neutral-800/40'} transition-colors`}
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-neutral-600 dark:text-neutral-400">
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${designVersion === 'v2' ? 'bg-[var(--v2-bg-muted)] text-[var(--v2-text)]' : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400'}`}>
                         <Brain size={16} />
                       </div>
                       <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100">AI 识别配置</span>
@@ -249,10 +250,10 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                   <button
                     onClick={handleRefreshNews}
                     disabled={isRefreshingNews}
-                    className="w-full flex items-center justify-between p-3.5 rounded-xl border border-neutral-100 dark:border-neutral-700/60 hover:bg-neutral-50 dark:hover:bg-neutral-800/40 transition-colors disabled:opacity-50"
+                    className={`w-full flex items-center justify-between p-3.5 ${designVersion === 'v2' ? 'rounded-xl border border-[var(--v2-border)] hover:bg-[var(--v2-bg-muted)]' : 'rounded-xl border border-neutral-100 dark:border-neutral-700/60 hover:bg-neutral-50 dark:hover:bg-neutral-800/40'} transition-colors disabled:opacity-50`}
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-neutral-600 dark:text-neutral-400">
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${designVersion === 'v2' ? 'bg-[var(--v2-bg-muted)] text-[var(--v2-text)]' : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400'}`}>
                         <Newspaper size={16} />
                       </div>
                       <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100">热点新闻</span>
@@ -274,10 +275,10 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                   {/* 备份与还原 */}
                   <button
                     onClick={() => setShowBackupModal(true)}
-                    className="w-full flex items-center justify-between p-3.5 rounded-xl border border-neutral-100 dark:border-neutral-700/60 hover:bg-neutral-50 dark:hover:bg-neutral-800/40 transition-colors"
+                    className={`w-full flex items-center justify-between p-3.5 ${designVersion === 'v2' ? 'rounded-xl border border-[var(--v2-border)] hover:bg-[var(--v2-bg-muted)]' : 'rounded-xl border border-neutral-100 dark:border-neutral-700/60 hover:bg-neutral-50 dark:hover:bg-neutral-800/40'} transition-colors`}
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-neutral-600 dark:text-neutral-400">
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${designVersion === 'v2' ? 'bg-[var(--v2-bg-muted)] text-[var(--v2-text)]' : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400'}`}>
                         <Database size={16} />
                       </div>
                       <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100">备份与还原</span>
@@ -288,10 +289,10 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                   {/* 修改密码 */}
                   <button
                     onClick={() => setShowPasswordModal(true)}
-                    className="w-full flex items-center justify-between p-3.5 rounded-xl border border-neutral-100 dark:border-neutral-700/60 hover:bg-neutral-50 dark:hover:bg-neutral-800/40 transition-colors"
+                    className={`w-full flex items-center justify-between p-3.5 ${designVersion === 'v2' ? 'rounded-xl border border-[var(--v2-border)] hover:bg-[var(--v2-bg-muted)]' : 'rounded-xl border border-neutral-100 dark:border-neutral-700/60 hover:bg-neutral-50 dark:hover:bg-neutral-800/40'} transition-colors`}
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-neutral-600 dark:text-neutral-400">
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${designVersion === 'v2' ? 'bg-[var(--v2-bg-muted)] text-[var(--v2-text)]' : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400'}`}>
                         <Lock size={16} />
                       </div>
                       <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100">修改密码</span>
@@ -303,7 +304,7 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                   <button
                     onClick={handleClearData}
                     disabled={isClearingData}
-                    className="w-full flex items-center justify-between p-3.5 rounded-xl border border-red-100 dark:border-red-900/30 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors disabled:opacity-50"
+                    className={`w-full flex items-center justify-between p-3.5 ${designVersion === 'v2' ? 'rounded-xl border border-red-100 dark:border-red-900/30 hover:bg-red-50 dark:hover:bg-red-900/10' : 'rounded-xl border border-red-100 dark:border-red-900/30 hover:bg-red-50 dark:hover:bg-red-900/10'} transition-colors disabled:opacity-50`}
                   >
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center text-red-600 dark:text-red-400">
@@ -318,7 +319,7 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                   <div className="pt-3">
                     <button
                       onClick={handleLogout}
-                      className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-700 text-neutral-600 dark:text-neutral-400 text-sm font-medium hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
+                      className={`w-full flex items-center justify-center gap-2 py-2.5 ${designVersion === 'v2' ? 'rounded-lg border border-[var(--v2-border)] text-[var(--v2-text)] hover:bg-[var(--v2-bg-muted)]' : 'rounded-xl border border-neutral-200 dark:border-neutral-700 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800'} text-sm font-medium transition-colors`}
                     >
                       <LogOut size={16} />
                       退出管理员

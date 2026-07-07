@@ -7,6 +7,7 @@ import type { ThemeMode } from '@/utils/theme';
 const ThemeToggle = () => {
   const theme = useAppStore((state) => state.theme);
   const setTheme = useAppStore((state) => state.setTheme);
+  const designVersion = useAppStore((s) => s.designVersion);
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -33,7 +34,7 @@ const ThemeToggle = () => {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 py-2 rounded-full transition-all duration-300 text-neutral-600 dark:text-neutral-400 hover:text-primary-500 dark:hover:text-primary-400 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+        className={`flex items-center gap-2 px-3 py-2 ${designVersion === 'v2' ? 'rounded-lg' : 'rounded-full'} transition-all duration-300 text-neutral-600 dark:text-neutral-400 hover:text-primary-500 dark:hover:text-primary-400 ${designVersion === 'v2' ? 'hover:bg-[var(--v2-bg-muted)]' : 'hover:bg-neutral-100 dark:hover:bg-neutral-800'}`}
       >
         <CurrentIcon size={18} />
         <ChevronDown size={14} className={`transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
@@ -46,7 +47,7 @@ const ThemeToggle = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.95 }}
             transition={{ duration: 0.15 }}
-            className="absolute top-full right-0 mt-2 py-2 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 shadow-xl min-w-[140px] z-50"
+            className={`absolute top-full right-0 mt-2 py-2 ${designVersion === 'v2' ? 'rounded-lg bg-[var(--v2-bg-card)] border border-[var(--v2-border)]' : 'rounded-xl bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700'} shadow-xl min-w-[140px] z-50`}
           >
             {options.map((option) => {
               const Icon = option.icon;
@@ -60,8 +61,12 @@ const ThemeToggle = () => {
                   }}
                   className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors ${
                     isActive
-                      ? 'text-primary-500 bg-primary-50 dark:bg-primary-500/10'
-                      : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700'
+                      ? designVersion === 'v2'
+                        ? 'text-v2-primary-500 bg-v2-primary-500/10'
+                        : 'text-primary-500 bg-primary-50 dark:bg-primary-500/10'
+                      : designVersion === 'v2'
+                        ? 'text-[var(--v2-text)] hover:bg-[var(--v2-bg-muted)]'
+                        : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700'
                   }`}
                 >
                   <Icon size={16} />

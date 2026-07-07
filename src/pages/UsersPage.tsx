@@ -22,6 +22,7 @@ const UsersPage = () => {
   const removeUser = useAppStore((state) => state.removeUser);
   const currentUserId = useAppStore((state) => state.currentUserId);
   const isAdminLoggedIn = useAppStore((state) => state.isAdminLoggedIn);
+  const designVersion = useAppStore((s) => s.designVersion);
 
   const currentUser = useMemo(
     () => users.find((u) => u.id === currentUserId) || null,
@@ -64,10 +65,10 @@ const UsersPage = () => {
         className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8"
       >
         <div>
-          <h1 className="font-display text-4xl text-gradient-gold mb-2">
+          <h1 className={`text-4xl mb-2 ${designVersion === 'v2' ? 'font-v2-display font-bold text-[var(--v2-text)]' : 'font-display text-gradient-gold'}`}>
             成员管理
           </h1>
-          <p className="text-neutral-500 dark:text-neutral-500">
+          <p className={`text-neutral-500 dark:text-neutral-500 ${designVersion === 'v2' ? 'font-v2-body text-[var(--v2-text-secondary)]' : ''}`}>
             共 {users.length} 位成员参与
           </p>
         </div>
@@ -101,8 +102,8 @@ const UsersPage = () => {
               className="w-full max-w-md"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="card">
-                <h3 className="font-display text-xl text-neutral-800 dark:text-neutral-200 mb-4">
+              <div className={`card ${designVersion === 'v2' ? 'rounded-xl p-4 border border-[var(--v2-border)] bg-[var(--v2-bg-card)]' : ''}`}>
+                <h3 className={`text-xl text-neutral-800 dark:text-neutral-200 mb-4 ${designVersion === 'v2' ? 'font-v2-display font-semibold' : 'font-display'}`}>
                   添加新成员
                 </h3>
                 <form onSubmit={handleAddUser}>
@@ -115,7 +116,7 @@ const UsersPage = () => {
                       value={nickname}
                       onChange={(e) => setNickname(e.target.value)}
                       placeholder="输入昵称"
-                      className="w-full px-4 py-3 rounded-xl bg-white dark:bg-neutral-800 border border-primary/20 text-neutral-800 dark:text-neutral-200 focus:outline-none focus:border-primary/50 transition-colors"
+                      className={`w-full px-4 py-3 ${designVersion === 'v2' ? 'rounded-lg border border-[var(--v2-border)] bg-[var(--v2-bg)] text-[var(--v2-text)]' : 'rounded-xl bg-white dark:bg-neutral-800 border border-primary/20 text-neutral-800 dark:text-neutral-200'} focus:outline-none ${designVersion === 'v2' ? 'focus:border-v2-primary-500' : 'focus:border-primary/50'} transition-colors`}
                       autoFocus
                     />
                   </div>
@@ -158,7 +159,7 @@ const UsersPage = () => {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.4, delay: index * 0.05 }}
             >
-              <div className="card h-full">
+              <div className={`card h-full ${designVersion === 'v2' ? 'rounded-xl p-4 border border-[var(--v2-border)] bg-[var(--v2-bg-card)]' : ''}`}>
                 <div className="flex items-start justify-between mb-4">
                   <Link
                     to={`/profile/${user.id}`}
@@ -201,19 +202,19 @@ const UsersPage = () => {
 
                 <div className="grid grid-cols-3 gap-2 pt-4 border-t border-neutral-200 dark:border-neutral-700">
                   <div className="text-center">
-                    <p className="font-display text-lg text-neutral-800 dark:text-neutral-200">
+                    <p className={`text-lg text-neutral-800 dark:text-neutral-200 ${designVersion === 'v2' ? 'font-v2-mono font-bold' : 'font-display'}`}>
                       {stats.totalBets}
                     </p>
                     <p className="text-xs text-neutral-500 dark:text-neutral-400">记录数</p>
                   </div>
                   <div className="text-center">
-                    <p className="font-display text-lg text-profit-500">
+                    <p className={`text-lg text-profit-500 ${designVersion === 'v2' ? 'font-v2-mono font-bold' : 'font-display'}`}>
                       {stats.winDays}
                     </p>
                     <p className="text-xs text-neutral-500 dark:text-neutral-400">中奖天数</p>
                   </div>
                   <div className="text-center">
-                    <p className="font-display text-lg text-amber-600 dark:text-gold-400">
+                    <p className={`text-lg text-amber-600 dark:text-gold-400 ${designVersion === 'v2' ? 'font-v2-mono font-bold' : 'font-display'}`}>
                       ¥{stats.totalWinAmount.toFixed(2)}
                     </p>
                     <p className="text-xs text-neutral-500 dark:text-neutral-400">中奖总额</p>

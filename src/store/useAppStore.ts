@@ -8,7 +8,11 @@ import {
   loadTheme,
   saveTheme as saveThemeToStorage,
   applyTheme,
+  loadDesignVersion,
+  saveDesignVersion as saveDesignVersionToStorage,
+  applyDesignVersion,
   type ThemeMode,
+  type DesignVersion,
 } from '@/utils/theme';
 import { api, getAdminToken, type BackupInfo } from '@/utils/api';
 
@@ -26,6 +30,7 @@ interface AppState {
   lastRefreshTime: string | null;
   refreshError: string | null;
   theme: ThemeMode;
+  designVersion: DesignVersion;
   environment: Environment;
   isAdminLoggedIn: boolean;
   isLoading: boolean;
@@ -59,6 +64,8 @@ interface AppState {
   setRefreshError: (error: string | null) => void;
 
   setTheme: (theme: ThemeMode) => void;
+
+  setDesignVersion: (version: DesignVersion) => void;
 
   adminLogin: (password: string) => Promise<boolean>;
   adminLogout: () => void;
@@ -107,6 +114,7 @@ const getInitialState = (): Omit<AppState, keyof ReturnType<typeof createStoreAc
     lastRefreshTime: null,
     refreshError: null,
     theme,
+    designVersion: loadDesignVersion(),
     environment: import.meta.env.PROD ? 'production' as Environment : 'test' as Environment,
     isAdminLoggedIn: false,
     isLoading: true,
@@ -345,6 +353,12 @@ const createStoreActions = (set: any, get: any) => ({
     set({ theme });
     saveThemeToStorage(theme);
     applyTheme(theme);
+  },
+
+  setDesignVersion: (version: DesignVersion) => {
+    set({ designVersion: version });
+    saveDesignVersionToStorage(version);
+    applyDesignVersion(version);
   },
 
   adminLogin: async (password: string) => {

@@ -16,6 +16,7 @@ const MatchCard = ({ match, isAdmin = false }: MatchCardProps) => {
   const [awayScore, setAwayScore] = useState(match.awayScore ?? 0);
 
   const updateMatchScore = useAppStore((state) => state.updateMatchScore);
+  const designVersion = useAppStore((s) => s.designVersion);
 
   const handleSave = () => {
     updateMatchScore(match.id, homeScore, awayScore);
@@ -43,15 +44,26 @@ const MatchCard = ({ match, isAdmin = false }: MatchCardProps) => {
   return (
     <motion.div
       layout
-      className="card overflow-hidden"
+      className={designVersion === 'v2' ? 'rounded-xl p-4 border border-[var(--v2-border)] bg-[var(--v2-bg-card)] overflow-hidden' : 'card overflow-hidden'}
     >
       <div className="p-4">
         <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
-            {getStatusIcon()}
-            <span>{getStatusText()}</span>
-            <span className="text-neutral-300 dark:text-neutral-600">•</span>
-            <span>{getStageLabel()}</span>
+          <div className={designVersion === 'v2' ? 'flex items-center gap-2 text-xs font-v2-body text-[var(--v2-text-secondary)]' : 'flex items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400'}>
+            {designVersion === 'v2' ? (
+              <>
+                {getStatusIcon()}
+                <span>{getStatusText()}</span>
+                <span className="text-[var(--v2-border)]">·</span>
+                <span>{getStageLabel()}</span>
+              </>
+            ) : (
+              <>
+                {getStatusIcon()}
+                <span>{getStatusText()}</span>
+                <span className="text-neutral-300 dark:text-neutral-600">•</span>
+                <span>{getStageLabel()}</span>
+              </>
+            )}
           </div>
           {isAdmin && match.status !== 'live' && (
             <button
@@ -67,7 +79,7 @@ const MatchCard = ({ match, isAdmin = false }: MatchCardProps) => {
           <div className="flex-1 flex items-center gap-3">
             <div className="text-3xl flex-shrink-0">{match.homeFlag}</div>
             <div className="min-w-0">
-              <p className="font-medium text-neutral-800 dark:text-neutral-200 truncate">
+              <p className={designVersion === 'v2' ? 'font-v2-body font-medium text-sm text-[var(--v2-text)] truncate' : 'font-medium text-neutral-800 dark:text-neutral-200 truncate'}>
                 {match.homeTeam}
               </p>
             </div>
@@ -114,11 +126,11 @@ const MatchCard = ({ match, isAdmin = false }: MatchCardProps) => {
                   className="text-center"
                 >
                   {match.homeScore !== null && match.awayScore !== null ? (
-                    <span className="font-display text-3xl text-neutral-800 dark:text-neutral-200">
+                    <span className={designVersion === 'v2' ? 'font-v2-mono text-2xl font-bold text-[var(--v2-text)]' : 'font-display text-3xl text-neutral-800 dark:text-neutral-200'}>
                       {match.homeScore}{match.homePenaltyScore !== null ? `[${match.homePenaltyScore}]` : ''} : {match.awayScore}{match.awayPenaltyScore !== null ? `[${match.awayPenaltyScore}]` : ''}
                     </span>
                   ) : (
-                    <span className="font-display text-xl text-neutral-400 dark:text-neutral-500">
+                    <span className={designVersion === 'v2' ? 'font-v2-mono text-xl text-[var(--v2-text-secondary)]' : 'font-display text-xl text-neutral-400 dark:text-neutral-500'}>
                       VS
                     </span>
                   )}
@@ -129,7 +141,7 @@ const MatchCard = ({ match, isAdmin = false }: MatchCardProps) => {
 
           <div className="flex-1 flex items-center gap-3 justify-end">
             <div className="min-w-0 text-right">
-              <p className="font-medium text-neutral-800 dark:text-neutral-200 truncate">
+              <p className={designVersion === 'v2' ? 'font-v2-body font-medium text-sm text-[var(--v2-text)] truncate' : 'font-medium text-neutral-800 dark:text-neutral-200 truncate'}>
                 {match.awayTeam}
               </p>
             </div>
@@ -137,8 +149,8 @@ const MatchCard = ({ match, isAdmin = false }: MatchCardProps) => {
           </div>
         </div>
 
-        <div className="mt-3 pt-3 border-t border-neutral-100 dark:border-neutral-800">
-          <p className="text-xs text-neutral-500 dark:text-neutral-400 text-center">
+        <div className={designVersion === 'v2' ? 'mt-3 pt-3 border-t border-[var(--v2-border)]' : 'mt-3 pt-3 border-t border-neutral-100 dark:border-neutral-800'}>
+          <p className={designVersion === 'v2' ? 'text-xs font-v2-body text-[var(--v2-text-secondary)] text-center' : 'text-xs text-neutral-500 dark:text-neutral-400 text-center'}>
             {formatDate(match.matchTime)}
           </p>
         </div>

@@ -32,14 +32,16 @@ function PageContainer({ children }: { children: React.ReactNode }) {
   );
 }
 
-function ProgressDots({ current }: { current: number }) {
+function ProgressDots({ current, designVersion }: { current: number; designVersion: string }) {
   return (
     <div className="fixed bottom-8 left-1/2 -translate-x-1/2 flex gap-2 z-50">
       {Array.from({ length: TOTAL_PAGES }).map((_, i) => (
         <motion.div
           key={i}
           className={`w-2 h-2 rounded-full ${
-            i === current ? 'bg-amber-400' : 'bg-white/30'
+            designVersion === 'v2'
+              ? (i === current ? 'bg-white' : 'bg-white/30')
+              : (i === current ? 'bg-amber-400' : 'bg-white/30')
           }`}
           animate={{ scale: i === current ? 1.2 : 1 }}
           transition={{ duration: 0.2 }}
@@ -49,7 +51,7 @@ function ProgressDots({ current }: { current: number }) {
   );
 }
 
-function Page01Cover({ data }: { data: ReportData }) {
+function Page01Cover({ data, designVersion }: { data: ReportData; designVersion: string }) {
   return (
     <PageContainer>
       <motion.div
@@ -64,7 +66,7 @@ function Page01Cover({ data }: { data: ReportData }) {
         initial={{ y: 30, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.4, duration: 0.6 }}
-        className="text-3xl font-bold mb-3 bg-gradient-to-r from-amber-300 to-yellow-500 bg-clip-text text-transparent"
+        className={`text-3xl font-bold mb-3 ${designVersion === 'v2' ? 'font-v2-display bg-gradient-to-r from-yellow-300 via-yellow-400 to-amber-500' : 'bg-gradient-to-r from-amber-300 to-yellow-500'} bg-clip-text text-transparent`}
       >
         你的2026世界杯
       </motion.h1>
@@ -72,7 +74,7 @@ function Page01Cover({ data }: { data: ReportData }) {
         initial={{ y: 30, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.6, duration: 0.6 }}
-        className="text-2xl font-bold mb-6 text-amber-200"
+        className={`text-2xl font-bold mb-6 ${designVersion === 'v2' ? 'font-v2-display text-white/80' : 'text-amber-200'}`}
       >
         中奖回忆录
       </motion.h2>
@@ -105,12 +107,12 @@ function Page01Cover({ data }: { data: ReportData }) {
   );
 }
 
-function Page02FirstWin({ data }: { data: ReportData }) {
+function Page02FirstWin({ data, designVersion }: { data: ReportData; designVersion: string }) {
   if (!data.firstWin) {
     return (
       <PageContainer>
         <div className="text-5xl mb-6">🎯</div>
-        <h2 className="text-2xl font-bold mb-4">开门红</h2>
+        <h2 className={`text-2xl font-bold mb-4 ${designVersion === 'v2' ? 'font-v2-display' : ''}`}>开门红</h2>
         <p className="text-white/70">你的第一笔中奖，还在路上</p>
         <p className="text-white/50 text-sm mt-2">好运正在赶来的路上～</p>
       </PageContainer>
@@ -131,7 +133,7 @@ function Page02FirstWin({ data }: { data: ReportData }) {
         initial={{ y: 30, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.4, duration: 0.5 }}
-        className="text-2xl font-bold mb-3"
+        className={`text-2xl font-bold mb-3 ${designVersion === 'v2' ? 'font-v2-display' : ''}`}
       >
         一切的开始
       </motion.h2>
@@ -139,7 +141,7 @@ function Page02FirstWin({ data }: { data: ReportData }) {
         initial={{ y: 30, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.6, duration: 0.5 }}
-        className="text-amber-300 text-xl font-bold mb-6"
+        className={`text-xl font-bold mb-6 ${designVersion === 'v2' ? 'font-v2-mono text-white/80' : 'text-amber-300'}`}
       >
         {formatDateCN(data.firstWin.date)}
       </motion.div>
@@ -155,7 +157,7 @@ function Page02FirstWin({ data }: { data: ReportData }) {
         initial={{ scale: 0.5, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ delay: 1, type: 'spring' }}
-        className="text-4xl font-bold text-green-400 mb-8"
+        className={`text-4xl font-bold text-green-400 mb-8 ${designVersion === 'v2' ? 'font-v2-mono' : ''}`}
       >
         ¥{formatMoney(data.firstWin.amount)}
       </motion.div>
@@ -171,7 +173,7 @@ function Page02FirstWin({ data }: { data: ReportData }) {
   );
 }
 
-function Page03Overview({ data }: { data: ReportData }) {
+function Page03Overview({ data, designVersion }: { data: ReportData; designVersion: string }) {
   const stats = [
     { label: '记录中奖', value: data.totalBets, unit: '笔', icon: '🎫' },
     { label: '猜中比赛', value: data.totalWinMatches, unit: '场', icon: '⚽' },
@@ -185,7 +187,7 @@ function Page03Overview({ data }: { data: ReportData }) {
         initial={{ y: -30, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.2, duration: 0.5 }}
-        className="text-2xl font-bold mb-2"
+        className={`text-2xl font-bold mb-2 ${designVersion === 'v2' ? 'font-v2-display' : ''}`}
       >
         这个世界杯
       </motion.h2>
@@ -193,7 +195,7 @@ function Page03Overview({ data }: { data: ReportData }) {
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.3, duration: 0.5 }}
-        className="text-white/60 text-sm mb-10"
+        className={`text-white/60 text-sm mb-10 ${designVersion === 'v2' ? 'font-v2-body' : ''}`}
       >
         你一共
       </motion.p>
@@ -204,14 +206,14 @@ function Page03Overview({ data }: { data: ReportData }) {
             initial={{ y: 30, opacity: 0, scale: 0.9 }}
             animate={{ y: 0, opacity: 1, scale: 1 }}
             transition={{ delay: 0.4 + i * 0.15, type: 'spring' }}
-            className="bg-white/10 backdrop-blur-sm rounded-2xl p-5 text-center"
+            className={`${designVersion === 'v2' ? 'bg-v2-primary-500/20 backdrop-blur-sm rounded-xl' : 'bg-white/10 backdrop-blur-sm rounded-2xl'} p-5 text-center`}
           >
             <div className="text-3xl mb-2">{stat.icon}</div>
-            <div className="text-2xl font-bold text-amber-300 mb-1">
+            <div className={`text-2xl font-bold mb-1 ${designVersion === 'v2' ? 'font-v2-mono text-white' : 'text-amber-300'}`}>
               {stat.value}
-              <span className="text-sm font-normal text-white/60 ml-1">{stat.unit}</span>
+              <span className={`text-sm font-normal ml-1 ${designVersion === 'v2' ? 'text-white/60 font-v2-body' : 'text-white/60'}`}>{stat.unit}</span>
             </div>
-            <div className="text-white/60 text-sm">{stat.label}</div>
+            <div className={`text-sm ${designVersion === 'v2' ? 'font-v2-body text-white/70' : 'text-white/60'}`}>{stat.label}</div>
           </motion.div>
         ))}
       </div>
@@ -229,12 +231,12 @@ function Page03Overview({ data }: { data: ReportData }) {
   );
 }
 
-function Page04WealthCurve({ data }: { data: ReportData }) {
+function Page04WealthCurve({ data, designVersion }: { data: ReportData; designVersion: string }) {
   if (data.dailyTrend.length === 0) {
     return (
       <PageContainer>
         <div className="text-5xl mb-6">📈</div>
-        <h2 className="text-2xl font-bold mb-4">财富曲线</h2>
+        <h2 className={`text-2xl font-bold mb-4 ${designVersion === 'v2' ? 'font-v2-display' : ''}`}>财富曲线</h2>
         <p className="text-white/70">记录你的第一笔中奖，解锁你的财富曲线</p>
       </PageContainer>
     );
@@ -268,7 +270,7 @@ function Page04WealthCurve({ data }: { data: ReportData }) {
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.3, duration: 0.5 }}
-        className="text-xl font-bold mb-2"
+        className={`text-xl font-bold mb-2 ${designVersion === 'v2' ? 'font-v2-display' : ''}`}
       >
         你的财富曲线
       </motion.h2>
@@ -276,7 +278,7 @@ function Page04WealthCurve({ data }: { data: ReportData }) {
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.4, duration: 0.5 }}
-        className="text-white/60 text-sm mb-6"
+        className={`text-white/60 text-sm mb-6 ${designVersion === 'v2' ? 'font-v2-body' : ''}`}
       >
         从第一笔到现在的旅程
       </motion.p>
@@ -374,14 +376,14 @@ function Page04WealthCurve({ data }: { data: ReportData }) {
   );
 }
 
-function Page06TimePattern({ data }: { data: ReportData }) {
+function Page06TimePattern({ data, designVersion }: { data: ReportData; designVersion: string }) {
   const hasStageData = data.stageStats.some((s) => s.winAmount > 0);
 
   if (!hasStageData) {
     return (
       <PageContainer>
         <div className="text-5xl mb-6">🎯</div>
-        <h2 className="text-2xl font-bold mb-4">时间规律</h2>
+        <h2 className={`text-2xl font-bold mb-4 ${designVersion === 'v2' ? 'font-v2-display' : ''}`}>时间规律</h2>
         <p className="text-white/70">多记录几笔，看看你的运气规律</p>
       </PageContainer>
     );
@@ -408,7 +410,7 @@ function Page06TimePattern({ data }: { data: ReportData }) {
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.3, duration: 0.5 }}
-        className="text-xl font-bold mb-2"
+        className={`text-xl font-bold mb-2 ${designVersion === 'v2' ? 'font-v2-display' : ''}`}
       >
         你的运气有规律吗
       </motion.h2>
@@ -419,7 +421,7 @@ function Page06TimePattern({ data }: { data: ReportData }) {
         transition={{ delay: 0.6, duration: 0.5 }}
         className="w-full max-w-sm"
       >
-        <p className="text-white/60 text-xs mb-2 text-left">阶段对比</p>
+        <p className={`text-white/60 text-xs mb-2 text-left ${designVersion === 'v2' ? 'font-v2-body' : ''}`}>阶段对比</p>
         <div className="flex gap-3">
           {data.stageStats.map((s, i) => {
             const percent = maxStageAmount > 0 ? (s.winAmount / maxStageAmount) * 100 : 0;
@@ -430,20 +432,22 @@ function Page06TimePattern({ data }: { data: ReportData }) {
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ delay: 0.7 + i * 0.15, type: 'spring' }}
-                className={`flex-1 rounded-xl p-3 text-center ${
+                className={`flex-1 ${designVersion === 'v2' ? 'rounded-xl' : 'rounded-xl'} p-3 text-center ${
                   isBetter
-                    ? 'bg-gradient-to-br from-amber-500/20 to-yellow-500/20 border border-amber-400/30'
+                    ? (designVersion === 'v2'
+                      ? 'bg-gradient-to-br from-v2-primary-500/20 to-v2-gold-500/20 border border-v2-primary-500/30'
+                      : 'bg-gradient-to-br from-amber-500/20 to-yellow-500/20 border border-amber-400/30')
                     : 'bg-white/10'
                 }`}
               >
                 <div className="text-2xl mb-1">{stageEmojis[s.label] || '⚽'}</div>
-                <div className={`text-sm font-bold mb-1 ${isBetter ? 'text-amber-300' : 'text-white'}`}>
+                <div className={`text-sm font-bold mb-1 ${isBetter ? (designVersion === 'v2' ? 'text-white' : 'text-amber-300') : 'text-white'}`}>
                   {s.label}
                 </div>
-                <div className="text-lg font-bold text-green-400">
+                <div className={`text-lg font-bold text-green-400 ${designVersion === 'v2' ? 'font-v2-mono' : ''}`}>
                   ¥{formatMoney(s.winAmount)}
                 </div>
-                <div className="text-[10px] text-white/50 mt-1">
+                <div className={`text-[10px] text-white/50 mt-1 ${designVersion === 'v2' ? 'font-v2-body' : ''}`}>
                   {s.winCount} 次中奖
                 </div>
               </motion.div>
@@ -464,12 +468,12 @@ function Page06TimePattern({ data }: { data: ReportData }) {
   );
 }
 
-function Page07FavoriteTeam({ data }: { data: ReportData }) {
+function Page07FavoriteTeam({ data, designVersion }: { data: ReportData; designVersion: string }) {
   if (data.teamStats.length === 0) {
     return (
       <PageContainer>
         <div className="text-5xl mb-6">⚽</div>
-        <h2 className="text-2xl font-bold mb-4">最有缘的球队</h2>
+        <h2 className={`text-2xl font-bold mb-4 ${designVersion === 'v2' ? 'font-v2-display' : ''}`}>最有缘的球队</h2>
         <p className="text-white/70">上传彩票截图，AI识别后解锁</p>
       </PageContainer>
     );
@@ -492,7 +496,7 @@ function Page07FavoriteTeam({ data }: { data: ReportData }) {
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.3, duration: 0.5 }}
-        className="text-xl font-bold mb-2"
+        className={`text-xl font-bold mb-2 ${designVersion === 'v2' ? 'font-v2-display' : ''}`}
       >
         你最有缘的球队是
       </motion.h2>
@@ -503,8 +507,8 @@ function Page07FavoriteTeam({ data }: { data: ReportData }) {
         className="text-center mb-6"
       >
         <div className="text-7xl mb-3">{getTeamFlag(favorite.name)}</div>
-        <div className="text-2xl font-bold text-amber-300">{favorite.name}</div>
-        <div className="text-white/60 text-sm mt-2">
+        <div className={`text-2xl font-bold mb-0 ${designVersion === 'v2' ? 'font-v2-display text-white' : 'text-amber-300'}`}>{favorite.name}</div>
+        <div className={`text-white/60 text-sm mt-2 ${designVersion === 'v2' ? 'font-v2-body' : ''}`}>
           你一共 {favorite.winCount} 次猜中了ta的比赛
         </div>
       </motion.div>
@@ -545,12 +549,12 @@ function Page07FavoriteTeam({ data }: { data: ReportData }) {
   );
 }
 
-function Page08PlayType({ data }: { data: ReportData }) {
+function Page08PlayType({ data, designVersion }: { data: ReportData; designVersion: string }) {
   if (data.playTypeStats.length === 0) {
     return (
       <PageContainer>
         <div className="text-5xl mb-6">🎯</div>
-        <h2 className="text-2xl font-bold mb-4">最擅长的玩法</h2>
+        <h2 className={`text-2xl font-bold mb-4 ${designVersion === 'v2' ? 'font-v2-display' : ''}`}>最擅长的玩法</h2>
         <p className="text-white/70">上传彩票截图，AI识别后解锁</p>
       </PageContainer>
     );
@@ -583,7 +587,7 @@ function Page08PlayType({ data }: { data: ReportData }) {
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.3, duration: 0.5 }}
-        className="text-xl font-bold mb-2"
+        className={`text-xl font-bold mb-2 ${designVersion === 'v2' ? 'font-v2-display' : ''}`}
       >
         你最擅长的玩法是
       </motion.h2>
@@ -591,7 +595,7 @@ function Page08PlayType({ data }: { data: ReportData }) {
         initial={{ y: 30, opacity: 0, scale: 0.8 }}
         animate={{ y: 0, opacity: 1, scale: 1 }}
         transition={{ delay: 0.5, type: 'spring' }}
-        className="text-3xl font-bold text-amber-300 mb-2"
+        className={`text-3xl font-bold mb-2 ${designVersion === 'v2' ? 'font-v2-display text-white' : 'text-amber-300'}`}
       >
         {favorite.type}
       </motion.div>
@@ -599,7 +603,7 @@ function Page08PlayType({ data }: { data: ReportData }) {
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.7, duration: 0.5 }}
-        className="text-white/70 mb-4"
+        className={`text-white/70 mb-4 ${designVersion === 'v2' ? 'font-v2-body' : ''}`}
       >
         {favorite.type}你猜中了 {favorite.winCount} 场
       </motion.p>
@@ -636,11 +640,11 @@ function Page08PlayType({ data }: { data: ReportData }) {
               animate={{ x: 0, opacity: 1 }}
               transition={{ delay: 1.1 + i * 0.15 }}
             >
-              <div className="flex justify-between text-sm mb-1">
+              <div className={`flex justify-between text-sm mb-1 ${designVersion === 'v2' ? 'font-v2-body' : ''}`}>
                 <span className="text-white/80">
                   {playTypeEmojis[pt.type] || '🎲'} {pt.type}
                 </span>
-                <span className="text-amber-300">
+                <span className={designVersion === 'v2' ? 'text-white' : 'text-amber-300'}>
                   {pt.winCount}场
                   {amountStat && (
                     <span className="text-green-400 ml-2 text-xs">
@@ -654,7 +658,7 @@ function Page08PlayType({ data }: { data: ReportData }) {
                   initial={{ width: 0 }}
                   animate={{ width: `${percent}%` }}
                   transition={{ delay: 1.3 + i * 0.15, duration: 0.8, ease: 'easeOut' }}
-                  className="h-full bg-gradient-to-r from-amber-400 to-yellow-500 rounded-full"
+                  className={`h-full rounded-full ${designVersion === 'v2' ? 'bg-gradient-to-r from-v2-primary-500 via-v2-primary-400 to-v2-gold-500' : 'bg-gradient-to-r from-amber-400 to-yellow-500'}`}
                 />
               </div>
             </motion.div>
@@ -673,12 +677,12 @@ function Page08PlayType({ data }: { data: ReportData }) {
   );
 }
 
-function Page06BestDay({ data }: { data: ReportData }) {
+function Page06BestDay({ data, designVersion }: { data: ReportData; designVersion: string }) {
   if (!data.bestDay) {
     return (
       <PageContainer>
         <div className="text-5xl mb-6">🌟</div>
-        <h2 className="text-2xl font-bold mb-4">巅峰时刻</h2>
+        <h2 className={`text-2xl font-bold mb-4 ${designVersion === 'v2' ? 'font-v2-display' : ''}`}>巅峰时刻</h2>
         <p className="text-white/70">你的高光时刻，即将到来</p>
       </PageContainer>
     );
@@ -698,7 +702,7 @@ function Page06BestDay({ data }: { data: ReportData }) {
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.3, duration: 0.5 }}
-        className="text-xl font-bold mb-2"
+        className={`text-xl font-bold mb-2 ${designVersion === 'v2' ? 'font-v2-display' : ''}`}
       >
         你的高光时刻
       </motion.h2>
@@ -706,7 +710,7 @@ function Page06BestDay({ data }: { data: ReportData }) {
         initial={{ y: 30, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.5, duration: 0.5 }}
-        className="text-amber-300 text-2xl font-bold mb-8"
+        className={`text-2xl font-bold mb-8 ${designVersion === 'v2' ? 'font-v2-mono text-white/80' : 'text-amber-300'}`}
       >
         {formatDateCN(data.bestDay.date)}
       </motion.div>
@@ -714,16 +718,16 @@ function Page06BestDay({ data }: { data: ReportData }) {
         initial={{ scale: 0.5, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ delay: 0.7, type: 'spring' }}
-        className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 w-full max-w-sm"
+        className={`${designVersion === 'v2' ? 'bg-v2-primary-500/20 backdrop-blur-sm rounded-xl' : 'bg-white/10 backdrop-blur-sm rounded-2xl'} p-6 w-full max-w-sm`}
       >
         <div className="flex justify-between items-center mb-4">
           <div className="text-left">
-            <div className="text-white/60 text-sm">单日中奖</div>
-            <div className="text-xl font-bold">{data.bestDay.winCount} 次</div>
+            <div className={`text-white/60 text-sm ${designVersion === 'v2' ? 'font-v2-body' : ''}`}>单日中奖</div>
+            <div className={`text-xl font-bold ${designVersion === 'v2' ? 'font-v2-mono' : ''}`}>{data.bestDay.winCount} 次</div>
           </div>
           <div className="text-right">
-            <div className="text-white/60 text-sm">单日盈利</div>
-            <div className="text-xl font-bold text-green-400">
+            <div className={`text-white/60 text-sm ${designVersion === 'v2' ? 'font-v2-body' : ''}`}>单日盈利</div>
+            <div className={`text-xl font-bold text-green-400 ${designVersion === 'v2' ? 'font-v2-mono' : ''}`}>
               ¥{formatMoney(data.bestDay.profit)}
             </div>
           </div>
@@ -741,12 +745,12 @@ function Page06BestDay({ data }: { data: ReportData }) {
   );
 }
 
-function Page07BiggestWin({ data }: { data: ReportData }) {
+function Page07BiggestWin({ data, designVersion }: { data: ReportData; designVersion: string }) {
   if (!data.biggestWin) {
     return (
       <PageContainer>
         <div className="text-5xl mb-6">💎</div>
-        <h2 className="text-2xl font-bold mb-4">最大一笔中奖</h2>
+        <h2 className={`text-2xl font-bold mb-4 ${designVersion === 'v2' ? 'font-v2-display' : ''}`}>最大一笔中奖</h2>
         <p className="text-white/70">你的幸运星，还在等你</p>
       </PageContainer>
     );
@@ -766,7 +770,7 @@ function Page07BiggestWin({ data }: { data: ReportData }) {
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.3, duration: 0.5 }}
-        className="text-xl font-bold mb-2"
+        className={`text-xl font-bold mb-2 ${designVersion === 'v2' ? 'font-v2-display' : ''}`}
       >
         你最大的一笔中奖
       </motion.h2>
@@ -774,7 +778,7 @@ function Page07BiggestWin({ data }: { data: ReportData }) {
         initial={{ scale: 0.3, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ delay: 0.5, type: 'spring', stiffness: 200 }}
-        className="text-5xl font-bold text-green-400 mb-4"
+        className={`text-5xl font-bold text-green-400 mb-4 ${designVersion === 'v2' ? 'font-v2-mono' : ''}`}
       >
         ¥{formatMoney(data.biggestWin.amount)}
       </motion.div>
@@ -782,7 +786,7 @@ function Page07BiggestWin({ data }: { data: ReportData }) {
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.8, duration: 0.5 }}
-        className="text-white/60 mb-6"
+        className={`text-white/60 mb-6 ${designVersion === 'v2' ? 'font-v2-mono' : ''}`}
       >
         {formatDateCN(data.biggestWin.date)}
       </motion.p>
@@ -791,7 +795,7 @@ function Page07BiggestWin({ data }: { data: ReportData }) {
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 1, duration: 0.5 }}
-          className="bg-white/10 backdrop-blur-sm rounded-xl px-4 py-3 max-w-sm"
+          className={`${designVersion === 'v2' ? 'bg-v2-primary-500/20 backdrop-blur-sm rounded-xl' : 'bg-white/10 backdrop-blur-sm rounded-xl'} px-4 py-3 max-w-sm`}
         >
           <p className="text-white/80 text-sm">「{data.biggestWin.note}」</p>
         </motion.div>
@@ -808,12 +812,12 @@ function Page07BiggestWin({ data }: { data: ReportData }) {
   );
 }
 
-function Page08AIComment({ data }: { data: ReportData }) {
+function Page08AIComment({ data, designVersion }: { data: ReportData; designVersion: string }) {
   if (!data.bestAIComment) {
     return (
       <PageContainer>
         <div className="text-5xl mb-6">🤖</div>
-        <h2 className="text-2xl font-bold mb-4">AI 金句</h2>
+        <h2 className={`text-2xl font-bold mb-4 ${designVersion === 'v2' ? 'font-v2-display' : ''}`}>AI 金句</h2>
         <p className="text-white/70">上传彩票截图，AI识别后解锁</p>
       </PageContainer>
     );
@@ -833,7 +837,7 @@ function Page08AIComment({ data }: { data: ReportData }) {
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.3, duration: 0.5 }}
-        className="text-xl font-bold mb-2"
+        className={`text-xl font-bold mb-2 ${designVersion === 'v2' ? 'font-v2-display' : ''}`}
       >
         AI 是这样评价你的
       </motion.h2>
@@ -841,7 +845,7 @@ function Page08AIComment({ data }: { data: ReportData }) {
         initial={{ y: 30, opacity: 0, scale: 0.9 }}
         animate={{ y: 0, opacity: 1, scale: 1 }}
         transition={{ delay: 0.6, type: 'spring' }}
-        className="bg-gradient-to-br from-violet-500/20 to-pink-500/20 backdrop-blur-sm rounded-2xl p-8 w-full max-w-sm border border-white/10"
+        className={`${designVersion === 'v2' ? 'bg-gradient-to-br from-v2-primary-500/20 to-v2-gold-500/20 backdrop-blur-sm rounded-xl' : 'bg-gradient-to-br from-violet-500/20 to-pink-500/20 backdrop-blur-sm rounded-2xl'} p-8 w-full max-w-sm border border-white/10`}
       >
         <div className="text-4xl mb-4">💬</div>
         <p className="text-lg text-white leading-relaxed">
@@ -860,12 +864,12 @@ function Page08AIComment({ data }: { data: ReportData }) {
   );
 }
 
-function Page09Streak({ data }: { data: ReportData }) {
+function Page09Streak({ data, designVersion }: { data: ReportData; designVersion: string }) {
   if (data.maxStreak < 2) {
     return (
       <PageContainer>
         <div className="text-5xl mb-6">🔥</div>
-        <h2 className="text-2xl font-bold mb-4">连胜记录</h2>
+        <h2 className={`text-2xl font-bold mb-4 ${designVersion === 'v2' ? 'font-v2-display' : ''}`}>连胜记录</h2>
         <p className="text-white/70">好运正在酝酿中</p>
         <p className="text-white/50 text-sm mt-2">连续中奖的记录，等你来创造</p>
       </PageContainer>
@@ -886,7 +890,7 @@ function Page09Streak({ data }: { data: ReportData }) {
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.3, duration: 0.5 }}
-        className="text-xl font-bold mb-2"
+        className={`text-xl font-bold mb-2 ${designVersion === 'v2' ? 'font-v2-display' : ''}`}
       >
         你曾连续
       </motion.h2>
@@ -894,7 +898,7 @@ function Page09Streak({ data }: { data: ReportData }) {
         initial={{ scale: 0.5, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ delay: 0.5, type: 'spring', stiffness: 200 }}
-        className="text-6xl font-bold text-orange-400 mb-2"
+        className={`text-6xl font-bold text-orange-400 mb-2 ${designVersion === 'v2' ? 'font-v2-mono' : ''}`}
       >
         {data.maxStreak}
       </motion.div>
@@ -922,7 +926,7 @@ function Page09Streak({ data }: { data: ReportData }) {
         initial={{ scaleX: 0 }}
         animate={{ scaleX: 1 }}
         transition={{ delay: 1.1, duration: 0.8, ease: 'easeOut' }}
-        className="w-full max-w-sm h-2 bg-gradient-to-r from-yellow-500 via-orange-500 to-red-500 rounded-full origin-left"
+        className={`w-full max-w-sm h-2 bg-gradient-to-r rounded-full origin-left ${designVersion === 'v2' ? 'from-v2-primary-500 via-v2-primary-400 to-v2-gold-500' : 'from-yellow-500 via-orange-500 to-red-500'}`}
       />
       <motion.p
         initial={{ y: 20, opacity: 0 }}
@@ -936,7 +940,7 @@ function Page09Streak({ data }: { data: ReportData }) {
   );
 }
 
-function Page11SocialCompare({ data }: { data: ReportData }) {
+function Page11SocialCompare({ data, designVersion }: { data: ReportData; designVersion: string }) {
   return (
     <PageContainer>
       <motion.div
@@ -951,7 +955,7 @@ function Page11SocialCompare({ data }: { data: ReportData }) {
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.3, duration: 0.5 }}
-        className="text-xl font-bold mb-2"
+        className={`text-xl font-bold mb-2 ${designVersion === 'v2' ? 'font-v2-display' : ''}`}
       >
         你在群内排名
       </motion.h2>
@@ -961,7 +965,7 @@ function Page11SocialCompare({ data }: { data: ReportData }) {
         transition={{ delay: 0.5, type: 'spring' }}
         className="text-center mb-6"
       >
-        <div className="text-4xl font-bold text-amber-300 mb-2">
+        <div className={`text-4xl font-bold mb-2 ${designVersion === 'v2' ? 'font-v2-display text-white' : 'text-amber-300'}`}>
           第 {data.rank} 名
         </div>
         <div className="text-lg font-semibold text-white/80">
@@ -1027,34 +1031,34 @@ function Page11SocialCompare({ data }: { data: ReportData }) {
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 1.1, type: 'spring' }}
-            className="bg-white/10 rounded-xl p-3 text-center"
+            className={`${designVersion === 'v2' ? 'bg-v2-primary-500/20 rounded-xl' : 'bg-white/10 rounded-xl'} p-3 text-center`}
           >
-            <div className="text-lg font-bold text-amber-300">
+            <div className={`text-lg font-bold ${designVersion === 'v2' ? 'font-v2-mono text-white' : 'text-amber-300'}`}>
               ¥{formatMoney(data.groupStats.avgWinAmount)}
             </div>
-            <div className="text-[10px] text-white/50 mt-1">平均中奖</div>
+            <div className={`text-[10px] text-white/50 mt-1 ${designVersion === 'v2' ? 'font-v2-body' : ''}`}>平均中奖</div>
           </motion.div>
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 1.2, type: 'spring' }}
-            className="bg-white/10 rounded-xl p-3 text-center"
+            className={`${designVersion === 'v2' ? 'bg-v2-primary-500/20 rounded-xl' : 'bg-white/10 rounded-xl'} p-3 text-center`}
           >
-            <div className="text-lg font-bold text-red-400">
+            <div className={`text-lg font-bold text-red-400 ${designVersion === 'v2' ? 'font-v2-mono' : ''}`}>
               ¥{formatMoney(data.groupStats.maxSingleWin)}
             </div>
-            <div className="text-[10px] text-white/50 mt-1">最高单注</div>
+            <div className={`text-[10px] text-white/50 mt-1 ${designVersion === 'v2' ? 'font-v2-body' : ''}`}>最高单注</div>
           </motion.div>
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 1.3, type: 'spring' }}
-            className="bg-white/10 rounded-xl p-3 text-center"
+            className={`${designVersion === 'v2' ? 'bg-v2-primary-500/20 rounded-xl' : 'bg-white/10 rounded-xl'} p-3 text-center`}
           >
-            <div className="text-lg font-bold text-blue-400">
+            <div className={`text-lg font-bold text-blue-400 ${designVersion === 'v2' ? 'font-v2-mono' : ''}`}>
               {data.groupStats.avgWinMatches.toFixed(0)}
             </div>
-            <div className="text-[10px] text-white/50 mt-1">人均猜中</div>
+            <div className={`text-[10px] text-white/50 mt-1 ${designVersion === 'v2' ? 'font-v2-body' : ''}`}>人均猜中</div>
           </motion.div>
         </div>
       </motion.div>
@@ -1063,9 +1067,9 @@ function Page11SocialCompare({ data }: { data: ReportData }) {
         initial={{ y: 30, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 1.4, duration: 0.5 }}
-        className="w-full max-w-sm bg-white/10 backdrop-blur-sm rounded-2xl p-4"
+        className={`w-full max-w-sm backdrop-blur-sm p-4 ${designVersion === 'v2' ? 'bg-v2-primary-500/20 rounded-xl' : 'bg-white/10 rounded-2xl'}`}
       >
-        <p className="text-white/60 text-xs mb-3 text-left">⚔️ 胜负关系</p>
+        <p className={`text-white/60 text-xs mb-3 text-left ${designVersion === 'v2' ? 'font-v2-body' : ''}`}>⚔️ 胜负关系</p>
         <div className="flex justify-between items-center">
           <motion.div
             initial={{ x: -20, opacity: 0 }}
@@ -1073,8 +1077,8 @@ function Page11SocialCompare({ data }: { data: ReportData }) {
             transition={{ delay: 1.5, duration: 0.5 }}
             className="text-center"
           >
-            <div className="text-2xl font-bold text-green-400">{data.groupStats.beatCount}</div>
-            <div className="text-[10px] text-white/50">击败人数</div>
+            <div className={`text-2xl font-bold text-green-400 ${designVersion === 'v2' ? 'font-v2-mono' : ''}`}>{data.groupStats.beatCount}</div>
+            <div className={`text-[10px] text-white/50 ${designVersion === 'v2' ? 'font-v2-body' : ''}`}>击败人数</div>
           </motion.div>
           <div className="text-2xl">💥</div>
           <motion.div
@@ -1083,8 +1087,8 @@ function Page11SocialCompare({ data }: { data: ReportData }) {
             transition={{ delay: 1.6, duration: 0.5 }}
             className="text-center"
           >
-            <div className="text-2xl font-bold text-red-400">{data.groupStats.lostCount}</div>
-            <div className="text-[10px] text-white/50">被压制</div>
+            <div className={`text-2xl font-bold text-red-400 ${designVersion === 'v2' ? 'font-v2-mono' : ''}`}>{data.groupStats.lostCount}</div>
+            <div className={`text-[10px] text-white/50 ${designVersion === 'v2' ? 'font-v2-body' : ''}`}>被压制</div>
           </motion.div>
         </div>
       </motion.div>
@@ -1101,7 +1105,7 @@ function Page11SocialCompare({ data }: { data: ReportData }) {
   );
 }
 
-function Page10CPBadges({ data }: { data: ReportData }) {
+function Page10CPBadges({ data, designVersion }: { data: ReportData; designVersion: string }) {
   return (
     <PageContainer>
       <motion.div className="w-full max-w-sm">
@@ -1109,7 +1113,7 @@ function Page10CPBadges({ data }: { data: ReportData }) {
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.2, duration: 0.5 }}
-          className="text-lg font-bold mb-4 text-left"
+          className={`text-lg font-bold mb-4 text-left ${designVersion === 'v2' ? 'font-v2-display' : ''}`}
         >
           🤝 你的中奖搭子
         </motion.h3>
@@ -1118,7 +1122,7 @@ function Page10CPBadges({ data }: { data: ReportData }) {
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.4, duration: 0.5 }}
-            className="bg-white/10 backdrop-blur-sm rounded-2xl p-5 mb-8"
+            className={`${designVersion === 'v2' ? 'bg-v2-primary-500/20 backdrop-blur-sm rounded-xl' : 'bg-white/10 backdrop-blur-sm rounded-2xl'} p-5 mb-8`}
           >
             <div className="flex items-center justify-center gap-6">
               <div className="text-center">
@@ -1131,7 +1135,7 @@ function Page10CPBadges({ data }: { data: ReportData }) {
                 <div className="text-sm text-white/70 mt-2">{data.bestCP.nickname}</div>
               </div>
             </div>
-            <div className="text-center mt-4 text-amber-300 font-bold">
+            <div className={`text-center mt-4 font-bold ${designVersion === 'v2' ? 'font-v2-mono text-white' : 'text-amber-300'}`}>
               一起中奖 {data.bestCP.commonWinDays} 天
             </div>
           </motion.div>
@@ -1140,7 +1144,7 @@ function Page10CPBadges({ data }: { data: ReportData }) {
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.4, duration: 0.5 }}
-            className="bg-white/10 backdrop-blur-sm rounded-2xl p-5 mb-8 text-white/60"
+            className={`${designVersion === 'v2' ? 'bg-v2-primary-500/20 backdrop-blur-sm rounded-xl' : 'bg-white/10 backdrop-blur-sm rounded-2xl'} p-5 mb-8 text-white/60`}
           >
             寻找你的中奖搭子中...
           </motion.div>
@@ -1150,7 +1154,7 @@ function Page10CPBadges({ data }: { data: ReportData }) {
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.7, duration: 0.5 }}
-          className="text-lg font-bold mb-4 text-left"
+          className={`text-lg font-bold mb-4 text-left ${designVersion === 'v2' ? 'font-v2-display' : ''}`}
         >
           🏅 解锁成就
         </motion.h3>
@@ -1167,13 +1171,13 @@ function Page10CPBadges({ data }: { data: ReportData }) {
                 initial={{ scale: 0, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ delay: 1 + i * 0.1, type: 'spring' }}
-                className={`bg-white/10 backdrop-blur-sm rounded-xl p-3 text-center ${
-                  badge.rarity >= 4 ? 'ring-2 ring-amber-400/50' : ''
+                className={`${designVersion === 'v2' ? 'bg-v2-primary-500/20 backdrop-blur-sm rounded-xl' : 'bg-white/10 backdrop-blur-sm rounded-xl'} p-3 text-center ${
+                  badge.rarity >= 4 ? (designVersion === 'v2' ? 'ring-2 ring-v2-gold-500/50' : 'ring-2 ring-amber-400/50') : ''
                 }`}
               >
                 <div className="text-3xl mb-1">{badge.emoji}</div>
-                <div className="text-xs text-white/80">{badge.name}</div>
-                <div className="text-[10px] text-amber-300">
+                <div className={`text-xs text-white/80 ${designVersion === 'v2' ? 'font-v2-body' : ''}`}>{badge.name}</div>
+                <div className={`text-[10px] mt-1 ${designVersion === 'v2' ? 'text-v2-gold-500' : 'text-amber-300'}`}>
                   {'⭐'.repeat(badge.rarity)}
                 </div>
               </motion.div>
@@ -1184,7 +1188,7 @@ function Page10CPBadges({ data }: { data: ReportData }) {
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.9, duration: 0.5 }}
-            className="bg-white/10 backdrop-blur-sm rounded-2xl p-5 text-white/60"
+            className={`${designVersion === 'v2' ? 'bg-v2-primary-500/20 backdrop-blur-sm rounded-xl' : 'bg-white/10 backdrop-blur-sm rounded-2xl'} p-5 text-white/60`}
           >
             继续加油，解锁更多徽章！
           </motion.div>
@@ -1194,7 +1198,7 @@ function Page10CPBadges({ data }: { data: ReportData }) {
   );
 }
 
-function Page11Ending({ data }: { data: ReportData }) {
+function Page11Ending({ data, designVersion }: { data: ReportData; designVersion: string }) {
   return (
     <PageContainer>
       <motion.div
@@ -1217,7 +1221,7 @@ function Page11Ending({ data }: { data: ReportData }) {
         initial={{ y: 30, opacity: 0, scale: 0.8 }}
         animate={{ y: 0, opacity: 1, scale: 1 }}
         transition={{ delay: 0.6, type: 'spring' }}
-        className="text-4xl font-bold bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 bg-clip-text text-transparent mb-3"
+        className={`text-4xl font-bold bg-clip-text text-transparent mb-3 ${designVersion === 'v2' ? 'font-v2-display bg-gradient-to-r from-yellow-300 via-yellow-400 to-amber-500' : 'bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500'}`}
       >
         {data.title}
       </motion.div>
@@ -1234,21 +1238,21 @@ function Page11Ending({ data }: { data: ReportData }) {
         initial={{ y: 30, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 1, duration: 0.5 }}
-        className="bg-white/10 backdrop-blur-sm rounded-2xl p-5 w-full max-w-sm mb-8"
+        className={`${designVersion === 'v2' ? 'bg-v2-primary-500/20 backdrop-blur-sm rounded-xl' : 'bg-white/10 backdrop-blur-sm rounded-2xl'} p-5 w-full max-w-sm mb-8`}
       >
         <div className="flex items-center justify-between mb-3">
-          <span className="text-white/60">累计盈利</span>
-          <span className="text-xl font-bold text-green-400">
+          <span className={`text-white/60 ${designVersion === 'v2' ? 'font-v2-body' : ''}`}>累计盈利</span>
+          <span className={`text-xl font-bold text-green-400 ${designVersion === 'v2' ? 'font-v2-mono' : ''}`}>
             ¥{formatMoney(data.totalWinAmount)}
           </span>
         </div>
         <div className="flex items-center justify-between mb-3">
-          <span className="text-white/60">猜中场次</span>
-          <span className="text-white font-bold">{data.totalWinMatches} 场</span>
+          <span className={`text-white/60 ${designVersion === 'v2' ? 'font-v2-body' : ''}`}>猜中场次</span>
+          <span className={`text-white font-bold ${designVersion === 'v2' ? 'font-v2-mono' : ''}`}>{data.totalWinMatches} 场</span>
         </div>
         <div className="flex items-center justify-between">
-          <span className="text-white/60">群内排名</span>
-          <span className="text-amber-300 font-bold">
+          <span className={`text-white/60 ${designVersion === 'v2' ? 'font-v2-body' : ''}`}>群内排名</span>
+          <span className={`font-bold ${designVersion === 'v2' ? 'font-v2-mono text-white' : 'text-amber-300'}`}>
             第 {data.rank} 名 / 共 {data.totalUsers} 人
           </span>
         </div>
@@ -1273,6 +1277,7 @@ export default function ReportPage() {
   const navigate = useNavigate();
   const users = useAppStore((state) => state.users);
   const bets = useAppStore((state) => state.bets);
+  const designVersion = useAppStore((s) => s.designVersion);
   const [currentPage, setCurrentPage] = useState(0);
   const [direction, setDirection] = useState(0);
   const touchStartY = useRef(0);
@@ -1376,20 +1381,20 @@ export default function ReportPage() {
   }
 
   const pages = [
-    <Page01Cover key="1" data={reportData} />,
-    <Page02FirstWin key="2" data={reportData} />,
-    <Page03Overview key="3" data={reportData} />,
-    <Page04WealthCurve key="4" data={reportData} />,
-    <Page06TimePattern key="5" data={reportData} />,
-    <Page06BestDay key="6" data={reportData} />,
-    <Page07BiggestWin key="7" data={reportData} />,
-    <Page08AIComment key="8" data={reportData} />,
-    <Page08PlayType key="9" data={reportData} />,
-    <Page07FavoriteTeam key="10" data={reportData} />,
-    <Page09Streak key="11" data={reportData} />,
-    <Page11SocialCompare key="12" data={reportData} />,
-    <Page10CPBadges key="13" data={reportData} />,
-    <Page11Ending key="14" data={reportData} />,
+    <Page01Cover key="1" data={reportData} designVersion={designVersion} />,
+    <Page02FirstWin key="2" data={reportData} designVersion={designVersion} />,
+    <Page03Overview key="3" data={reportData} designVersion={designVersion} />,
+    <Page04WealthCurve key="4" data={reportData} designVersion={designVersion} />,
+    <Page06TimePattern key="5" data={reportData} designVersion={designVersion} />,
+    <Page06BestDay key="6" data={reportData} designVersion={designVersion} />,
+    <Page07BiggestWin key="7" data={reportData} designVersion={designVersion} />,
+    <Page08AIComment key="8" data={reportData} designVersion={designVersion} />,
+    <Page08PlayType key="9" data={reportData} designVersion={designVersion} />,
+    <Page07FavoriteTeam key="10" data={reportData} designVersion={designVersion} />,
+    <Page09Streak key="11" data={reportData} designVersion={designVersion} />,
+    <Page11SocialCompare key="12" data={reportData} designVersion={designVersion} />,
+    <Page10CPBadges key="13" data={reportData} designVersion={designVersion} />,
+    <Page11Ending key="14" data={reportData} designVersion={designVersion} />,
   ];
 
   return (
@@ -1430,7 +1435,7 @@ export default function ReportPage() {
         </button>
       )}
 
-      <ProgressDots current={currentPage} />
+      <ProgressDots current={currentPage} designVersion={designVersion} />
 
       <AnimatePresence initial={false} custom={direction} mode="wait">
         <motion.div

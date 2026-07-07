@@ -20,6 +20,7 @@ const BetList = ({ bets, showUser = false, canDelete = false }: BetListProps) =>
   const removeBet = useAppStore((state) => state.removeBet);
   const updateBet = useAppStore((state) => state.updateBet);
   const isAdminLoggedIn = useAppStore((state) => state.isAdminLoggedIn);
+  const designVersion = useAppStore((s) => s.designVersion);
 
   const [editingBet, setEditingBet] = useState<Bet | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
@@ -88,7 +89,7 @@ const BetList = ({ bets, showUser = false, canDelete = false }: BetListProps) =>
 
   if (bets.length === 0) {
     return (
-      <div className="card p-12 text-center">
+      <div className={designVersion === 'v2' ? 'rounded-xl p-12 border border-[var(--v2-border)] bg-[var(--v2-bg-card)] text-center' : 'card p-12 text-center'}>
         <div className="text-5xl mb-4">📝</div>
         <p className="text-neutral-500 dark:text-neutral-400">暂无记录</p>
       </div>
@@ -109,7 +110,7 @@ const BetList = ({ bets, showUser = false, canDelete = false }: BetListProps) =>
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: index * 0.03 }}
-            className="card p-4 hover:shadow-lg transition-all duration-300"
+            className={['p-4 hover:shadow-lg transition-all duration-300', designVersion === 'v2' ? 'rounded-xl border border-[var(--v2-border)] bg-[var(--v2-bg-card)]' : 'card'].join(' ')}
           >
             <div className="flex items-start gap-4">
               {showUser && user && (
@@ -119,18 +120,18 @@ const BetList = ({ bets, showUser = false, canDelete = false }: BetListProps) =>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
                   {showUser && user && (
-                    <span className="font-medium text-neutral-800 dark:text-neutral-200">
+                    <span className={designVersion === 'v2' ? 'font-v2-body font-medium text-[var(--v2-text)]' : 'font-medium text-neutral-800 dark:text-neutral-200'}>
                       {user.nickname}
                     </span>
                   )}
-                  <div className="flex items-center gap-1 text-xs text-neutral-500 dark:text-neutral-400">
+                  <div className={['flex items-center gap-1 text-xs', designVersion === 'v2' ? 'text-[var(--v2-text-secondary)]' : 'text-neutral-500 dark:text-neutral-400'].join(' ')}>
                     <Calendar size={12} />
                     <span>{formatDateShort(bet.date)}</span>
                   </div>
                 </div>
 
                 {bet.note && (
-                  <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-2">
+                  <p className={designVersion === 'v2' ? 'font-v2-body text-xs text-[var(--v2-text-secondary)] mb-2' : 'text-sm text-neutral-500 dark:text-neutral-400 mb-2'}>
                     {bet.note}
                   </p>
                 )}
@@ -152,7 +153,7 @@ const BetList = ({ bets, showUser = false, canDelete = false }: BetListProps) =>
               </div>
 
               <div className="text-right flex-shrink-0 min-w-[80px]">
-                <div className="font-display text-xl text-amber-600 dark:text-gold-400">
+                <div className={designVersion === 'v2' ? 'font-v2-mono font-bold text-lg text-profit-500' : 'font-display text-xl text-amber-600 dark:text-gold-400'}>
                   ¥{(bet.winAmount ?? 0).toFixed(2)}
                 </div>
 
@@ -162,11 +163,13 @@ const BetList = ({ bets, showUser = false, canDelete = false }: BetListProps) =>
                       <button
                         onClick={() => handleAIRecognize(bet)}
                         disabled={isRecognizing}
-                        className={`p-1.5 rounded-lg transition-all ${
+                        className={[
+                          'p-1.5 rounded-lg transition-all',
                           isRecognizing
                             ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-500'
-                            : 'hover:bg-primary-50 dark:hover:bg-primary-900/20 text-neutral-400 hover:text-primary-500'
-                        } disabled:cursor-not-allowed`}
+                            : 'hover:bg-primary-50 dark:hover:bg-primary-900/20 text-neutral-400 hover:text-primary-500',
+                          'disabled:cursor-not-allowed'
+                        ].join(' ')}
                         title="AI评价"
                       >
                         {isRecognizing ? (
@@ -185,7 +188,7 @@ const BetList = ({ bets, showUser = false, canDelete = false }: BetListProps) =>
                     </button>
                     <button
                       onClick={() => setDeleteConfirmId(bet.id)}
-                      className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-neutral-400 hover:text-red-500 transition-colors"
+                      className={['p-1.5 transition-colors', designVersion === 'v2' ? 'rounded-lg text-profit-500 hover:bg-profit-500/10' : 'rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-neutral-400 hover:text-red-500'].join(' ')}
                       title="删除记录"
                     >
                       <Trash2 size={16} />
@@ -197,14 +200,14 @@ const BetList = ({ bets, showUser = false, canDelete = false }: BetListProps) =>
 
             {/* AI评价展示 - 放在外层，横跨整个卡片宽度 */}
             {bet.aiComment && !isRecognizing && !bet.aiRecognizing && (
-              <div className="mt-2 p-2 rounded-lg bg-primary-50/50 dark:bg-primary-900/10 border border-primary-200/50 dark:border-primary-800/30">
+              <div className={['mt-2', designVersion === 'v2' ? 'bg-v2-primary-500/5 rounded-lg p-3' : 'p-2 rounded-lg bg-primary-50/50 dark:bg-primary-900/10 border border-primary-200/50 dark:border-primary-800/30'].join(' ')}>
                 <div className="flex items-center gap-1.5 mb-1">
                   <Sparkles size={13} className="text-primary-500" />
                   <span className="text-xs font-medium text-primary-700 dark:text-primary-300">
                     AI评价
                   </span>
                 </div>
-                <p className="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed whitespace-pre-wrap">
+                <p className={designVersion === 'v2' ? 'text-xs text-[var(--v2-text-secondary)] leading-relaxed whitespace-pre-wrap font-v2-body' : 'text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed whitespace-pre-wrap'}>
                   {bet.aiComment}
                 </p>
               </div>

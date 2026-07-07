@@ -25,6 +25,7 @@ export default function BadgeDisplay({ userId }: BadgeDisplayProps) {
   const [stats, setStats] = useState<BadgeStats | null>(null);
   const [loading, setLoading] = useState(true);
   const environment = useAppStore((state) => state.environment);
+  const designVersion = useAppStore((s) => s.designVersion);
 
   useEffect(() => {
     const fetchBadges = async () => {
@@ -84,7 +85,7 @@ export default function BadgeDisplay({ userId }: BadgeDisplayProps) {
                 {earnedInCategory}/{categoryBadges.length}
               </span>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+            <div className={designVersion === 'v2' ? 'flex flex-col gap-2' : 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3'}>
               {categoryBadges.map(badgeDef => {
                 const earned = earnedBadges.find(e => e.id === badgeDef.id);
                 return (
@@ -107,6 +108,39 @@ function BadgeItem({ badge, earned }: { badge: BadgeDefinition; earned?: EarnedB
   const rarity = (earned?.rarity || badge.rarity) as BadgeRarity;
   const style = RARITY_STYLES[rarity];
   const isEarned = Boolean(earned);
+  const designVersion = useAppStore((s) => s.designVersion);
+
+  // V2: compact inline badge with emoji + name + stars in one row
+  if (designVersion === 'v2') {
+    return (
+      <div
+        className={`flex items-center gap-2.5 px-3 py-2 rounded-lg border transition-all ${
+          isEarned
+            ? `${style.borderColor} ${style.bgColor} ${style.glow} ${style.animation}`
+            : 'border-[var(--v2-border)] bg-[var(--v2-bg-muted)] opacity-50'
+        }`}
+      >
+        <span className={`text-2xl flex-shrink-0 ${isEarned ? '' : 'grayscale'}`}>
+          {badge.emoji}
+        </span>
+        <div className="flex-1 min-w-0">
+          <p className={`font-v2-body text-xs font-medium truncate ${isEarned ? 'text-[var(--v2-text)]' : 'text-[var(--v2-text-muted)]'}`}>
+            {badge.name}
+          </p>
+          <p className={`font-v2-body text-[10px] leading-tight truncate ${isEarned ? 'text-[var(--v2-text-secondary)]' : 'text-[var(--v2-text-muted)]'}`}>
+            {badge.condition}
+          </p>
+        </div>
+        <div className="flex items-center gap-px flex-shrink-0">
+          {[...Array(rarity)].map((_, i) => (
+            <span key={i} className={`text-[10px] ${isEarned ? 'text-v2-gold-500' : 'text-neutral-400'}`}>
+              ★
+            </span>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div

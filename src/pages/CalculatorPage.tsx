@@ -34,6 +34,7 @@ const formatDate = (dateStr: string) => {
 
 const CalculatorPage = () => {
   const isAdminLoggedIn = useAppStore((state) => state.isAdminLoggedIn);
+  const designVersion = useAppStore((s) => s.designVersion);
   const [activeTab, setActiveTab] = useState<'calculator' | 'prediction'>('calculator');
   const [view, setView] = useState<'current' | 'history'>('current');
   const [predictions, setPredictions] = useState<Prediction[]>([]);
@@ -110,7 +111,7 @@ const CalculatorPage = () => {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: index * 0.05 }}
-        className="card p-4 hover:shadow-md transition-shadow"
+        className={`card p-4 hover:shadow-md transition-shadow ${designVersion === 'v2' ? 'rounded-xl border border-[var(--v2-border)] bg-[var(--v2-bg-card)]' : ''}`}
       >
         <div className="flex items-center justify-between mb-3">
           <span className="text-xs px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-500">
@@ -196,8 +197,8 @@ const CalculatorPage = () => {
         className="flex items-center justify-between gap-3 mb-3"
       >
         <div>
-          <h1 className="font-display text-xl sm:text-4xl text-gradient-gold mb-0.5">奖金计算器</h1>
-          <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-500">竞彩足球胜平负奖金计算</p>
+          <h1 className={`text-xl sm:text-4xl mb-0.5 ${designVersion === 'v2' ? 'font-v2-display font-bold text-[var(--v2-text)]' : 'font-display text-gradient-gold'}`}>奖金计算器</h1>
+          <p className={`text-xs sm:text-sm text-neutral-500 dark:text-neutral-500 ${designVersion === 'v2' ? 'font-v2-body text-[var(--v2-text-secondary)]' : ''}`}>竞彩足球胜平负奖金计算</p>
         </div>
         <a
           href={CALCULATOR_URL}
@@ -214,10 +215,14 @@ const CalculatorPage = () => {
       <div className="flex gap-2 mb-3">
         <button
           onClick={() => setActiveTab('calculator')}
-          className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-medium transition-all ${
+          className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-v2-body font-medium transition-all ${
             activeTab === 'calculator'
-              ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/25'
-              : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400'
+              ? designVersion === 'v2'
+                ? 'bg-v2-primary-500/15 text-v2-primary-600 dark:bg-v2-primary-500/20 dark:text-v2-primary-400'
+                : 'bg-primary-500 text-white shadow-lg shadow-primary-500/25'
+              : designVersion === 'v2'
+                ? 'bg-[var(--v2-bg-muted)] text-[var(--v2-text-secondary)] hover:text-v2-primary-500'
+                : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400'
           }`}
         >
           <Calculator size={16} />
@@ -225,10 +230,14 @@ const CalculatorPage = () => {
         </button>
         <button
           onClick={() => setActiveTab('prediction')}
-          className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-medium transition-all ${
+          className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-v2-body font-medium transition-all ${
             activeTab === 'prediction'
-              ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/25'
-              : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400'
+              ? designVersion === 'v2'
+                ? 'bg-v2-primary-500/15 text-v2-primary-600 dark:bg-v2-primary-500/20 dark:text-v2-primary-400'
+                : 'bg-primary-500 text-white shadow-lg shadow-primary-500/25'
+              : designVersion === 'v2'
+                ? 'bg-[var(--v2-bg-muted)] text-[var(--v2-text-secondary)] hover:text-v2-primary-500'
+                : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400'
           }`}
         >
           <Sparkles size={16} />
@@ -247,7 +256,7 @@ const CalculatorPage = () => {
             className="flex justify-center"
           >
             <div
-              className="w-full max-w-md border border-neutral-200 dark:border-neutral-700 rounded-xl overflow-hidden shadow-lg"
+              className={`w-full max-w-md border rounded-xl overflow-hidden shadow-lg ${designVersion === 'v2' ? 'border-[var(--v2-border)] bg-[var(--v2-bg-card)]' : 'border-neutral-200 dark:border-neutral-700'}`}
               style={{ height: 'calc(100vh - 220px)', maxHeight: '560px', minHeight: '320px' }}
             >
               <iframe
@@ -320,7 +329,7 @@ const CalculatorPage = () => {
                     {isAdminLoggedIn ? (
                       <>
                         <p className="text-neutral-500 dark:text-neutral-400 text-sm mb-4">暂无预测数据</p>
-                        <button onClick={fetchPredictions} className="btn-primary text-sm px-4 py-2">
+                        <button onClick={fetchPredictions} className={`btn-primary text-sm px-4 py-2 ${designVersion === 'v2' ? 'rounded-lg' : ''}`}>
                           开始预测
                         </button>
                       </>
@@ -377,7 +386,7 @@ const CalculatorPage = () => {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.05 }}
                       onClick={() => setSelectedHistory(record)}
-                      className="card p-4 w-full text-left hover:shadow-md transition-shadow"
+                      className={`card p-4 w-full text-left hover:shadow-md transition-shadow ${designVersion === 'v2' ? 'rounded-xl border border-[var(--v2-border)] bg-[var(--v2-bg-card)]' : ''}`}
                     >
                       <div className="flex items-center justify-between">
                         <div>

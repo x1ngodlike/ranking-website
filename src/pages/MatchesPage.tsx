@@ -63,6 +63,7 @@ const MatchesPage = () => {
   const syncMatchesFromApi = useAppStore((state) => state.syncMatchesFromApi);
   const setRefreshError = useAppStore((state) => state.setRefreshError);
   const isAdminLoggedIn = useAppStore((state) => state.isAdminLoggedIn);
+  const designVersion = useAppStore((s) => s.designVersion);
 
   const currentUser = useMemo(
     () => users.find((u) => u.id === currentUserId) || null,
@@ -192,11 +193,11 @@ const MatchesPage = () => {
         transition={{ duration: 0.5 }}
         className="text-center mb-6"
       >
-        <h1 className="font-display text-4xl text-gradient-gold mb-2">比赛赛程</h1>
-        <p className="text-neutral-500 dark:text-neutral-500">共 {matches.length} 场比赛 ·{' '}
+        <h1 className={designVersion === 'v2' ? 'font-v2-display text-4xl text-[var(--v2-text)] mb-2 font-semibold' : 'font-display text-4xl text-gradient-gold mb-2'}>比赛赛程</h1>
+        <p className={designVersion === 'v2' ? 'font-v2-body text-[var(--v2-text-secondary)]' : 'text-neutral-500 dark:text-neutral-500'}>共 {matches.length} 场比赛 · {' '}
           {matches.filter((m) => m.status === 'finished').length} 场已完赛
           {liveCount > 0 && (
-            <span className="text-profit-500">
+            <span className={designVersion === 'v2' ? 'text-v2-primary-500' : 'text-profit-500'}>
               {' '}
               · {liveCount} 场进行中
             </span>
@@ -208,32 +209,61 @@ const MatchesPage = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.05 }}
-        className="flex items-center justify-center gap-3 mb-6"
+        className="mb-6"
       >
-        <div className="flex items-center gap-2 p-1.5 bg-neutral-100 dark:bg-neutral-800/50 rounded-full">
-          <button
-            onClick={() => setViewMode('timeline')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
-              viewMode === 'timeline'
-                ? 'bg-white dark:bg-neutral-700 text-primary-600 dark:text-white shadow-md'
-                : 'text-neutral-600 dark:text-neutral-400 hover:text-primary-600 dark:hover:text-white'
-            }`}
-          >
-            <CalendarDays size={16} />
-            时间轴
-          </button>
-          <button
-            onClick={() => setViewMode('bracket')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
-              viewMode === 'bracket'
-                ? 'bg-white dark:bg-neutral-700 text-primary-600 dark:text-white shadow-md'
-                : 'text-neutral-600 dark:text-neutral-400 hover:text-primary-600 dark:hover:text-white'
-            }`}
-          >
-            <GitBranch size={16} />
-            淘汰赛
-          </button>
+        {designVersion === 'v2' ? (
+          <div className="flex items-center justify-center gap-2">
+            <button
+              onClick={() => setViewMode('timeline')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-v2-body font-medium transition-all duration-300 ${
+                viewMode === 'timeline'
+                  ? 'bg-v2-primary-500/15 text-v2-primary-600 dark:bg-v2-primary-500/20 dark:text-v2-primary-400'
+                  : 'bg-[var(--v2-bg-muted)] text-[var(--v2-text-secondary)] hover:text-v2-primary-500'
+              }`}
+            >
+              <CalendarDays size={16} />
+              时间轴
+            </button>
+            <button
+              onClick={() => setViewMode('bracket')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-v2-body font-medium transition-all duration-300 ${
+                viewMode === 'bracket'
+                  ? 'bg-v2-primary-500/15 text-v2-primary-600 dark:bg-v2-primary-500/20 dark:text-v2-primary-400'
+                  : 'bg-[var(--v2-bg-muted)] text-[var(--v2-text-secondary)] hover:text-v2-primary-500'
+              }`}
+            >
+              <GitBranch size={16} />
+              淘汰赛
+            </button>
+          </div>
+        ) : (
+        <div className="flex items-center justify-center gap-3">
+          <div className="flex items-center gap-2 p-1.5 bg-neutral-100 dark:bg-neutral-800/50 rounded-full">
+            <button
+              onClick={() => setViewMode('timeline')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
+                viewMode === 'timeline'
+                  ? 'bg-white dark:bg-neutral-700 text-primary-600 dark:text-white shadow-md'
+                  : 'text-neutral-600 dark:text-neutral-400 hover:text-primary-600 dark:hover:text-white'
+              }`}
+            >
+              <CalendarDays size={16} />
+              时间轴
+            </button>
+            <button
+              onClick={() => setViewMode('bracket')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
+                viewMode === 'bracket'
+                  ? 'bg-white dark:bg-neutral-700 text-primary-600 dark:text-white shadow-md'
+                  : 'text-neutral-600 dark:text-neutral-400 hover:text-primary-600 dark:hover:text-white'
+              }`}
+            >
+              <GitBranch size={16} />
+              淘汰赛
+            </button>
+          </div>
         </div>
+        )}
       </motion.div>
 
       <AnimatePresence mode="wait">
@@ -389,11 +419,18 @@ const MatchesPage = () => {
                   <button
                     key={tab.key}
                     onClick={() => setActiveTab(tab.key as TabType)}
-                    className={`flex items-center gap-2 px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
-                      isActive
-                        ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/30'
-                        : 'bg-neutral-50 dark:bg-neutral-800/50 text-neutral-600 dark:text-neutral-400 hover:text-primary-500 hover:bg-neutral-100 dark:hover:bg-neutral-700/50'
-                    }`}
+                    className={designVersion === 'v2'
+                      ? `flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-v2-body font-medium transition-all duration-300 ${
+                          isActive
+                            ? 'bg-v2-primary-500/15 text-v2-primary-600 dark:bg-v2-primary-500/20 dark:text-v2-primary-400'
+                            : 'bg-[var(--v2-bg-muted)] text-[var(--v2-text-secondary)] hover:text-v2-primary-500'
+                        }`
+                      : `flex items-center gap-2 px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
+                          isActive
+                            ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/30'
+                            : 'bg-neutral-50 dark:bg-neutral-800/50 text-neutral-600 dark:text-neutral-400 hover:text-primary-500 hover:bg-neutral-100 dark:hover:bg-neutral-700/50'
+                        }`
+                    }
                   >
                     <Icon size={16} />
                     {tab.label}
@@ -477,17 +514,20 @@ const MatchesPage = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
-          className="card mb-8 border-primary/20 bg-primary-500/5"
+          className={designVersion === 'v2'
+            ? 'rounded-xl p-5 border border-[var(--v2-border)] bg-[var(--v2-bg-card)] mb-8'
+            : 'card mb-8 border-primary/20 bg-primary-500/5'
+          }
         >
           <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-primary-500/20 flex items-center justify-center flex-shrink-0">
-              <Settings size={24} className="text-primary-500" />
+            <div className={designVersion === 'v2' ? 'w-12 h-12 rounded-lg bg-v2-primary-500/10 flex items-center justify-center flex-shrink-0' : 'w-12 h-12 rounded-full bg-primary-500/20 flex items-center justify-center flex-shrink-0'}>
+              <Settings size={24} className={designVersion === 'v2' ? 'text-v2-primary-500' : 'text-primary-500'} />
             </div>
             <div className="flex-1">
-              <h3 className="font-display text-lg text-primary-500 mb-1">
+              <h3 className={designVersion === 'v2' ? 'font-v2-display text-lg text-[var(--v2-text)] mb-1 font-semibold' : 'font-display text-lg text-primary-500 mb-1'}>
                 配置 API 实现实时比分
               </h3>
-              <p className="text-sm text-neutral-600 dark:text-neutral-400">
+              <p className={designVersion === 'v2' ? 'text-sm font-v2-body text-[var(--v2-text-secondary)]' : 'text-sm text-neutral-600 dark:text-neutral-400'}>
                 接入 football-data.org 免费 API，自动同步比赛赛程和实时比分。免费版每天 100 次请求，完全够用。
               </p>
             </div>
@@ -523,13 +563,16 @@ const MatchesPage = () => {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.3 }}
-              className="card text-center py-16"
+              className={designVersion === 'v2'
+                ? 'rounded-xl p-5 border border-[var(--v2-border)] bg-[var(--v2-bg-card)] text-center py-16'
+                : 'card text-center py-16'
+              }
             >
-              <div className="w-16 h-16 rounded-full bg-white dark:bg-neutral-800 flex items-center justify-center mx-auto mb-4">
-                <Calendar size={32} className="text-neutral-600 dark:text-neutral-400" />
+              <div className={designVersion === 'v2' ? 'w-16 h-16 rounded-xl bg-[var(--v2-bg)] flex items-center justify-center mx-auto mb-4' : 'w-16 h-16 rounded-full bg-white dark:bg-neutral-800 flex items-center justify-center mx-auto mb-4'}>
+                <Calendar size={32} className={designVersion === 'v2' ? 'text-[var(--v2-text-secondary)]' : 'text-neutral-600 dark:text-neutral-400'} />
               </div>
-              <p className="text-neutral-500 dark:text-neutral-500 mb-2">当日暂无比赛</p>
-              <p className="text-sm text-neutral-600 dark:text-neutral-400">
+              <p className={designVersion === 'v2' ? 'font-v2-body text-[var(--v2-text-secondary)] mb-2' : 'text-neutral-500 dark:text-neutral-500 mb-2'}>当日暂无比赛</p>
+              <p className={designVersion === 'v2' ? 'text-sm font-v2-body text-[var(--v2-text-secondary)]' : 'text-sm text-neutral-600 dark:text-neutral-400'}>
                 左右滑动日期栏查看其他比赛日
               </p>
             </motion.div>

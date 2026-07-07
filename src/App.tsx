@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import Layout from './components/Layout/Layout';
 import RankingPage from './pages/RankingPage';
 import { useAppStore } from './store/useAppStore';
-import { applyTheme, initThemeListener } from './utils/theme';
+import { applyTheme, initThemeListener, applyDesignVersion } from './utils/theme';
 
 const BetsPage = lazy(() => import('./pages/BetsPage'));
 const ProfilePage = lazy(() => import('./pages/ProfilePage'));
@@ -88,6 +88,7 @@ function AnimatedRoutes() {
 
 export default function App() {
   const theme = useAppStore((state) => state.theme);
+  const designVersion = useAppStore((state) => state.designVersion);
   const init = useAppStore((state) => state.init);
 
   useEffect(() => {
@@ -104,6 +105,10 @@ export default function App() {
       return cleanup;
     }
   }, [theme]);
+
+  useEffect(() => {
+    applyDesignVersion(designVersion);
+  }, [designVersion]);
 
   return (
     <Router>

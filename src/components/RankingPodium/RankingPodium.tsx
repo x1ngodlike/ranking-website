@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { isImageAvatar } from '@/components/Avatar';
 import { RARITY_STYLES, BadgeRarity } from '@/utils/badges';
 import { TrendingUp, Minus } from 'lucide-react';
+import { useAppStore } from '@/store/useAppStore';
 
 interface RankingPodiumProps {
   rankings: RankingItem[];
@@ -19,6 +20,7 @@ const podiumConfig = [
 ];
 
 const RankingPodium = ({ rankings, dailyStarUserId, todayWinUsers }: RankingPodiumProps) => {
+  const designVersion = useAppStore((state) => state.designVersion);
   const top3 = rankings.slice(0, 3);
 
   if (top3.length === 0) return null;
@@ -53,7 +55,15 @@ const RankingPodium = ({ rankings, dailyStarUserId, todayWinUsers }: RankingPodi
             >
               <div className="relative mb-3">
                 <div className="relative w-14 h-14 md:w-20 md:h-20">
-                  <div className={`w-full h-full rounded-full bg-gradient-to-br ${config.glow} shadow-lg group-hover:scale-110 transition-transform overflow-hidden flex items-center justify-center text-3xl md:text-4xl`}>
+                  <div className={`w-full h-full rounded-full ${
+                    designVersion === 'v2'
+                      ? config.rank === 1
+                        ? 'bg-gradient-to-br from-yellow-200 via-yellow-400 to-amber-500 ring-2 ring-yellow-300/50'
+                        : config.rank === 2
+                          ? 'bg-gradient-to-br from-gray-200 via-gray-300 to-gray-400 ring-2 ring-gray-200/50'
+                          : 'bg-gradient-to-br from-amber-400 via-amber-500 to-amber-700 ring-2 ring-amber-400/50'
+                      : `bg-gradient-to-br ${config.glow}`
+                  } shadow-lg group-hover:scale-110 transition-transform overflow-hidden flex items-center justify-center text-3xl md:text-4xl`}>
                     {isImageAvatar(item.avatar) ? (
                       <img
                         src={item.avatar}
@@ -76,15 +86,35 @@ const RankingPodium = ({ rankings, dailyStarUserId, todayWinUsers }: RankingPodi
                     </div>
                   )}
                 </div>
-                <div className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-white dark:bg-neutral-800 border-2 border-neutral-100 dark:border-neutral-700 flex items-center justify-center text-base font-bold">
-                  <span className={config.rank === 1 ? 'text-gold-600' : config.rank === 2 ? 'text-neutral-500' : 'text-amber-700'}>
+                <div className={`absolute -top-2 -right-2 w-8 h-8 ${
+                  designVersion === 'v2'
+                    ? config.rank === 1
+                      ? 'rounded-full bg-gradient-to-br from-yellow-300 via-yellow-400 to-amber-500 text-yellow-900'
+                      : config.rank === 2
+                        ? 'rounded-full bg-gradient-to-br from-gray-200 via-gray-300 to-gray-400 text-gray-700'
+                        : 'rounded-full bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 text-white'
+                    : 'rounded-full bg-white dark:bg-neutral-800 border-2 border-neutral-100 dark:border-neutral-700'
+                } flex items-center justify-center text-base font-bold`}>
+                  <span className={
+                    designVersion === 'v2'
+                    ? config.rank === 1
+                      ? 'text-yellow-900'
+                      : config.rank === 2
+                        ? 'text-gray-700'
+                        : 'text-white'
+                      : config.rank === 1 ? 'text-gold-600' : config.rank === 2 ? 'text-neutral-500' : 'text-amber-700'
+                  }>
                     {config.rank}
                   </span>
                 </div>
               </div>
 
               <div className="flex items-center gap-1 mb-1">
-                <p className="font-display text-lg md:text-xl text-neutral-800 dark:text-neutral-200 text-center">
+                <p className={
+                  designVersion === 'v2'
+                    ? 'font-v2-display font-semibold text-neutral-800 dark:text-neutral-200 text-center'
+                    : 'font-display text-lg md:text-xl text-neutral-800 dark:text-neutral-200 text-center'
+                }>
                   {item.nickname}
                 </p>
                 {todayWinUsers && todayWinUsers.has(item.userId) ? (
@@ -95,7 +125,17 @@ const RankingPodium = ({ rankings, dailyStarUserId, todayWinUsers }: RankingPodi
               </div>
 
               <p
-                className={`font-display text-xl md:text-2xl text-amber-600 dark:text-gold-400 mb-1`}
+                className={
+                  designVersion === 'v2'
+                    ? `font-v2-mono font-bold mb-1 text-xl md:text-2xl ${
+                        config.rank === 1
+                          ? 'text-amber-600 dark:text-yellow-400'
+                          : config.rank === 2
+                            ? 'text-gray-600 dark:text-gray-300'
+                            : 'text-amber-700 dark:text-amber-500'
+                      }`
+                    : 'font-display text-xl md:text-2xl text-amber-600 dark:text-gold-400 mb-1'
+                }
               >
                 ¥{item.totalWinAmount.toFixed(2)}
               </p>
@@ -116,14 +156,30 @@ const RankingPodium = ({ rankings, dailyStarUserId, todayWinUsers }: RankingPodi
             </Link>
 
             <div
-              className={`w-24 md:w-32 ${config.height} mt-3 rounded-t-xl bg-gradient-to-t from-white dark:from-neutral-800 to-neutral-100 dark:to-neutral-700 border-t border-x border-gold/20 flex items-start justify-center pt-3 relative overflow-hidden`}
+              className={`w-24 md:w-32 ${config.height} mt-3 rounded-t-xl ${
+                designVersion === 'v2'
+                  ? config.rank === 1
+                    ? 'bg-gradient-to-t from-yellow-500 to-yellow-400'
+                    : config.rank === 2
+                      ? 'bg-gradient-to-t from-gray-500 to-gray-400'
+                      : 'bg-gradient-to-t from-amber-700 to-amber-600'
+                  : 'bg-gradient-to-t from-white dark:from-neutral-800 to-neutral-100 dark:to-neutral-700 border-t border-x border-gold/20'
+              } flex items-start justify-center pt-3 relative overflow-hidden`}
             >
-              <div className="text-4xl md:text-5xl animate-float">
-                {config.medal}
-              </div>
-              <div
-                className={`absolute inset-0 bg-gradient-to-t ${config.glow} opacity-10`}
-              />
+              {designVersion === 'v2' ? (
+                <span className="font-v2-display text-2xl md:text-3xl font-bold text-white/90">
+                  #{config.rank}
+                </span>
+              ) : (
+                <>
+                  <div className="text-4xl md:text-5xl animate-float">
+                    {config.medal}
+                  </div>
+                  <div
+                    className={`absolute inset-0 bg-gradient-to-t ${config.glow} opacity-10`}
+                  />
+                </>
+              )}
             </div>
           </motion.div>
         );

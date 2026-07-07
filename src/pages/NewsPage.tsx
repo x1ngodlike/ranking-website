@@ -19,6 +19,7 @@ const NewsPage = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState('');
   const isAdminLoggedIn = useAppStore((state) => state.isAdminLoggedIn);
+  const designVersion = useAppStore((s) => s.designVersion);
 
   const fetchNews = async () => {
     setError('');
@@ -90,10 +91,10 @@ const NewsPage = () => {
         className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8"
       >
         <div>
-          <h1 className="font-display text-4xl text-gradient-gold mb-2">
+          <h1 className={`text-4xl mb-2 ${designVersion === 'v2' ? 'font-v2-display font-bold text-[var(--v2-text)]' : 'font-display text-gradient-gold'}`}>
             热点新闻
           </h1>
-          <p className="text-neutral-500 dark:text-neutral-500">
+          <p className={`text-neutral-500 dark:text-neutral-500 ${designVersion === 'v2' ? 'font-v2-body text-[var(--v2-text-secondary)]' : ''}`}>
             世界杯最新资讯，AI评价的灵感来源
           </p>
         </div>
@@ -152,7 +153,7 @@ const NewsPage = () => {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.3, delay: index * 0.05 }}
-            className="card p-4 hover:shadow-lg transition-shadow cursor-pointer group"
+            className={`card p-4 hover:shadow-lg transition-shadow cursor-pointer group ${designVersion === 'v2' ? 'rounded-xl border border-[var(--v2-border)] bg-[var(--v2-bg-card)]' : ''}`}
           >
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1">
@@ -165,12 +166,12 @@ const NewsPage = () => {
                       {item.team}
                     </span>
                   )}
-                  <span className="text-xs text-neutral-400 dark:text-neutral-600 flex items-center gap-1">
+                  <span className={`text-xs flex items-center gap-1 ${designVersion === 'v2' ? 'text-[var(--v2-text-secondary)]' : 'text-neutral-400 dark:text-neutral-600'}`}>
                     <Clock size={12} />
                     {formatDate(item.pubDate)}
                   </span>
                 </div>
-                <h3 className="text-lg font-medium text-neutral-800 dark:text-neutral-200 mb-2 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+                <h3 className={`text-lg mb-2 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors ${designVersion === 'v2' ? 'font-v2-body font-semibold text-[var(--v2-text)]' : 'font-medium text-neutral-800 dark:text-neutral-200'}`}>
                   {item.title}
                 </h3>
                 {item.description && (

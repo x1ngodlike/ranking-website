@@ -3,6 +3,7 @@ import type { DailyTrendItem } from '@/types';
 import { TrendingUp, Users, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { isImageAvatar } from '@/components/Avatar';
+import { useAppStore } from '@/store/useAppStore';
 
 interface TrendChartProps {
   data: DailyTrendItem[];
@@ -28,6 +29,7 @@ const AVATAR_TOP = 6;
 const AVATAR_SIZE = 30;
 
 const TrendChart = ({ data }: TrendChartProps) => {
+  const designVersion = useAppStore((s) => s.designVersion);
   const scrollRef = useRef<HTMLDivElement>(null);
   const innerRef = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(0);
@@ -119,10 +121,10 @@ const TrendChart = ({ data }: TrendChartProps) => {
 
   if (data.length === 0) {
     return (
-      <div className="card">
+      <div className={`card ${designVersion === 'v2' ? 'rounded-xl border border-[var(--v2-border)] bg-[var(--v2-bg-card)]' : ''}`}>
         <div className="flex items-center gap-2 mb-4">
           <TrendingUp size={20} className="text-primary-500" />
-          <h2 className="font-display text-lg text-neutral-800 dark:text-neutral-200">
+          <h2 className={`text-lg ${designVersion === 'v2' ? 'font-v2-display font-semibold text-[var(--v2-text)]' : 'font-display text-neutral-800 dark:text-neutral-200'}`}>
             中奖走势
           </h2>
         </div>
@@ -142,12 +144,12 @@ const TrendChart = ({ data }: TrendChartProps) => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
-      className="card"
+      className={`card ${designVersion === 'v2' ? 'rounded-xl border border-[var(--v2-border)] bg-[var(--v2-bg-card)]' : ''}`}
     >
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <TrendingUp size={20} className="text-primary-500" />
-          <h2 className="font-display text-lg text-neutral-800 dark:text-neutral-200">
+          <h2 className={`text-lg ${designVersion === 'v2' ? 'font-v2-display font-semibold text-[var(--v2-text)]' : 'font-display text-neutral-800 dark:text-neutral-200'}`}>
             中奖走势
           </h2>
         </div>

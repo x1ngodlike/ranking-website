@@ -20,6 +20,7 @@ const BetsPage = () => {
   const environment = useAppStore((state) => state.environment);
   const updateBet = useAppStore((state) => state.updateBet);
   const refreshData = useAppStore((state) => state.refreshData);
+  const designVersion = useAppStore((s) => s.designVersion);
 
   const sortedBets = useMemo(() => {
     return [...bets].sort(
@@ -110,13 +111,13 @@ const BetsPage = () => {
         className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8"
       >
         <div>
-          <h1 className="font-display text-4xl text-gradient-gold mb-2">中奖记录</h1>
-          <p className="text-neutral-500 dark:text-neutral-500">记录每一次心跳加速的时刻</p>
+          <h1 className={`mb-2 ${designVersion === 'v2' ? 'font-v2-display font-bold text-[var(--v2-text)] text-4xl' : 'font-display text-4xl text-gradient-gold'}`}>中奖记录</h1>
+          <p className={designVersion === 'v2' ? 'text-[var(--v2-text-secondary)]' : 'text-neutral-500 dark:text-neutral-500'}>记录每一次心跳加速的时刻</p>
         </div>
         <div className="flex items-center gap-3">
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className="btn-outline flex items-center gap-2"
+            className={`flex items-center gap-2 ${designVersion === 'v2' ? 'px-4 py-2 rounded-lg border border-[var(--v2-border)] bg-[var(--v2-bg-card)] text-[var(--v2-text)] text-sm font-v2-body hover:border-v2-primary-500 transition-colors' : 'btn-outline'}`}
           >
             <Filter size={18} />
             筛选
@@ -126,7 +127,7 @@ const BetsPage = () => {
               <button
                 onClick={handleUpdateAllAiComments}
                 disabled={isUpdatingAll}
-                className="btn-outline flex items-center gap-2"
+                className={`flex items-center gap-2 ${designVersion === 'v2' ? 'px-4 py-2 rounded-lg border border-[var(--v2-border)] bg-[var(--v2-bg-card)] text-[var(--v2-text)] text-sm font-v2-body hover:border-v2-primary-500 transition-colors' : 'btn-outline'}`}
               >
                 <RefreshCw size={18} className={isUpdatingAll ? 'animate-spin' : ''} />
                 {isUpdatingAll ? '更新中...' : '更新全部AI评价'}
@@ -135,7 +136,7 @@ const BetsPage = () => {
           )}
           <button
             onClick={() => setShowForm(true)}
-            className="btn-gold flex items-center gap-2"
+            className={`flex items-center gap-2 ${designVersion === 'v2' ? 'px-5 py-2.5 rounded-lg bg-profit-500 text-white font-v2-body font-bold text-sm hover:bg-profit-600 active:scale-[0.98] transition-all shadow-sm shadow-profit-500/25' : 'btn-gold'}`}
           >
             <Plus size={18} />
             新增记录
@@ -194,19 +195,19 @@ const BetsPage = () => {
         transition={{ duration: 0.5, delay: 0.1 }}
         className="grid grid-cols-2 gap-4 mb-8"
       >
-        <div className="card p-4">
-          <div className="flex items-center gap-2 text-neutral-500 dark:text-neutral-500 text-sm mb-2">
+        <div className={designVersion === 'v2' ? 'rounded-xl p-4 border border-[var(--v2-border)] bg-[var(--v2-bg-card)]' : 'card p-4'}>
+          <div className={`flex items-center gap-2 text-sm mb-2 ${designVersion === 'v2' ? 'text-[var(--v2-text-secondary)]' : 'text-neutral-500 dark:text-neutral-500'}`}>
             <Calendar size={16} />
             <span>总记录</span>
           </div>
-          <p className="font-display text-3xl text-neutral-800 dark:text-neutral-200">{stats.total}</p>
+          <p className={designVersion === 'v2' ? 'font-v2-mono font-bold text-3xl text-[var(--v2-text)]' : 'font-display text-3xl text-neutral-800 dark:text-neutral-200'}>{stats.total}</p>
         </div>
-        <div className="card p-4">
-          <div className="flex items-center gap-2 text-amber-600 dark:text-gold-400 text-sm mb-2">
+        <div className={designVersion === 'v2' ? 'rounded-xl p-4 border border-[var(--v2-border)] bg-[var(--v2-bg-card)]' : 'card p-4'}>
+          <div className={`flex items-center gap-2 text-sm mb-2 ${designVersion === 'v2' ? 'text-[var(--v2-text-secondary)]' : 'text-amber-600 dark:text-gold-400'}`}>
             <Trophy size={16} />
             <span>中奖总额</span>
           </div>
-          <p className="font-display text-3xl text-amber-600 dark:text-gold-400">
+          <p className={designVersion === 'v2' ? 'font-v2-mono font-bold text-3xl text-profit-500' : 'font-display text-3xl text-amber-600 dark:text-gold-400'}>
             ¥{stats.totalWinAmount.toFixed(2)}
           </p>
         </div>
@@ -221,14 +222,14 @@ const BetsPage = () => {
             transition={{ duration: 0.3 }}
             className="overflow-hidden"
           >
-            <div className="card p-4">
+            <div className={designVersion === 'v2' ? 'rounded-xl p-4 border border-[var(--v2-border)] bg-[var(--v2-bg-card)]' : 'card p-4'}>
               <div className="flex flex-wrap gap-4">
                 <div className="flex-1 min-w-[150px]">
-                  <p className="text-sm text-neutral-500 dark:text-neutral-500 mb-2">用户筛选</p>
+                  <p className={`text-sm mb-2 ${designVersion === 'v2' ? 'font-v2-body text-sm font-medium text-[var(--v2-text-secondary)]' : 'text-neutral-500 dark:text-neutral-500'}`}>用户筛选</p>
                   <select
                     value={filterUserId}
                     onChange={(e) => setFilterUserId(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-neutral-800 dark:text-neutral-200 text-sm focus:outline-none focus:border-primary-500/50"
+                    className={designVersion === 'v2' ? 'w-full px-4 py-2.5 rounded-lg border border-[var(--v2-border)] bg-[var(--v2-bg)] text-[var(--v2-text)] text-sm font-v2-body focus:border-v2-primary-500 focus:outline-none transition-colors' : 'w-full px-3 py-2 rounded-lg bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-neutral-800 dark:text-neutral-200 text-sm focus:outline-none focus:border-primary-500/50'}
                   >
                     <option value="all">全部用户</option>
                     {users.map((u) => (

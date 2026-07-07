@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import Avatar from '@/components/Avatar';
 import { RARITY_STYLES, BadgeRarity } from '@/utils/badges';
 import { TrendingUp, Minus } from 'lucide-react';
+import { useAppStore } from '@/store/useAppStore';
 
 interface RankingListProps {
   rankings: RankingItem[];
@@ -13,7 +14,15 @@ interface RankingListProps {
 }
 
 const RankingList = ({ rankings, sortType, todayWinUsers }: RankingListProps) => {
+  const designVersion = useAppStore((state) => state.designVersion);
+
   const getRankBadgeClass = (rank: number) => {
+    if (designVersion === 'v2') {
+      if (rank === 1) return 'rounded-lg bg-gradient-to-br from-yellow-400 to-yellow-500 text-yellow-900';
+      if (rank === 2) return 'rounded-lg bg-gradient-to-br from-gray-300 to-gray-400 text-gray-700';
+      if (rank === 3) return 'rounded-lg bg-gradient-to-br from-amber-500 to-amber-600 text-white';
+      return 'rounded-lg bg-neutral-100 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-400';
+    }
     if (rank === 1) return 'badge-rank-1';
     if (rank === 2) return 'badge-rank-2';
     if (rank === 3) return 'badge-rank-3';
@@ -21,26 +30,46 @@ const RankingList = ({ rankings, sortType, todayWinUsers }: RankingListProps) =>
   };
 
   return (
-    <div className="card">
+    <div className={designVersion === 'v2' ? 'rounded-xl p-5 border border-[var(--v2-border)] bg-[var(--v2-bg-card)]' : 'card'}>
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
             <tr className="border-b border-neutral-100 dark:border-neutral-800/50">
-              <th className="text-left py-3 px-2 sm:px-4 text-neutral-500 dark:text-neutral-500 text-sm font-medium">
+              <th className={
+                designVersion === 'v2'
+                  ? 'text-left py-3 px-2 sm:px-4 font-v2-body text-xs font-semibold text-[var(--v2-text-secondary)] uppercase tracking-wider'
+                  : 'text-left py-3 px-2 sm:px-4 text-neutral-500 dark:text-neutral-500 text-sm font-medium'
+              }>
                 排名
               </th>
-              <th className="text-left py-3 px-2 sm:px-4 text-neutral-500 dark:text-neutral-500 text-sm font-medium">
+              <th className={
+                designVersion === 'v2'
+                  ? 'text-left py-3 px-2 sm:px-4 font-v2-body text-xs font-semibold text-[var(--v2-text-secondary)] uppercase tracking-wider'
+                  : 'text-left py-3 px-2 sm:px-4 text-neutral-500 dark:text-neutral-500 text-sm font-medium'
+              }>
                 用户
               </th>
-              <th className="text-right py-3 px-4 text-neutral-500 dark:text-neutral-500 text-sm font-medium">
+              <th className={
+                designVersion === 'v2'
+                  ? 'text-right py-3 px-4 font-v2-body text-xs font-semibold text-[var(--v2-text-secondary)] uppercase tracking-wider'
+                  : 'text-right py-3 px-4 text-neutral-500 dark:text-neutral-500 text-sm font-medium'
+              }>
                 {sortType === 'totalWin' && '中奖总额'}
                 {sortType === 'winDays' && '中奖天数'}
                 {sortType === 'totalBets' && '记录总数'}
               </th>
-              <th className="text-right py-3 px-4 text-neutral-500 dark:text-neutral-500 text-sm font-medium hidden md:table-cell">
+              <th className={
+                designVersion === 'v2'
+                  ? 'text-right py-3 px-4 font-v2-body text-xs font-semibold text-[var(--v2-text-secondary)] uppercase tracking-wider hidden md:table-cell'
+                  : 'text-right py-3 px-4 text-neutral-500 dark:text-neutral-500 text-sm font-medium hidden md:table-cell'
+              }>
                 平均中奖
               </th>
-              <th className="text-right py-3 px-4 text-neutral-500 dark:text-neutral-500 text-sm font-medium hidden sm:table-cell">
+              <th className={
+                designVersion === 'v2'
+                  ? 'text-right py-3 px-4 font-v2-body text-xs font-semibold text-[var(--v2-text-secondary)] uppercase tracking-wider hidden sm:table-cell'
+                  : 'text-right py-3 px-4 text-neutral-500 dark:text-neutral-500 text-sm font-medium hidden sm:table-cell'
+              }>
                 记录数
               </th>
             </tr>
@@ -52,7 +81,11 @@ const RankingList = ({ rankings, sortType, todayWinUsers }: RankingListProps) =>
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.4, delay: index * 0.05 }}
-                className="border-b border-gold/5 hover:bg-gold-500/5 transition-colors"
+                className={`border-b border-gold/5 ${
+                  designVersion === 'v2'
+                    ? 'hover:bg-v2-primary-500/3'
+                    : 'hover:bg-gold-500/5'
+                } transition-colors`}
               >
                 <td className="py-4 px-2 sm:px-4">
                   <div className={`badge-rank ${getRankBadgeClass(index + 1)}`}>
@@ -67,7 +100,11 @@ const RankingList = ({ rankings, sortType, todayWinUsers }: RankingListProps) =>
                     <Avatar src={item.avatar} alt={item.nickname} size="sm" className="sm:w-[60px] sm:h-[60px] sm:text-2xl" />
                     <div>
                       <div className="flex items-center gap-1">
-                        <p className="font-medium text-neutral-800 dark:text-neutral-200 group-hover:text-primary-500 transition-colors">
+                        <p className={
+                          designVersion === 'v2'
+                            ? 'font-v2-body font-medium text-[var(--v2-text)] group-hover:text-v2-primary-500 transition-colors'
+                            : 'font-medium text-neutral-800 dark:text-neutral-200 group-hover:text-primary-500 transition-colors'
+                        }>
                           {item.nickname}
                         </p>
                         {todayWinUsers && todayWinUsers.has(item.userId) ? (
@@ -89,7 +126,11 @@ const RankingList = ({ rankings, sortType, todayWinUsers }: RankingListProps) =>
                           ))}
                         </div>
                       ) : (
-                        <p className="text-xs text-neutral-500 dark:text-neutral-500">
+                        <p className={
+                          designVersion === 'v2'
+                            ? 'font-v2-body text-xs text-[var(--v2-text-secondary)]'
+                            : 'text-xs text-neutral-500 dark:text-neutral-500'
+                        }>
                           中奖 {item.winDays} 天
                         </p>
                       )}
@@ -98,23 +139,39 @@ const RankingList = ({ rankings, sortType, todayWinUsers }: RankingListProps) =>
                 </td>
                 <td className="py-4 px-4 text-right">
                   {sortType === 'totalWin' && (
-                    <span className="font-display text-lg text-amber-600 dark:text-gold-400">
+                    <span className={
+                      designVersion === 'v2'
+                        ? 'font-v2-mono font-bold text-lg text-profit-500'
+                        : 'font-display text-lg text-amber-600 dark:text-gold-400'
+                    }>
                       ¥{item.totalWinAmount.toFixed(2)}
                     </span>
                   )}
                   {sortType === 'winDays' && (
-                    <span className="font-bold text-lg text-profit-500">
+                    <span className={
+                      designVersion === 'v2'
+                        ? 'font-v2-mono font-bold text-lg text-profit-500'
+                        : 'font-bold text-lg text-profit-500'
+                    }>
                       {item.winDays} 天
                     </span>
                   )}
                   {sortType === 'totalBets' && (
-                    <span className="font-bold text-lg text-neutral-800 dark:text-neutral-200">
+                    <span className={
+                      designVersion === 'v2'
+                        ? 'font-v2-mono font-bold text-lg text-neutral-800 dark:text-neutral-200'
+                        : 'font-bold text-lg text-neutral-800 dark:text-neutral-200'
+                    }>
                       {item.totalBets} 条
                     </span>
                   )}
                 </td>
                 <td className="py-4 px-4 text-right hidden md:table-cell">
-                  <span className="font-display text-sm text-amber-600 dark:text-gold-400">
+                  <span className={
+                      designVersion === 'v2'
+                        ? 'font-v2-mono text-sm text-profit-500'
+                        : 'font-display text-sm text-amber-600 dark:text-gold-400'
+                  }>
                     ¥{item.avgWin.toFixed(2)}
                   </span>
                 </td>
