@@ -27,7 +27,7 @@ const pageVariants = {
 
 /* ── 每页背景图映射（14页全覆盖） ── */
 const PAGE_BGS: Record<number, string> = {
-  0:  '/report/stadium-hero.jpg',    // 封面
+  0:  '/report/world-cup-stars-bg.jpg', // 封面（球星）
   1:  '/report/first-win-bg.jpg',    // 开门红
   2:  '/report/overview-bg.jpg',     // 总览
   3:  '/report/goal-net.jpg',        // 财富曲线
@@ -200,7 +200,7 @@ function P01({ data }: { data: ReportData }) {
         <span className="text-base text-white/50">{data.nickname}</span>
       </motion.div>
       <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-        transition={{ delay: 1.3 }} className="text-white/25 text-xs mb-2">
+        transition={{ delay: 1.3 }} className="text-white/25 text-[13px] mb-2">
         下滑开启回忆
       </motion.p>
       <motion.div initial={{ y: 0 }} animate={{ y: 6 }}
@@ -224,7 +224,7 @@ function P02({ data }: { data: ReportData }) {
       <motion.img initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 0.55, duration: 0.5 }}
         src="/report/illust-trophy.jpg" alt="" className="w-16 h-16 rounded-full opacity-60 mb-4" />
-      <p className="text-white/45 text-sm mb-4">你记录了第一笔中奖</p>
+      <p className="text-white/45 text-[15px] mb-4">你记录了第一笔中奖</p>
       <Num value={`¥${formatMoney(data.firstWin.amount)}`} delay={0.7} color="#F0C05A" />
       <Sep />
       <Quote>开门红，是这个夏天最好的开场</Quote>
@@ -291,15 +291,15 @@ function P04({ data }: { data: ReportData }) {
           <motion.path d={line} fill="none" stroke={C.gold} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
             initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ delay: 0.6, duration: 1.2, ease: 'easeOut' }} />
           {pts.length > 0 && <>
-            <motion.text x={pts[0].x} y={pts[0].y - 8} textAnchor="middle" className="text-[9px] font-bold fill-amber-300"
+            <motion.text x={pts[0].x} y={pts[0].y - 8} textAnchor="middle" className="text-[10px] font-bold fill-amber-300"
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.5 }}>¥{formatMoney(pts[0].cumulative)}</motion.text>
-            <motion.text x={pts[pts.length - 1].x} y={pts[pts.length - 1].y - 8} textAnchor="middle" className="text-[9px] font-bold fill-amber-300"
+            <motion.text x={pts[pts.length - 1].x} y={pts[pts.length - 1].y - 8} textAnchor="middle" className="text-[10px] font-bold fill-amber-300"
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.7 }}>¥{formatMoney(pts[pts.length - 1].cumulative)}</motion.text>
             <motion.circle cx={pts[pts.length - 1].x} cy={pts[pts.length - 1].y} r="3" fill={C.gold}
               initial={{ r: 0 }} animate={{ r: 3 }} transition={{ delay: 1.8 }} />
           </>}
         </svg>
-        <div className="flex justify-between text-[9px] text-white/20 mt-2 px-1">
+        <div className="flex justify-between text-[10px] text-white/20 mt-2 px-1">
           <span>{formatDateCN(data.dailyTrend[0].date)}</span>
           <span>{formatDateCN(data.dailyTrend[data.dailyTrend.length - 1].date)}</span>
         </div>
@@ -326,7 +326,7 @@ function P05({ data }: { data: ReportData }) {
           return (
             <Card key={s.stage} delay={0.5 + i * 0.15}
               className={`flex-1 p-4 ${isBest ? 'border-amber-400/20' : ''}`}>
-              <div className={`text-sm font-bold mb-1 ${isBest ? 'text-white' : 'text-white/50'}`}>{s.label}</div>
+              <div className={`text-[15px] font-bold mb-1 ${isBest ? 'text-white' : 'text-white/50'}`}>{s.label}</div>
               <div className="text-lg font-bold font-mono" style={{ color: '#F0C05A' }}>¥{formatMoney(s.winAmount)}</div>
               <div className="text-[10px] text-white/25 mt-1">{s.winCount} 次</div>
               <div className="mt-2"><Bar percent={(s.winAmount / maxA) * 100} delay={0.8 + i * 0.15} /></div>
@@ -352,12 +352,12 @@ function P06({ data }: { data: ReportData }) {
       <Card delay={0.6} className="p-6 w-full max-w-[300px]">
         <div className="flex justify-between items-center">
           <div className="text-center">
-            <div className="text-white/35 text-xs mb-1">单日中奖</div>
+            <div className="text-white/35 text-[13px] mb-1">单日中奖</div>
             <div className="text-2xl font-bold font-mono text-white">{data.bestDay.winCount} <span className="text-sm text-white/25">次</span></div>
           </div>
           <div className="w-px h-10 bg-white/10" />
           <div className="text-center">
-            <div className="text-white/35 text-xs mb-1">单日盈利</div>
+            <div className="text-white/35 text-[13px] mb-1">单日盈利</div>
             <div className="text-2xl font-bold font-mono" style={{ color: '#F0C05A' }}>¥{formatMoney(data.bestDay.profit)}</div>
           </div>
         </div>
@@ -378,10 +378,10 @@ function P07({ data }: { data: ReportData }) {
       <Title size="text-xl" className="mb-4">你最大的一笔中奖</Title>
       <div className="absolute top-[30%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-36 h-36 rounded-full bg-amber-400/[0.06] blur-[60px] pointer-events-none" />
       <Num value={`¥${formatMoney(data.biggestWin.amount)}`} delay={0.5} size="text-5xl" color="#F0C05A" />
-      <p className="text-white/35 text-sm font-mono mt-3 mb-6">{formatDateCN(data.biggestWin.date)}</p>
+      <p className="text-white/35 text-[15px] font-mono mt-3 mb-6">{formatDateCN(data.biggestWin.date)}</p>
       {data.biggestWin.note && (
         <Card delay={0.9} className="px-5 py-3 max-w-[280px]">
-          <p className="text-white/50 text-sm">「{data.biggestWin.note}」</p>
+          <p className="text-white/50 text-[15px]">「{data.biggestWin.note}」</p>
         </Card>
       )}
       <Quote delay={1.2}>这一票，买中了一整个夏天的快乐</Quote>
@@ -419,6 +419,9 @@ function P09({ data }: { data: ReportData }) {
   return (
     <PageBg pageIndex={8}>
       <Ch>Chapter 08</Ch>
+      <motion.img initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 0.5, scale: 1 }}
+        transition={{ delay: 0.35, duration: 0.5 }}
+        src="/report/illust-soccer.jpg" alt="" className="w-14 h-14 rounded-full mb-3" />
       <Title size="text-xl">你最擅长的玩法是</Title>
       <motion.div initial={{ y: 16, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.5 }} className="text-3xl font-bold text-white mb-1">{fav.type}</motion.div>
@@ -435,7 +438,7 @@ function P09({ data }: { data: ReportData }) {
           return (
             <motion.div key={pt.type} initial={{ x: -16, opacity: 0 }} animate={{ x: 0, opacity: 1 }}
               transition={{ delay: 0.85 + i * 0.1 }}>
-              <div className="flex justify-between text-xs mb-1">
+              <div className="flex justify-between text-[13px] mb-1">
                 <span className="text-white/50">{pt.type}</span>
                 <span className="text-white/70">{pt.winCount}场{amt && <span className="ml-2" style={{ color: '#F0C05A' }}>¥{formatMoney(amt.winAmount)}</span>}</span>
               </div>
@@ -464,10 +467,10 @@ function P10({ data }: { data: ReportData }) {
         transition={{ delay: 0.5, type: 'spring' }} className="mb-6">
         <div className="text-6xl mb-2">{getTeamFlag(fav.name)}</div>
         <div className="text-2xl font-bold text-white">{fav.name}</div>
-        <div className="text-white/35 text-sm mt-1">你一共 {fav.winCount} 次猜中了ta的比赛</div>
+        <div className="text-white/35 text-[15px] mt-1">你一共 {fav.winCount} 次猜中了ta的比赛</div>
       </motion.div>
       <Card delay={0.7} className="p-4 w-full max-w-[300px]">
-        <p className="text-white/30 text-[10px] mb-3 text-left">猜中过的球队</p>
+        <p className="text-white/30 text-[11px] mb-3 text-left">猜中过的球队</p>
         <div className="grid grid-cols-6 gap-2">
           {top.map((t, i) => (
             <motion.div key={t.name} initial={{ scale: 0 }} animate={{ scale: 1 }}
@@ -476,7 +479,7 @@ function P10({ data }: { data: ReportData }) {
                 t.name === fav.name ? 'bg-amber-400/[0.08] ring-1 ring-amber-400/15' : ''
               }`}>
               <div className="text-2xl">{getTeamFlag(t.name)}</div>
-              <div className="text-[9px] text-white/25 mt-1">{t.winCount}次</div>
+              <div className="text-[10px] text-white/25 mt-1">{t.winCount}次</div>
             </motion.div>
           ))}
         </div>
@@ -503,7 +506,7 @@ function P11({ data }: { data: ReportData }) {
       </div>
       <Sub delay={0.7} className="text-lg !text-white/50 mb-8">天中奖</Sub>
       {data.streakStartDate && data.streakEndDate && (
-        <p className="text-white/30 text-sm font-mono mb-8">{formatDateCN(data.streakStartDate)} → {formatDateCN(data.streakEndDate)}</p>
+        <p className="text-white/30 text-[15px] font-mono mb-8">{formatDateCN(data.streakStartDate)} → {formatDateCN(data.streakEndDate)}</p>
       )}
       <div className="w-full max-w-[300px]">
         <Bar percent={Math.min(data.maxStreak * 15, 100)} delay={1.0} className="from-red-400 via-orange-400 to-red-500" />
@@ -522,7 +525,7 @@ function P12({ data }: { data: ReportData }) {
       <motion.div initial={{ y: 16, opacity: 0, scale: 0.95 }} animate={{ y: 0, opacity: 1, scale: 1 }}
         transition={{ delay: 0.5, type: 'spring' }} className="mb-6">
         <div className="text-5xl font-bold text-white mb-1">#{data.rank}</div>
-        <span className="inline-block px-3 py-1 rounded-full text-xs bg-amber-400/[0.08] border border-amber-400/15"
+        <span className="inline-block px-3 py-1 rounded-full text-[13px] bg-amber-400/[0.08] border border-amber-400/15"
           style={{ color: C.gold }}>
           {data.socialTitle}
         </span>
@@ -543,35 +546,35 @@ function P12({ data }: { data: ReportData }) {
                 }`}>{u.avatar || '?'}</div>
               )}
             </div>
-            <div className="text-[10px] text-white/40 truncate w-full text-center">{u.nickname}</div>
-            <div className="text-xs font-bold font-mono mt-0.5" style={{ color: '#F0C05A' }}>¥{formatMoney(u.totalWinAmount)}</div>
+            <div className="text-[11px] text-white/40 truncate w-full text-center">{u.nickname}</div>
+            <div className="text-[13px] font-bold font-mono mt-0.5" style={{ color: '#F0C05A' }}>¥{formatMoney(u.totalWinAmount)}</div>
           </motion.div>
         ))}
       </div>
       <div className="grid grid-cols-3 gap-2 w-full max-w-[300px] mb-4">
         <Card delay={0.9} className="p-3 text-center">
           <div className="text-sm font-bold font-mono" style={{ color: '#F0C05A' }}>¥{formatMoney(data.groupStats.avgWinAmount)}</div>
-          <div className="text-[9px] text-white/25 mt-0.5">平均中奖</div>
+          <div className="text-[10px] text-white/25 mt-0.5">平均中奖</div>
         </Card>
         <Card delay={1.0} className="p-3 text-center">
           <div className="text-sm font-bold font-mono" style={{ color: '#F0C05A' }}>¥{formatMoney(data.groupStats.maxSingleWin)}</div>
-          <div className="text-[9px] text-white/25 mt-0.5">最高单注</div>
+          <div className="text-[10px] text-white/25 mt-0.5">最高单注</div>
         </Card>
         <Card delay={1.1} className="p-3 text-center">
           <div className="text-sm font-bold font-mono text-blue-400">{data.groupStats.avgWinMatches.toFixed(0)}</div>
-          <div className="text-[9px] text-white/25 mt-0.5">人均猜中</div>
+          <div className="text-[10px] text-white/25 mt-0.5">人均猜中</div>
         </Card>
       </div>
       <Card delay={1.2} className="p-4 w-full max-w-[300px]">
         <div className="flex justify-between items-center">
           <div className="text-center">
             <div className="text-xl font-bold font-mono text-amber-400">{data.groupStats.beatCount}</div>
-            <div className="text-[9px] text-white/25">击败</div>
+            <div className="text-[10px] text-white/25">击败</div>
           </div>
           <div className="w-px h-8 bg-white/10" />
           <div className="text-center">
             <div className="text-xl font-bold font-mono text-amber-400">{data.groupStats.lostCount}</div>
-            <div className="text-[9px] text-white/25">被压制</div>
+            <div className="text-[10px] text-white/25">被压制</div>
           </div>
         </div>
       </Card>
@@ -587,7 +590,7 @@ function P13({ data }: { data: ReportData }) {
       <div className="w-full max-w-[300px]">
         <motion.h3 initial={{ y: 16, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.2 }}
-          className="text-sm font-bold text-white mb-4 text-left">你的中奖搭子</motion.h3>
+          className="text-[15px] font-bold text-white mb-4 text-left">你的中奖搭子</motion.h3>
         {data.bestCP ? (
           <Card delay={0.4} className="p-5 mb-8">
             <div className="flex items-center justify-center gap-6">
@@ -599,7 +602,7 @@ function P13({ data }: { data: ReportData }) {
                     <span className="text-xl">{data.avatar}</span>
                   )}
                 </div>
-                <div className="text-xs text-white/40 mt-2">{data.nickname}</div>
+                <div className="text-[13px] text-white/40 mt-2">{data.nickname}</div>
               </div>
               <div className="text-lg text-white/15 shrink-0">~</div>
               <div className="text-center shrink-0">
@@ -610,31 +613,31 @@ function P13({ data }: { data: ReportData }) {
                     <span className="text-xl">{data.bestCP.avatar}</span>
                   )}
                 </div>
-                <div className="text-xs text-white/40 mt-2">{data.bestCP.nickname}</div>
+                <div className="text-[13px] text-white/40 mt-2">{data.bestCP.nickname}</div>
               </div>
             </div>
-            <div className="text-center mt-4 text-sm font-bold font-mono text-white">一起中奖 {data.bestCP.commonWinDays} 天</div>
+            <div className="text-center mt-4 text-[15px] font-bold font-mono text-white">一起中奖 {data.bestCP.commonWinDays} 天</div>
           </Card>
         ) : (
-          <Card delay={0.4} className="p-5 mb-8 text-white/30 text-sm">寻找你的中奖搭子中...</Card>
+          <Card delay={0.4} className="p-5 mb-8 text-white/30 text-[15px]">寻找你的中奖搭子中...</Card>
         )}
 
         <motion.h3 initial={{ y: 16, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.6 }}
-          className="text-sm font-bold text-white mb-4 text-left">解锁成就</motion.h3>
+          className="text-[15px] font-bold text-white mb-4 text-left">解锁成就</motion.h3>
         {data.topBadges.length > 0 ? (
           <div className="grid grid-cols-3 gap-2">
             {data.topBadges.slice(0, 6).map((b, i) => (
               <Card key={b.id} delay={0.8 + i * 0.08}
                 className={`p-3 text-center ${b.rarity >= 4 ? 'border-amber-400/15' : ''}`}>
                 <div className="text-2xl mb-1">{b.emoji}</div>
-                <div className="text-[10px] text-white/50">{b.name}</div>
-                <div className="text-[9px] mt-0.5 text-amber-400/50">{'★'.repeat(b.rarity)}</div>
+                <div className="text-[11px] text-white/50">{b.name}</div>
+                <div className="text-[10px] mt-0.5 text-amber-400/50">{'★'.repeat(b.rarity)}</div>
               </Card>
             ))}
           </div>
         ) : (
-          <Card delay={0.8} className="p-5 text-white/30 text-sm">继续加油，解锁更多徽章！</Card>
+          <Card delay={0.8} className="p-5 text-white/30 text-[15px]">继续加油，解锁更多徽章！</Card>
         )}
       </div>
     </PageBg>
@@ -645,12 +648,15 @@ function P13({ data }: { data: ReportData }) {
 function P14({ data }: { data: ReportData }) {
   return (
     <PageBg pageIndex={13}>
+      <motion.img initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 0.3, scale: 1 }}
+        transition={{ delay: 0.1, duration: 0.5 }}
+        src="/report/illust-crown.jpg" alt="" className="w-20 h-20 rounded-full mb-4" />
       <motion.div initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
         transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
         className="w-16 h-16 rounded-full bg-amber-400/[0.08] ring-1 ring-amber-400/15 flex items-center justify-center mb-6">
         <span className="text-3xl">{data.titleEmoji}</span>
       </motion.div>
-      <p className="text-white/35 text-xs mb-1">你的专属称号</p>
+      <p className="text-white/35 text-[13px] mb-1">你的专属称号</p>
       <motion.div initial={{ y: 16, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.5 }}
         className="text-4xl font-bold text-white mb-2">{data.title}</motion.div>
@@ -658,23 +664,23 @@ function P14({ data }: { data: ReportData }) {
       <Card delay={0.9} className="p-5 w-full max-w-[300px] mb-8">
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-white/35 text-sm">累计盈利</span>
+            <span className="text-white/35 text-[15px]">累计盈利</span>
             <span className="text-lg font-bold font-mono" style={{ color: '#F0C05A' }}>¥{formatMoney(data.totalWinAmount)}</span>
           </div>
           <div className="h-px bg-white/[0.05]" />
           <div className="flex items-center justify-between">
-            <span className="text-white/35 text-sm">猜中场次</span>
-            <span className="text-sm font-bold font-mono text-white">{data.totalWinMatches} 场</span>
+            <span className="text-white/35 text-[15px]">猜中场次</span>
+            <span className="text-[15px] font-bold font-mono text-white">{data.totalWinMatches} 场</span>
           </div>
           <div className="h-px bg-white/[0.05]" />
           <div className="flex items-center justify-between">
-            <span className="text-white/35 text-sm">群内排名</span>
-            <span className="text-sm font-bold font-mono text-white">第 {data.rank} 名 / 共 {data.totalUsers} 人</span>
+            <span className="text-white/35 text-[15px]">群内排名</span>
+            <span className="text-[15px] font-bold font-mono text-white">第 {data.rank} 名 / 共 {data.totalUsers} 人</span>
           </div>
         </div>
       </Card>
-      <p className="text-white/20 text-sm">感谢这个夏天的每一次心跳</p>
-      <p className="text-white/15 text-sm mt-1">我们下届世界杯，再见</p>
+      <p className="text-white/20 text-[15px]">感谢这个夏天的每一次心跳</p>
+      <p className="text-white/15 text-[15px] mt-1">我们下届世界杯，再见</p>
     </PageBg>
   );
 }
@@ -775,7 +781,7 @@ export default function ReportPage() {
         transition: 'transform 0.45s cubic-bezier(0.4, 0, 0.2, 1)',
       }}>
         {pages.map((p, i) => (
-          <div key={i} className="w-full h-full" style={{ minHeight: '100vh' }}>
+          <div key={i} className="w-full h-full relative">
             {p}
           </div>
         ))}
