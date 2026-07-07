@@ -96,6 +96,13 @@ const TEAM_NAME_ALIASES: Record<string, string> = {
   '意大利队': '意大利',
   '比利时队': '比利时',
   '克罗地亚队': '克罗地亚',
+  '佛得角队': '佛得角',
+  '阿尔及利亚队': '阿尔及利亚',
+  '刚果(金)队': '刚果(金)',
+  '刚果民主共和国': '刚果(金)',
+  '刚果金': '刚果(金)',
+  '乌兹别克斯坦队': '乌兹别克斯坦',
+  '约旦队': '约旦',
 };
 
 function normalizeTeamName(name: string): string {
@@ -113,6 +120,17 @@ function normalizeTeamName(name: string): string {
 }
 
 function detectPlayType(text: string): string {
+  // 优先从 "| 玩法类型：选项 | 比分" 格式中提取玩法类型
+  // 例如：加拿大 vs 摩洛哥 | 总进球数：(2)@2.900元 | 比分0:3 → ❌错
+  const playTypeMatch = text.match(/\|\s*(.+?)[：:]/);
+  if (playTypeMatch) {
+    const playTypePart = playTypeMatch[1].trim().replace(/[（(].*?[）)]/g, '').trim();
+    if (PLAY_TYPES.includes(playTypePart)) {
+      return playTypePart;
+    }
+  }
+
+  // 回退到关键词匹配
   for (const type of PLAY_TYPES) {
     if (text.includes(type)) {
       return type;
@@ -381,6 +399,11 @@ const TEAM_FLAGS: Record<string, string> = {
   '委内瑞拉': '🇻🇪',
   '新西兰': '🇳🇿',
   '中国': '🇨🇳',
+  '佛得角': '🇨🇻',
+  '阿尔及利亚': '🇩🇿',
+  '刚果(金)': '🇨🇩',
+  '乌兹别克斯坦': '🇺🇿',
+  '约旦': '🇯🇴',
 };
 
 export function getTeamFlag(teamName: string): string {
@@ -468,6 +491,18 @@ export function getTeamFlag(teamName: string): string {
     ['意大利队', '🇮🇹'],
     ['比利时队', '🇧🇪'],
     ['克罗地亚队', '🇭🇷'],
+    ['佛得角', '🇨🇻'],
+    ['佛得角队', '🇨🇻'],
+    ['阿尔及利亚', '🇩🇿'],
+    ['阿尔及利亚队', '🇩🇿'],
+    ['刚果(金)', '🇨🇩'],
+    ['刚果(金)队', '🇨🇩'],
+    ['刚果民主共和国', '🇨🇩'],
+    ['刚果金', '🇨🇩'],
+    ['乌兹别克斯坦', '🇺🇿'],
+    ['乌兹别克斯坦队', '🇺🇿'],
+    ['约旦', '🇯🇴'],
+    ['约旦队', '🇯🇴'],
   ];
 
   for (const [alias, flag] of ALIASES) {
