@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { ChevronDown, ChevronUp, X } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { generateReportData, formatDateCN, formatMoney, type ReportData } from '@/utils/reportData';
@@ -63,7 +63,7 @@ function PageBg({ children, pageIndex }: { children: React.ReactNode; pageIndex?
       <div className="absolute inset-0 bg-gradient-to-b from-black/35 via-black/25 to-black/70" />
       <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] rounded-full bg-amber-500/[0.03] blur-[90px] pointer-events-none" />
       <div className="absolute bottom-[-15%] right-[-10%] w-[50%] h-[50%] rounded-full bg-emerald-500/[0.02] blur-[80px] pointer-events-none" />
-      <div className="relative z-10 w-full flex flex-col items-center justify-center px-6 text-center max-w-[340px]">
+      <div className="relative z-10 w-full flex flex-col items-center justify-center px-8 text-center max-w-[360px]">
         {children}
       </div>
     </div>
@@ -75,7 +75,7 @@ function Ch({ children, delay = 0.2 }: { children: React.ReactNode; delay?: numb
   return (
     <motion.p initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
       transition={{ delay, duration: 0.4 }}
-      className="text-[10px] tracking-[5px] uppercase mb-5 font-medium"
+      className="text-[11px] tracking-[5px] uppercase mb-5 font-medium"
       style={{ color: C.gold }}>
       {children}
     </motion.p>
@@ -83,7 +83,7 @@ function Ch({ children, delay = 0.2 }: { children: React.ReactNode; delay?: numb
 }
 
 /* ── 标题 ── */
-function Title({ children, delay = 0.3, size = 'text-[26px]', className = '' }: { children: React.ReactNode; delay?: number; size?: string; className?: string }) {
+function Title({ children, delay = 0.3, size = 'text-[28px]', className = '' }: { children: React.ReactNode; delay?: number; size?: string; className?: string }) {
   return (
     <motion.h2 initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
       transition={{ delay, duration: 0.5 }}
@@ -98,14 +98,14 @@ function Sub({ children, delay = 0.5, className = '' }: { children: React.ReactN
   return (
     <motion.p initial={{ y: 12, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
       transition={{ delay, duration: 0.4 }}
-      className={`text-white/50 text-base ${className}`}>
+      className={`text-white/50 text-[17px] ${className}`}>
       {children}
     </motion.p>
   );
 }
 
 /* ── 大数字 ── */
-function Num({ value, color, delay = 0.6, size = 'text-[52px]' }: { value: string; color?: string; delay?: number; size?: string }) {
+function Num({ value, color, delay = 0.6, size = 'text-[56px]' }: { value: string; color?: string; delay?: number; size?: string }) {
   return (
     <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
       transition={{ delay, type: 'spring', stiffness: 200 }}
@@ -141,7 +141,7 @@ function Quote({ children, delay = 1.2 }: { children: React.ReactNode; delay?: n
   return (
     <motion.p initial={{ y: 12, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
       transition={{ delay, duration: 0.4 }}
-      className="text-white/25 text-base mt-8 italic max-w-[280px]">
+      className="text-white/25 text-[17px] mt-8 italic max-w-[300px]">
       {children}
     </motion.p>
   );
@@ -179,7 +179,7 @@ function P01({ data }: { data: ReportData }) {
         className="w-[120px] h-[120px] mb-6 rounded-2xl object-contain" />
       <motion.h1 initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.4, duration: 0.6 }}
-        className="text-[30px] font-semibold text-white mb-2 tracking-wider">
+        className="text-[32px] font-semibold text-white mb-2 tracking-wider">
         你的2026世界杯
       </motion.h1>
       <motion.p initial={{ y: 25, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
@@ -751,7 +751,7 @@ export default function ReportPage() {
   ];
 
   return (
-    <div ref={containerRef} className="fixed inset-0 overflow-hidden z-[100]"
+    <div ref={containerRef} className="fixed inset-0 overflow-hidden z-[100] bg-black"
       onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
       <button onClick={() => navigate(-1)}
         className="fixed top-4 right-4 z-50 p-2 text-white/30 hover:text-white/70 transition-colors">
@@ -770,14 +770,16 @@ export default function ReportPage() {
         </button>
       )}
       <ProgressDots current={page} />
-      <AnimatePresence initial={false} custom={dir} mode="wait">
-        <motion.div key={page} custom={dir} variants={pageVariants}
-          initial="enter" animate="center" exit="exit"
-          transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
-          className="absolute inset-0">
-          {pages[page]}
-        </motion.div>
-      </AnimatePresence>
+      <div className="absolute inset-0" style={{
+        transform: `translateY(-${page * 100}%)`,
+        transition: 'transform 0.45s cubic-bezier(0.4, 0, 0.2, 1)',
+      }}>
+        {pages.map((p, i) => (
+          <div key={i} className="w-full h-full" style={{ minHeight: '100vh' }}>
+            {p}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
