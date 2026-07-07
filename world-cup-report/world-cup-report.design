@@ -152,7 +152,7 @@
       "createdAt": 1783433900000,
       "canvasData": {
         "x": 0,
-        "y": 590
+        "y": 607
       },
       "devMetadata": {
         "imageSrc": "assets/stadium-hero.jpg"
@@ -166,7 +166,7 @@
       "createdAt": 1783433900000,
       "canvasData": {
         "x": 420,
-        "y": 590
+        "y": 607
       },
       "devMetadata": {
         "imageSrc": "assets/celebration.jpg"
@@ -180,7 +180,7 @@
       "createdAt": 1783433900000,
       "canvasData": {
         "x": 840,
-        "y": 590
+        "y": 607
       },
       "devMetadata": {
         "imageSrc": "assets/goal-net.jpg"
@@ -194,7 +194,7 @@
       "createdAt": 1783433900000,
       "canvasData": {
         "x": 1260,
-        "y": 590
+        "y": 607
       },
       "devMetadata": {
         "imageSrc": "assets/scoreboard.jpg"
@@ -208,7 +208,7 @@
       "createdAt": 1783433900000,
       "canvasData": {
         "x": 1680,
-        "y": 590
+        "y": 607
       },
       "devMetadata": {
         "imageSrc": "assets/pitch-aerial.jpg"
