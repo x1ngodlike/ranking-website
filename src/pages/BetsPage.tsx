@@ -200,14 +200,14 @@ const BetsPage = () => {
             <Calendar size={16} />
             <span>总记录</span>
           </div>
-          <p className={designVersion === 'v2' ? 'font-v2-mono font-bold text-3xl text-[var(--v2-text)]' : 'font-display text-3xl text-neutral-800 dark:text-neutral-200'}>{stats.total}</p>
+          <p className={designVersion === 'v2' ? 'font-v2-mono font-bold text-2xl md:text-3xl text-[var(--v2-text)]' : 'font-display text-2xl md:text-3xl text-neutral-800 dark:text-neutral-200'}>{stats.total}</p>
         </div>
         <div className={designVersion === 'v2' ? 'rounded-xl p-4 border border-[var(--v2-border)] bg-[var(--v2-bg-card)]' : 'card p-4'}>
           <div className={`flex items-center gap-2 text-sm mb-2 ${designVersion === 'v2' ? 'text-[var(--v2-text-secondary)]' : 'text-amber-600 dark:text-gold-400'}`}>
             <Trophy size={16} />
             <span>中奖总额</span>
           </div>
-          <p className={designVersion === 'v2' ? 'font-v2-mono font-bold text-3xl text-profit-500' : 'font-display text-3xl text-amber-600 dark:text-gold-400'}>
+          <p className={designVersion === 'v2' ? 'font-v2-mono font-bold text-2xl md:text-3xl text-profit-500' : 'font-display text-2xl md:text-3xl text-amber-600 dark:text-gold-400'}>
             ¥{stats.totalWinAmount.toFixed(2)}
           </p>
         </div>

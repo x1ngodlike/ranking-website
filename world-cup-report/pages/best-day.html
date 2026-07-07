@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>巅峰时刻</title>
+    <style id="theme-vars">
+/* World Cup Winning Report - Cinematic Immersive Style */
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+:root {
+  /* Brand Colors */
+  --brand-primary: #D4A853;
+  --brand-primary-light: #F0D68A;
+  --brand-primary-dark: #A07D2E;
+  --brand-accent: #E84855;
+  --brand-accent-light: #FF6B78;
+  --brand-accent-dark: #B8303C;
+
+  /* Surface Colors */
+  --bg-base: #0A0A0F;
+  --bg-surface: #14141F;
+  --bg-surface-elevated: #1C1C2A;
+  --bg-overlay: rgba(10, 10, 15, 0.75);
+
+  /* Text Colors */
+  --text-primary: #F5F0E8;
+  --text-secondary: rgba(245, 240, 232, 0.7);
+  --text-muted: rgba(245, 240, 232, 0.4);
+  --text-accent: #D4A853;
+  --text-accent-bright: #F0D68A;
+
+  /* Data Colors */
+  --color-win: #4ADE80;
+  --color-win-dim: rgba(74, 222, 128, 0.15);
+  --color-profit: #4ADE80;
+  --color-hot: #F97316;
+  --color-hot-dim: rgba(249, 115, 22, 0.15);
+  --color-streak: #FB923C;
+
+  /* Gradients */
+  --gradient-gold: linear-gradient(135deg, #D4A853 0%, #F0D68A 50%, #D4A853 100%);
+  --gradient-warm: linear-gradient(135deg, #D4A853 0%, #E84855 100%);
+  --gradient-deep: linear-gradient(180deg, rgba(10,10,15,0) 0%, rgba(10,10,15,0.8) 100%);
+
+  /* Spacing */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+  --space-3xl: 64px;
+
+  /* Radius */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+
+  /* Typography */
+  --font-display: 'Oswald', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* Motion */
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Display font class */
+.font-display {
+  font-family: var(--font-display);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+/* Body font */
+.font-body {
+  font-family: var(--font-body);
+}
+
+/* Mono font for numbers */
+.font-mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Gold text gradient */
+.text-gradient-gold {
+  background: var(--gradient-gold);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Warm gradient text */
+.text-gradient-warm {
+  background: var(--gradient-warm);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Cinematic overlay */
+.cinematic-overlay {
+  position: relative;
+}
+
+.cinematic-overlay::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(10,10,15,0.3) 0%, rgba(10,10,15,0.1) 40%, rgba(10,10,15,0.7) 100%),
+    radial-gradient(ellipse at center, transparent 40%, rgba(10,10,15,0.4) 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Glow effects */
+.glow-gold {
+  box-shadow: 0 0 30px rgba(212, 168, 83, 0.3), 0 0 60px rgba(212, 168, 83, 0.1);
+}
+
+.glow-text-gold {
+  text-shadow: 0 0 20px rgba(212, 168, 83, 0.4), 0 0 40px rgba(212, 168, 83, 0.2);
+}
+
+/* Card glass effect */
+.glass-card {
+  background: rgba(20, 20, 31, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(212, 168, 83, 0.15);
+  border-radius: var(--radius-lg);
+}
+
+/* Full bleed image background */
+.bg-bleed {
+  position: fixed;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* Shimmer animation for loading states */
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+/* Particle-like decorative dots */
+@keyframes float {
+  0%, 100% { transform: translateY(0px) scale(1); opacity: 0.3; }
+  50% { transform: translateY(-10px) scale(1.2); opacity: 0.6; }
+}
+
+/* Progress bar animation */
+@keyframes progressFill {
+  from { width: 0%; }
+}
+
+/* Number counter animation */
+@keyframes countIn {
+  from { opacity: 0; transform: translateY(10px) scale(0.9); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+  }
+  @layer base {
+    body { background: var(--bg-base); color: var(--text-primary); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+
+      /* Page-specific styles */
+      @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(24px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      @keyframes fadeInScale {
+        from { opacity: 0; transform: scale(0.92); }
+        to { opacity: 1; transform: scale(1); }
+      }
+
+      @keyframes pulseGlow {
+        0%, 100% { box-shadow: 0 0 30px rgba(212, 168, 83, 0.3), 0 0 60px rgba(212, 168, 83, 0.1); }
+        50% { box-shadow: 0 0 40px rgba(212, 168, 83, 0.5), 0 0 80px rgba(212, 168, 83, 0.2); }
+      }
+
+      @keyframes shimmerGold {
+        0% { background-position: -200% center; }
+        100% { background-position: 200% center; }
+      }
+
+      .animate-fade-in-up {
+        animation: fadeInUp 0.8s var(--ease-smooth) both;
+      }
+
+      .animate-fade-in-scale {
+        animation: fadeInScale 0.6s var(--ease-spring) both;
+      }
+
+      .animate-pulse-glow {
+        animation: pulseGlow 3s ease-in-out infinite;
+      }
+
+      .delay-1 { animation-delay: 0.15s; }
+      .delay-2 { animation-delay: 0.3s; }
+      .delay-3 { animation-delay: 0.5s; }
+      .delay-4 { animation-delay: 0.7s; }
+      .delay-5 { animation-delay: 1.0s; }
+
+      .best-day-card:hover,
+      .best-day-card:active {
+        animation: pulseGlow 3s ease-in-out infinite;
+        border-color: rgba(212, 168, 83, 0.35);
+      }
+
+      /* Golden shimmer line */
+      .shimmer-line {
+        background: linear-gradient(
+          90deg,
+          transparent 0%,
+          rgba(212, 168, 83, 0.3) 40%,
+          rgba(212, 168, 83, 0.6) 50%,
+          rgba(212, 168, 83, 0.3) 60%,
+          transparent 100%
+        );
+        background-size: 200% 100%;
+        animation: shimmerGold 3s ease-in-out infinite;
+      }
+    </style>
+</head>
+<body class="min-h-screen font-sans antialiased">
+    <main class="relative min-h-screen w-full max-w-[375px] mx-auto overflow-hidden">
+
+      <!-- Fullscreen background image at 40% opacity -->
+      <div class="bg-bleed z-0" style="background-image: url('../assets/celebration.jpg'); opacity: 0.4;"></div>
+
+      <!-- Dark gradient overlay: top lighter, bottom heavier -->
+      <div class="fixed inset-0 z-[1]" style="background: linear-gradient(180deg, rgba(10,10,15,0.5) 0%, rgba(10,10,15,0.9) 100%);"></div>
+
+      <!-- Content layer -->
+      <div class="relative z-[2] min-h-screen flex flex-col justify-between px-6 py-12">
+
+        <!-- Top section: Chapter label + Title + Date -->
+        <div class="flex flex-col items-center pt-8">
+
+          <!-- CHAPTER 04 label -->
+          <p class="font-display text-xs tracking-[4px] animate-fade-in-up delay-1" style="color: var(--brand-primary);">
+            CHAPTER 04
+          </p>
+
+          <!-- Title -->
+          <h1 class="font-display text-[28px] leading-tight text-white mt-4 text-center animate-fade-in-up delay-2">
+            你的高光时刻
+          </h1>
+
+          <!-- Date -->
+          <p class="font-mono text-xl mt-3 animate-fade-in-up delay-3" style="color: rgba(255,255,255,0.8);">
+            6月28日
+          </p>
+
+          <!-- Decorative shimmer line -->
+          <div class="shimmer-line h-px w-16 mt-5 animate-fade-in-up delay-3"></div>
+        </div>
+
+        <!-- Central glass card -->
+        <div class="flex-1 flex items-center justify-center py-8">
+          <div class="glass-card best-day-card glow-gold w-full max-w-[320px] p-6 animate-fade-in-scale delay-4"
+               style="transition: border-color 0.3s ease, box-shadow 0.3s ease;">
+
+            <!-- Two-column stats -->
+            <div class="flex items-stretch">
+
+              <!-- Left column: 单日中奖 -->
+              <div class="flex-1 flex flex-col items-center justify-center py-3">
+                <span class="font-body text-xs tracking-wide" style="color: rgba(255,255,255,0.5);">
+                  单日中奖
+                </span>
+                <span class="font-mono text-[28px] font-bold text-white mt-2 leading-none">
+                  5 <span class="text-base font-normal" style="color: rgba(255,255,255,0.6);">次</span>
+                </span>
+              </div>
+
+              <!-- Separator line -->
+              <div class="w-px self-stretch my-2" style="background: rgba(212, 168, 83, 0.2);"></div>
+
+              <!-- Right column: 单日盈利 -->
+              <div class="flex-1 flex flex-col items-center justify-center py-3">
+                <span class="font-body text-xs tracking-wide" style="color: rgba(255,255,255,0.5);">
+                  单日盈利
+                </span>
+                <span class="font-mono text-[28px] font-bold mt-2 leading-none" style="color: var(--color-win);">
+                  ¥1,280
+                </span>
+              </div>
+            </div>
+
+            <!-- Subtle inner glow at bottom of card -->
+            <div class="mt-4 h-px rounded-full" style="background: linear-gradient(90deg, transparent 0%, rgba(212,168,83,0.15) 50%, transparent 100%);"></div>
+          </div>
+        </div>
+
+        <!-- Bottom quote -->
+        <div class="flex flex-col items-center pb-6">
+          <div class="shimmer-line h-px w-12 mb-5 animate-fade-in-up delay-4"></div>
+          <p class="font-body text-sm italic text-center animate-fade-in-up delay-5" style="color: rgba(255,255,255,0.4);">
+            那天你是不是对着屏幕喊出来了？
+          </p>
+        </div>
+
+      </div>
+
+    </main>
+    <script>lucide.createIcons();</script>
+</body>
+</html>

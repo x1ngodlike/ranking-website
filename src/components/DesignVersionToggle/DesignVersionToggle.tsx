@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useAppStore } from '@/store/useAppStore';
-import { ChevronDown } from 'lucide-react';
+import { Layers } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import type { DesignVersion } from '@/utils/theme';
 
 const DesignVersionToggle = () => {
@@ -28,43 +29,52 @@ const DesignVersionToggle = () => {
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen(!open)}
-        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
+        className={`p-2 rounded-lg transition-all duration-300 text-neutral-500 dark:text-neutral-400 hover:text-v2-primary-500 dark:hover:text-v2-primary-400 ${
           designVersion === 'v2'
-            ? 'bg-v2-primary-500/15 text-v2-primary-600 dark:text-v2-primary-400 border border-v2-primary-500/20'
-            : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 border border-transparent hover:border-neutral-200 dark:hover:border-neutral-700'
+            ? 'hover:bg-v2-primary-500/8'
+            : 'hover:bg-neutral-100 dark:hover:bg-neutral-800'
         }`}
+        title={designVersion === 'v2' ? '当前：新版设计' : '当前：旧版设计'}
       >
-        <span>{designVersion === 'v2' ? '新' : '旧'}</span>
-        <ChevronDown size={12} className={`transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
+        <Layers size={18} />
       </button>
-      {open && (
-        <div className={`absolute right-0 top-full mt-1 rounded-lg border shadow-lg overflow-hidden z-50 min-w-[80px] ${
-          designVersion === 'v2'
-            ? 'border-[var(--v2-border)] bg-[var(--v2-bg-card)]'
-            : 'border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800'
-        }`}>
-          <button
-            onClick={() => select('v2')}
-            className={`w-full text-left px-3 py-2 text-xs font-medium transition-colors ${
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: -10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -10, scale: 0.95 }}
+            transition={{ duration: 0.15 }}
+            className={`absolute top-full right-0 mt-2 py-1 rounded-lg shadow-xl min-w-[100px] z-50 border ${
               designVersion === 'v2'
-                ? 'text-v2-primary-600 dark:text-v2-primary-400 bg-v2-primary-500/10'
-                : 'text-[var(--v2-text-secondary)] hover:bg-v2-primary-500/5'
+                ? 'bg-[var(--v2-bg-card)] border-[var(--v2-border)]'
+                : 'bg-white dark:bg-neutral-800 border-neutral-200 dark:border-neutral-700'
             }`}
           >
-            新版
-          </button>
-          <button
-            onClick={() => select('v1')}
-            className={`w-full text-left px-3 py-2 text-xs font-medium transition-colors ${
-              designVersion === 'v1'
-                ? 'text-v2-primary-600 dark:text-v2-primary-400 bg-v2-primary-500/10'
-                : 'text-[var(--v2-text-secondary)] hover:bg-v2-primary-500/5'
-            }`}
-          >
-            旧版
-          </button>
-        </div>
-      )}
+            <button
+              onClick={() => select('v2')}
+              className={`w-full text-left px-3 py-2 text-xs font-medium transition-colors ${
+                designVersion === 'v2'
+                  ? 'text-v2-primary-600 dark:text-v2-primary-400 bg-v2-primary-500/10'
+                  : 'text-[var(--v2-text-secondary)] hover:bg-v2-primary-500/5'
+              }`}
+            >
+              新版
+            </button>
+            <button
+              onClick={() => select('v1')}
+              className={`w-full text-left px-3 py-2 text-xs font-medium transition-colors ${
+                designVersion === 'v1'
+                  ? 'text-v2-primary-600 dark:text-v2-primary-400 bg-v2-primary-500/10'
+                  : 'text-[var(--v2-text-secondary)] hover:bg-v2-primary-500/5'
+              }`}
+            >
+              旧版
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
