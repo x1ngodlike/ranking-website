@@ -118,9 +118,53 @@ function detectPlayType(text: string): string {
       return type;
     }
   }
+
+  const playMatch = text.match(/玩法[：:]\s*(.+?)@/);
+  if (playMatch) {
+    const option = playMatch[1].trim();
+
+    if (option.match(/^\(\d+:\d+\)/)) {
+      return '比分';
+    }
+
+    if (option.match(/^\(\d+:\d+\)\+\(\d+:\d+\)/)) {
+      return '比分';
+    }
+
+    if (option.match(/^\d+\+\d+/)) {
+      return '总进球数';
+    }
+
+    if (option.match(/^\d+$/)) {
+      return '总进球数';
+    }
+
+    const halfFullPatterns = ['胜胜', '胜平', '胜负', '平胜', '平平', '平负', '负胜', '负平', '负负'];
+    if (halfFullPatterns.includes(option)) {
+      return '半全场';
+    }
+
+    if (option.match(/^[胜负平]{2}$/)) {
+      return '半全场';
+    }
+
+    if (option.includes('让')) {
+      return '让球胜平负';
+    }
+
+    if (option.match(/^[胜负平]$/)) {
+      return '胜平负';
+    }
+
+    if (option.match(/^[胜负平]\+[胜负平]/)) {
+      return '胜平负';
+    }
+  }
+
   if (text.includes('胜') && text.includes('@') && !text.includes('平') && !text.includes('负')) {
     return '胜平负';
   }
+
   return '其他';
 }
 
