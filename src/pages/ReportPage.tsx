@@ -323,6 +323,32 @@ function Page04WealthCurve({ data }: { data: ReportData }) {
               transition={{ delay: 1.8, type: 'spring' }}
             />
           )}
+          {points.length > 0 && (
+            <>
+              <motion.text
+                x={points[0].x}
+                y={points[0].y - 12}
+                textAnchor="middle"
+                className="fill-amber-400 text-[10px] font-bold"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1.5 }}
+              >
+                ¥{formatMoney(points[0].cumulative)}
+              </motion.text>
+              <motion.text
+                x={points[points.length - 1].x}
+                y={points[points.length - 1].y - 12}
+                textAnchor="middle"
+                className="fill-amber-400 text-[10px] font-bold"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1.8 }}
+              >
+                ¥{formatMoney(points[points.length - 1].cumulative)}
+              </motion.text>
+            </>
+          )}
         </svg>
       </motion.div>
 
@@ -348,168 +374,10 @@ function Page04WealthCurve({ data }: { data: ReportData }) {
   );
 }
 
-function Page05Calendar({ data }: { data: ReportData }) {
-  const startDate = new Date('2026-06-11');
-  const endDate = new Date('2026-07-20');
-  const days: { date: string; profit: number; isBestDay: boolean; isFirstWin: boolean }[] = [];
-
-  const dailyMap = new Map<string, number>();
-  data.dailyTrend.forEach((d) => {
-    dailyMap.set(d.date, d.winAmount);
-  });
-
-  const current = new Date(startDate);
-  while (current <= endDate) {
-    const dateStr = current.toISOString().split('T')[0];
-    const profit = dailyMap.get(dateStr) || 0;
-    days.push({
-      date: dateStr,
-      profit,
-      isBestDay: data.bestDay?.date === dateStr,
-      isFirstWin: data.firstWin?.date === dateStr,
-    });
-    current.setDate(current.getDate() + 1);
-  }
-
-  const maxProfit = Math.max(...days.map((d) => d.profit), 1);
-  const weeks: typeof days[] = [];
-  for (let i = 0; i < days.length; i += 7) {
-    weeks.push(days.slice(i, i + 7));
-  }
-
-  const getColorLevel = (profit: number): number => {
-    if (profit === 0) return 0;
-    const ratio = profit / maxProfit;
-    if (ratio < 0.25) return 1;
-    if (ratio < 0.5) return 2;
-    if (ratio < 0.75) return 3;
-    return 4;
-  };
-
-  const colorClasses = [
-    'bg-white/10',
-    'bg-amber-500/30',
-    'bg-amber-500/50',
-    'bg-amber-400/70',
-    'bg-amber-300',
-  ];
-
-  const hasAnyWin = days.some((d) => d.profit > 0);
-
-  if (!hasAnyWin) {
-    return (
-      <PageContainer>
-        <div className="text-5xl mb-6">🗓️</div>
-        <h2 className="text-2xl font-bold mb-4">中奖日历</h2>
-        <p className="text-white/70">你的中奖日历，等待第一笔点亮</p>
-      </PageContainer>
-    );
-  }
-
-  return (
-    <PageContainer>
-      <motion.div
-        initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
-        transition={{ delay: 0.2, type: 'spring' }}
-        className="text-5xl mb-4"
-      >
-        🗓️
-      </motion.div>
-      <motion.h2
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.3, duration: 0.5 }}
-        className="text-xl font-bold mb-2"
-      >
-        中奖日历
-      </motion.h2>
-      <motion.p
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.4, duration: 0.5 }}
-        className="text-white/60 text-sm mb-6"
-      >
-        {data.winDays} 天有中奖的痕迹
-      </motion.p>
-
-      <motion.div
-        initial={{ scale: 0.9, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ delay: 0.6, duration: 0.5, type: 'spring' }}
-        className="w-full max-w-sm"
-      >
-        <div className="flex justify-between text-[10px] text-white/40 mb-1 px-0.5">
-          <span>日</span>
-          <span>一</span>
-          <span>二</span>
-          <span>三</span>
-          <span>四</span>
-          <span>五</span>
-          <span>六</span>
-        </div>
-        <div className="flex flex-col gap-1">
-          {weeks.map((week, wi) => (
-            <div key={wi} className="flex gap-1 justify-center">
-              {week.map((day, di) => {
-                const level = getColorLevel(day.profit);
-                return (
-                  <motion.div
-                    key={day.date}
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ delay: 0.7 + wi * 0.05 + di * 0.02, type: 'spring', stiffness: 300 }}
-                    className={`w-6 h-6 rounded-sm ${colorClasses[level]} ${
-                      day.isBestDay ? 'ring-2 ring-yellow-300 ring-offset-1 ring-offset-transparent' : ''
-                    } ${day.isFirstWin ? 'ring-2 ring-green-400' : ''}`}
-                    title={`${day.date}: ¥${day.profit}`}
-                  />
-                );
-              })}
-            </div>
-          ))}
-        </div>
-
-        <div className="flex items-center justify-end gap-1 mt-3 text-[10px] text-white/40">
-          <span>少</span>
-          {colorClasses.map((c, i) => (
-            <div key={i} className={`w-3 h-3 rounded-sm ${c}`} />
-          ))}
-          <span>多</span>
-        </div>
-      </motion.div>
-
-      <motion.div
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 1.3, duration: 0.5 }}
-        className="flex gap-4 mt-6 text-xs text-white/60"
-      >
-        <span className="flex items-center gap-1">
-          <span className="w-2 h-2 rounded-sm bg-green-400"></span> 开门红
-        </span>
-        <span className="flex items-center gap-1">
-          <span className="w-2 h-2 rounded-sm bg-yellow-300"></span> 巅峰日
-        </span>
-      </motion.div>
-
-      <motion.p
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 1.5, duration: 0.5 }}
-        className="text-white/50 text-sm mt-8"
-      >
-        每一天的努力，都有印记
-      </motion.p>
-    </PageContainer>
-  );
-}
-
 function Page06TimePattern({ data }: { data: ReportData }) {
-  const hasWeekdayData = data.weekdayStats.some((w) => w.winCount > 0);
   const hasStageData = data.stageStats.some((s) => s.winAmount > 0);
 
-  if (!hasWeekdayData && !hasStageData) {
+  if (!hasStageData) {
     return (
       <PageContainer>
         <div className="text-5xl mb-6">🎯</div>
@@ -519,7 +387,6 @@ function Page06TimePattern({ data }: { data: ReportData }) {
     );
   }
 
-  const maxWeekdayCount = Math.max(...data.weekdayStats.map((w) => w.winCount), 1);
   const maxStageAmount = Math.max(...data.stageStats.map((s) => s.winAmount), 1);
 
   const stageEmojis: Record<string, string> = {
@@ -546,94 +413,49 @@ function Page06TimePattern({ data }: { data: ReportData }) {
         你的运气有规律吗
       </motion.h2>
 
-      {data.bestWeekday && (
-        <motion.p
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.4, duration: 0.5 }}
-          className="text-amber-300 text-lg font-bold mb-6"
-        >
-          {data.bestWeekday.label}手气最好！
-        </motion.p>
-      )}
-
       <motion.div
         initial={{ y: 30, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.6, duration: 0.5 }}
-        className="w-full max-w-sm mb-6"
+        className="w-full max-w-sm"
       >
-        <p className="text-white/60 text-xs mb-2 text-left">一周中奖分布</p>
-        <div className="flex items-end justify-between gap-1 h-24 bg-white/5 rounded-lg p-2">
-          {data.weekdayStats.map((w, i) => {
-            const heightPercent = maxWeekdayCount > 0 ? (w.winCount / maxWeekdayCount) * 100 : 0;
-            const isBest = data.bestWeekday?.weekday === w.weekday;
+        <p className="text-white/60 text-xs mb-2 text-left">阶段对比</p>
+        <div className="flex gap-3">
+          {data.stageStats.map((s, i) => {
+            const percent = maxStageAmount > 0 ? (s.winAmount / maxStageAmount) * 100 : 0;
+            const isBetter = data.betterStage?.stage === s.stage;
             return (
-              <div key={w.weekday} className="flex flex-col items-center flex-1 gap-1">
-                <motion.div
-                  initial={{ height: 0 }}
-                  animate={{ height: `${Math.max(heightPercent, 5)}%` }}
-                  transition={{ delay: 0.7 + i * 0.08, duration: 0.5, ease: 'easeOut' }}
-                  className={`w-full rounded-t-sm ${
-                    isBest
-                      ? 'bg-gradient-to-t from-amber-500 to-amber-300'
-                      : 'bg-white/30'
-                  }`}
-                />
-                <span className={`text-[10px] ${isBest ? 'text-amber-300' : 'text-white/50'}`}>
-                  {w.label.slice(1)}
-                </span>
-              </div>
+              <motion.div
+                key={s.stage}
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 0.7 + i * 0.15, type: 'spring' }}
+                className={`flex-1 rounded-xl p-3 text-center ${
+                  isBetter
+                    ? 'bg-gradient-to-br from-amber-500/20 to-yellow-500/20 border border-amber-400/30'
+                    : 'bg-white/10'
+                }`}
+              >
+                <div className="text-2xl mb-1">{stageEmojis[s.label] || '⚽'}</div>
+                <div className={`text-sm font-bold mb-1 ${isBetter ? 'text-amber-300' : 'text-white'}`}>
+                  {s.label}
+                </div>
+                <div className="text-lg font-bold text-green-400">
+                  ¥{formatMoney(s.winAmount)}
+                </div>
+                <div className="text-[10px] text-white/50 mt-1">
+                  {s.winCount} 次中奖
+                </div>
+              </motion.div>
             );
           })}
         </div>
       </motion.div>
 
-      {hasStageData && (
-        <motion.div
-          initial={{ y: 30, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 1.1, duration: 0.5 }}
-          className="w-full max-w-sm"
-        >
-          <p className="text-white/60 text-xs mb-2 text-left">阶段对比</p>
-          <div className="flex gap-3">
-            {data.stageStats.map((s, i) => {
-              const percent = maxStageAmount > 0 ? (s.winAmount / maxStageAmount) * 100 : 0;
-              const isBetter = data.betterStage?.stage === s.stage;
-              return (
-                <motion.div
-                  key={s.stage}
-                  initial={{ scale: 0.9, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ delay: 1.2 + i * 0.15, type: 'spring' }}
-                  className={`flex-1 rounded-xl p-3 text-center ${
-                    isBetter
-                      ? 'bg-gradient-to-br from-amber-500/20 to-yellow-500/20 border border-amber-400/30'
-                      : 'bg-white/10'
-                  }`}
-                >
-                  <div className="text-2xl mb-1">{stageEmojis[s.label] || '⚽'}</div>
-                  <div className={`text-sm font-bold mb-1 ${isBetter ? 'text-amber-300' : 'text-white'}`}>
-                    {s.label}
-                  </div>
-                  <div className="text-lg font-bold text-green-400">
-                    ¥{formatMoney(s.winAmount)}
-                  </div>
-                  <div className="text-[10px] text-white/50 mt-1">
-                    {s.winCount} 次中奖
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
-        </motion.div>
-      )}
-
       <motion.p
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 1.6, duration: 0.5 }}
+        transition={{ delay: 1.2, duration: 0.5 }}
         className="text-white/50 text-sm mt-8"
       >
         原来你的好运也有时间表
@@ -655,15 +477,6 @@ function Page07FavoriteTeam({ data }: { data: ReportData }) {
 
   const topTeams = data.teamStats.slice(0, 6);
   const favorite = data.favoriteTeam!;
-  const continentEmojis: Record<string, string> = {
-    '欧洲': '🇪🇺',
-    '南美洲': '🌎',
-    '亚洲': '🌏',
-    '非洲': '🌍',
-    '北美洲': '🌎',
-    '大洋洲': '🌏',
-    '其他': '⚽',
-  };
 
   return (
     <PageContainer>
@@ -687,7 +500,7 @@ function Page07FavoriteTeam({ data }: { data: ReportData }) {
         initial={{ y: 30, opacity: 0, scale: 0.8 }}
         animate={{ y: 0, opacity: 1, scale: 1 }}
         transition={{ delay: 0.5, type: 'spring' }}
-        className="text-center mb-4"
+        className="text-center mb-6"
       >
         <div className="text-7xl mb-3">{getTeamFlag(favorite.name)}</div>
         <div className="text-2xl font-bold text-amber-300">{favorite.name}</div>
@@ -696,41 +509,10 @@ function Page07FavoriteTeam({ data }: { data: ReportData }) {
         </div>
       </motion.div>
 
-      {data.continentStats.length > 0 && (
-        <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.7, duration: 0.5 }}
-          className="flex flex-wrap justify-center gap-2 mb-4 max-w-sm"
-        >
-          {data.continentStats.slice(0, 4).map((c, i) => (
-            <div
-              key={c.continent}
-              className="bg-white/10 rounded-full px-3 py-1 text-xs text-white/70 flex items-center gap-1"
-            >
-              <span>{continentEmojis[c.continent] || '⚽'}</span>
-              <span>{c.continent}</span>
-              <span className="text-amber-300">{c.teamCount}队</span>
-            </div>
-          ))}
-        </motion.div>
-      )}
-
-      {data.teamCoverage > 0 && (
-        <motion.p
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.9, duration: 0.5 }}
-          className="text-white/60 text-sm mb-4"
-        >
-          32强中，你猜中过 <span className="text-amber-300 font-bold">{data.teamCoverage}</span> 支球队
-        </motion.p>
-      )}
-
       <motion.div
         initial={{ y: 30, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 1, duration: 0.5 }}
+        transition={{ delay: 0.7, duration: 0.5 }}
         className="w-full max-w-sm"
       >
         <p className="text-white/60 text-xs mb-3 text-left">猜中过的球队</p>
@@ -740,7 +522,7 @@ function Page07FavoriteTeam({ data }: { data: ReportData }) {
               key={team.name}
               initial={{ scale: 0, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 1.1 + i * 0.1, type: 'spring' }}
+              transition={{ delay: 0.8 + i * 0.1, type: 'spring' }}
               className="flex flex-col items-center"
             >
               <div className="text-2xl">{getTeamFlag(team.name)}</div>
@@ -754,7 +536,7 @@ function Page07FavoriteTeam({ data }: { data: ReportData }) {
       <motion.p
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 1.6, duration: 0.5 }}
+        transition={{ delay: 1.4, duration: 0.5 }}
         className="text-white/50 text-sm mt-8"
       >
         有些球队，就是特别给你面子
@@ -1152,6 +934,115 @@ function Page09Streak({ data }: { data: ReportData }) {
   );
 }
 
+function Page11SocialCompare({ data }: { data: ReportData }) {
+  const rankPercent = data.totalUsers > 0 ? ((data.totalUsers - data.rank + 1) / data.totalUsers) * 100 : 0;
+
+  return (
+    <PageContainer>
+      <motion.div
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+        transition={{ delay: 0.2, type: 'spring' }}
+        className="text-5xl mb-4"
+      >
+        🏆
+      </motion.div>
+      <motion.h2
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.3, duration: 0.5 }}
+        className="text-xl font-bold mb-2"
+      >
+        和朋友们比一比
+      </motion.h2>
+
+      <motion.div
+        initial={{ y: 30, opacity: 0, scale: 0.9 }}
+        animate={{ y: 0, opacity: 1, scale: 1 }}
+        transition={{ delay: 0.5, type: 'spring' }}
+        className="bg-white/10 backdrop-blur-sm rounded-2xl p-5 w-full max-w-sm mb-6"
+      >
+        <div className="flex items-center justify-between mb-4">
+          <div className="text-left">
+            <div className="text-white/60 text-sm">群内排名</div>
+            <div className="text-3xl font-bold text-amber-300">
+              第 {data.rank} 名
+            </div>
+          </div>
+          <div className="text-right">
+            <div className="text-white/60 text-sm">超越比例</div>
+            <div className="text-3xl font-bold text-green-400">
+              {rankPercent.toFixed(0)}%
+            </div>
+          </div>
+        </div>
+
+        <div className="h-3 bg-white/10 rounded-full overflow-hidden">
+          <motion.div
+            initial={{ width: 0 }}
+            animate={{ width: `${rankPercent}%` }}
+            transition={{ delay: 0.8, duration: 1, ease: 'easeOut' }}
+            className="h-full bg-gradient-to-r from-amber-500 via-yellow-400 to-green-400 rounded-full"
+          />
+        </div>
+        <div className="flex justify-between mt-2 text-[10px] text-white/50">
+          <span>垫底</span>
+          <span>第1名</span>
+        </div>
+      </motion.div>
+
+      <motion.p
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.7, duration: 0.5 }}
+        className="text-white/60 text-sm mb-6"
+      >
+        你超越了 <span className="text-amber-300 font-bold">{data.totalUsers - data.rank}</span> 位群友
+      </motion.p>
+
+      <motion.div
+        initial={{ y: 30, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.9, duration: 0.5 }}
+        className="w-full max-w-sm"
+      >
+        <p className="text-white/60 text-xs mb-3 text-left">关键数据</p>
+        <div className="grid grid-cols-2 gap-3">
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 1, type: 'spring' }}
+            className="bg-white/10 rounded-xl p-3 text-center"
+          >
+            <div className="text-2xl mb-1">🎯</div>
+            <div className="text-lg font-bold text-amber-300">{data.totalWinMatches}</div>
+            <div className="text-[10px] text-white/50">猜中场次</div>
+          </motion.div>
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 1.1, type: 'spring' }}
+            className="bg-white/10 rounded-xl p-3 text-center"
+          >
+            <div className="text-2xl mb-1">🔥</div>
+            <div className="text-lg font-bold text-orange-400">{data.maxStreak}</div>
+            <div className="text-[10px] text-white/50">最长连胜</div>
+          </motion.div>
+        </div>
+      </motion.div>
+
+      <motion.p
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 1.3, duration: 0.5 }}
+        className="text-white/50 text-sm mt-8"
+      >
+        继续加油，冲击更高排名！
+      </motion.p>
+    </PageContainer>
+  );
+}
+
 function Page10CPBadges({ data }: { data: ReportData }) {
   return (
     <PageContainer>
@@ -1431,14 +1322,14 @@ export default function ReportPage() {
     <Page02FirstWin key="2" data={reportData} />,
     <Page03Overview key="3" data={reportData} />,
     <Page04WealthCurve key="4" data={reportData} />,
-    <Page05Calendar key="5" data={reportData} />,
-    <Page06TimePattern key="6" data={reportData} />,
-    <Page07FavoriteTeam key="7" data={reportData} />,
-    <Page08PlayType key="8" data={reportData} />,
-    <Page06BestDay key="9" data={reportData} />,
-    <Page07BiggestWin key="10" data={reportData} />,
-    <Page09Streak key="11" data={reportData} />,
-    <Page08AIComment key="12" data={reportData} />,
+    <Page06TimePattern key="5" data={reportData} />,
+    <Page07FavoriteTeam key="6" data={reportData} />,
+    <Page08PlayType key="7" data={reportData} />,
+    <Page06BestDay key="8" data={reportData} />,
+    <Page07BiggestWin key="9" data={reportData} />,
+    <Page09Streak key="10" data={reportData} />,
+    <Page08AIComment key="11" data={reportData} />,
+    <Page11SocialCompare key="12" data={reportData} />,
     <Page10CPBadges key="13" data={reportData} />,
     <Page11Ending key="14" data={reportData} />,
   ];

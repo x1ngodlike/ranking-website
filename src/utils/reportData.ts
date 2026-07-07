@@ -17,24 +17,11 @@ export interface DailyTrendPoint {
   cumulative: number;
 }
 
-export interface WeekdayStats {
-  weekday: number;
-  label: string;
-  winCount: number;
-  winAmount: number;
-}
-
 export interface StageStats {
   stage: 'group' | 'knockout';
   label: string;
   winCount: number;
   winAmount: number;
-}
-
-export interface ContinentStats {
-  continent: string;
-  teamCount: number;
-  winCount: number;
 }
 
 export interface PlayTypeAmountStats {
@@ -86,8 +73,6 @@ export interface ReportData {
 
   teamStats: TeamStats[];
   favoriteTeam?: TeamStats;
-  continentStats: ContinentStats[];
-  teamCoverage: number;
 
   playTypeStats: PlayTypeStats[];
   favoritePlayType?: PlayTypeStats;
@@ -97,8 +82,6 @@ export interface ReportData {
   bestAIComment: string | null;
 
   dailyTrend: DailyTrendPoint[];
-  weekdayStats: WeekdayStats[];
-  bestWeekday?: WeekdayStats;
   stageStats: StageStats[];
   betterStage?: StageStats;
 
@@ -118,7 +101,6 @@ const TITLES = [
   { key: 'cp', title: '最佳搭档', emoji: '🤝', desc: '两个人的运气，双倍的快乐' },
   { key: 'burst', title: '闪电猎手', emoji: '⚡', desc: '一击制胜，说的就是你' },
   { key: 'allround', title: '全能选手', emoji: '🎲', desc: '每种玩法都难不倒你' },
-  { key: 'globe', title: '环球旅行家', emoji: '🌍', desc: '你的好运遍布各大洲' },
   { key: 'comback', title: '后程发力', emoji: '📈', desc: '越到后面，越精彩' },
   { key: 'knockout', title: '淘汰赛之王', emoji: '⚔️', desc: '硬仗越硬，你越稳' },
   { key: 'explorer', title: '足球探险家', emoji: '🧭', desc: '每一支球队都有你的足迹' },
@@ -132,52 +114,7 @@ function formatDate(dateStr: string): string {
   return `${m}月${day}日`;
 }
 
-const TEAM_CONTINENT: Record<string, string> = {
-  '阿根廷': '南美洲', '巴西': '南美洲', '乌拉圭': '南美洲', '哥伦比亚': '南美洲',
-  '厄瓜多尔': '南美洲', '秘鲁': '南美洲', '智利': '南美洲', '巴拉圭': '南美洲',
-  '玻利维亚': '南美洲', '委内瑞拉': '南美洲',
-  '法国': '欧洲', '德国': '欧洲', '西班牙': '欧洲', '英格兰': '欧洲',
-  '葡萄牙': '欧洲', '荷兰': '欧洲', '意大利': '欧洲', '比利时': '欧洲',
-  '克罗地亚': '欧洲', '瑞士': '欧洲', '塞尔维亚': '欧洲', '波兰': '欧洲',
-  '丹麦': '欧洲', '瑞典': '欧洲', '挪威': '欧洲', '奥地利': '欧洲',
-  '捷克': '欧洲', '匈牙利': '欧洲', '苏格兰': '欧洲', '威尔士': '欧洲',
-  '爱尔兰': '欧洲', '冰岛': '欧洲', '芬兰': '欧洲', '罗马尼亚': '欧洲',
-  '斯洛伐克': '欧洲', '斯洛文尼亚': '欧洲', '波斯尼亚': '欧洲', '波黑': '欧洲',
-  '黑山': '欧洲', '阿尔巴尼亚': '欧洲', '北马其顿': '欧洲', '保加利亚': '欧洲',
-  '希腊': '欧洲', '土耳其': '欧洲',
-  '日本': '亚洲', '韩国': '亚洲', '沙特': '亚洲', '卡塔尔': '亚洲',
-  '伊朗': '亚洲', '澳大利亚': '亚洲', '中国': '亚洲',
-  '摩洛哥': '非洲', '塞内加尔': '非洲', '突尼斯': '非洲', '喀麦隆': '非洲',
-  '加纳': '非洲', '埃及': '非洲', '尼日利亚': '非洲', '科特迪瓦': '非洲',
-  '南非': '非洲',
-  '墨西哥': '北美洲', '美国': '北美洲', '加拿大': '北美洲', '哥斯达黎加': '北美洲',
-  '洪都拉斯': '北美洲', '巴拿马': '北美洲',
-  '新西兰': '大洋洲', '牙买加': '北美洲',
-};
-
-const WEEKDAY_LABELS = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
-
 const KNOCKOUT_START_DATE = '2026-07-02';
-
-function getContinent(teamName: string): string {
-  return TEAM_CONTINENT[teamName] || '其他';
-}
-
-function calculateContinentStats(teamStats: TeamStats[]): ContinentStats[] {
-  const continentMap = new Map<string, { teamCount: number; winCount: number }>();
-
-  teamStats.forEach((team) => {
-    const continent = getContinent(team.name);
-    const existing = continentMap.get(continent) || { teamCount: 0, winCount: 0 };
-    existing.teamCount++;
-    existing.winCount += team.winCount;
-    continentMap.set(continent, existing);
-  });
-
-  return Array.from(continentMap.entries())
-    .map(([continent, stats]) => ({ continent, ...stats }))
-    .sort((a, b) => b.winCount - a.winCount);
-}
 
 function calculatePlayTypeAmountStats(bets: Bet[]): PlayTypeAmountStats[] {
   const typeMap = new Map<string, { winCount: number; winAmount: number }>();
@@ -220,32 +157,6 @@ function calculateDailyTrend(bets: Bet[]): DailyTrendPoint[] {
   });
 }
 
-function calculateWeekdayStats(bets: Bet[]): WeekdayStats[] {
-  const winBets = bets.filter((b) => (b.winAmount ?? 0) > 0);
-  const weekdayMap = new Map<number, { winCount: number; winAmount: number }>();
-
-  for (let i = 0; i < 7; i++) {
-    weekdayMap.set(i, { winCount: 0, winAmount: 0 });
-  }
-
-  winBets.forEach((bet) => {
-    const d = new Date(bet.date);
-    const wd = d.getDay();
-    const existing = weekdayMap.get(wd)!;
-    existing.winCount++;
-    existing.winAmount += bet.winAmount ?? 0;
-    weekdayMap.set(wd, existing);
-  });
-
-  return Array.from(weekdayMap.entries())
-    .map(([weekday, stats]) => ({
-      weekday,
-      label: WEEKDAY_LABELS[weekday],
-      ...stats,
-    }))
-    .sort((a, b) => a.weekday - b.weekday);
-}
-
 function calculateStageStats(bets: Bet[]): StageStats[] {
   const winBets = bets.filter((b) => (b.winAmount ?? 0) > 0);
   const cutoff = new Date(KNOCKOUT_START_DATE).getTime();
@@ -273,7 +184,6 @@ function calculateStageStats(bets: Bet[]): StageStats[] {
 function determineTitle(
   ranking: RankingItem,
   teamStats: TeamStats[],
-  continentStats: ContinentStats[],
   playTypeStats: PlayTypeStats[],
   stageStats: StageStats[],
   allRankings: RankingItem[]
@@ -311,25 +221,21 @@ function determineTitle(
     return TITLES[6];
   }
 
-  if (continentStats.length >= 4) {
-    return TITLES[7];
-  }
-
   const knockout = stageStats.find((s) => s.stage === 'knockout');
   const group = stageStats.find((s) => s.stage === 'group');
   if (knockout && group && knockout.winAmount > group.winAmount && knockout.winCount > 0) {
-    return TITLES[8];
+    return TITLES[7];
   }
 
   if (knockout && knockout.winAmount >= 1000) {
-    return TITLES[9];
+    return TITLES[8];
   }
 
   if (teamStats.length >= 6) {
-    return TITLES[10];
+    return TITLES[9];
   }
 
-  return TITLES[11];
+  return TITLES[10];
 }
 
 export function generateReportData(
@@ -425,8 +331,6 @@ export function generateReportData(
 
   const teamStats = calculateTeamStats(userBets);
   const favoriteTeam = teamStats.length > 0 ? teamStats[0] : undefined;
-  const continentStats = calculateContinentStats(teamStats);
-  const teamCoverage = teamStats.length;
 
   const playTypeStats = calculatePlayTypeStats(userBets);
   const favoritePlayType = playTypeStats.length > 0 ? playTypeStats[0] : undefined;
@@ -438,10 +342,6 @@ export function generateReportData(
   const totalWinMatches = getTotalWinMatches(userBets);
 
   const dailyTrend = calculateDailyTrend(userBets);
-  const weekdayStats = calculateWeekdayStats(userBets);
-  const bestWeekday = [...weekdayStats]
-    .filter((w) => w.winCount > 0)
-    .sort((a, b) => b.winCount - a.winCount)[0];
   const stageStats = calculateStageStats(userBets);
   const betterStage = [...stageStats]
     .filter((s) => s.winAmount > 0)
@@ -450,7 +350,6 @@ export function generateReportData(
   const titleInfo = determineTitle(
     userRanking!,
     teamStats,
-    continentStats,
     playTypeStats,
     stageStats,
     rankings
@@ -474,16 +373,12 @@ export function generateReportData(
     topBadges: userRanking?.topBadges ?? [],
     teamStats,
     favoriteTeam,
-    continentStats,
-    teamCoverage,
     playTypeStats,
     favoritePlayType,
     playTypeAmountStats,
     mvpPlayType,
     bestAIComment,
     dailyTrend,
-    weekdayStats,
-    bestWeekday,
     stageStats,
     betterStage,
     rank,
