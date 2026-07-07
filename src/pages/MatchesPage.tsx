@@ -306,10 +306,16 @@ const MatchesPage = () => {
                   onClick={() => setSelectedDate(dateKey)}
                   className={`flex-shrink-0 flex flex-col items-center px-4 py-3 rounded-2xl min-w-[72px] transition-all duration-300 relative ${
                     isSelected
-                      ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/30'
+                      ? designVersion === 'v2'
+                        ? 'bg-v2-primary-500 text-white shadow-lg shadow-v2-primary-500/30'
+                        : 'bg-primary-500 text-white shadow-lg shadow-primary-500/30'
                       : isToday
-                      ? 'bg-primary-500/20 text-primary-300 border border-primary/40'
-                      : 'bg-neutral-50 dark:bg-neutral-800/50 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700/50 border border-transparent'
+                        ? designVersion === 'v2'
+                          ? 'bg-v2-primary-500/20 text-v2-primary-600 dark:text-v2-primary-400 border border-v2-primary-500/40'
+                          : 'bg-primary-500/20 text-primary-300 border border-primary/40'
+                        : designVersion === 'v2'
+                          ? 'bg-[var(--v2-bg-muted)] text-[var(--v2-text-secondary)] hover:bg-[var(--v2-bg-muted)] border border-transparent'
+                          : 'bg-neutral-50 dark:bg-neutral-800/50 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700/50 border border-transparent'
                   }`}
                 >
                   <span className={`text-xs font-medium ${isSelected ? 'text-white' : ''}`}>
@@ -332,7 +338,9 @@ const MatchesPage = () => {
                                 ? 'bg-white/60'
                                 : hasLive && i === 0
                                 ? 'bg-profit-500'
-                                : 'bg-primary-400/60'
+                                : designVersion === 'v2'
+                                  ? 'bg-v2-primary-400/60'
+                                  : 'bg-primary-400/60'
                             }`}
                           />
                         ))}
@@ -365,7 +373,7 @@ const MatchesPage = () => {
 
         <div className="flex items-center justify-between mt-4 px-2">
           <div className="flex items-center gap-2">
-            <Calendar size={16} className="text-primary-500" />
+            <Calendar size={16} className={designVersion === 'v2' ? 'text-v2-primary-500' : 'text-primary-500'} />
             <span className="text-sm text-neutral-600 dark:text-neutral-400">
               {new Date(selectedDate).toLocaleDateString('zh-CN', {
                 year: 'numeric',
@@ -392,7 +400,7 @@ const MatchesPage = () => {
 
           <button
             onClick={() => setSelectedDate(today)}
-            className="text-sm text-primary-500 hover:text-primary-600 transition-colors flex items-center gap-1"
+            className={`text-sm ${designVersion === 'v2' ? 'text-v2-primary-500 hover:text-v2-primary-600' : 'text-primary-500 hover:text-primary-600'} transition-colors flex items-center gap-1`}
           >
             回到今日
           </button>

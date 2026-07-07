@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { formatDateShort } from '@/utils/helpers';
@@ -114,7 +115,9 @@ const BetList = ({ bets, showUser = false, canDelete = false }: BetListProps) =>
           >
             <div className="flex items-start gap-4">
               {showUser && user && (
-                <Avatar src={user.avatar} alt={user.nickname} size="lg" />
+                <Link to={`/profile/${user.id}`}>
+                  <Avatar src={user.avatar} alt={user.nickname} size="lg" />
+                </Link>
               )}
 
               <div className="flex-1 min-w-0">
@@ -200,7 +203,7 @@ const BetList = ({ bets, showUser = false, canDelete = false }: BetListProps) =>
 
             {/* AI评价展示 - 放在外层，横跨整个卡片宽度 */}
             {bet.aiComment && !isRecognizing && !bet.aiRecognizing && (
-              <div className={['mt-2', designVersion === 'v2' ? 'bg-v2-primary-500/5 rounded-lg p-3' : 'p-2 rounded-lg bg-primary-50/50 dark:bg-primary-900/10 border border-primary-200/50 dark:border-primary-800/30'].join(' ')}>
+              <div className={['mt-2', designVersion === 'v2' ? 'bg-blue-50 dark:bg-blue-900/15 rounded-lg p-3 border border-blue-100 dark:border-blue-800/30' : 'p-2 rounded-lg bg-primary-50/50 dark:bg-primary-900/10 border border-primary-200/50 dark:border-primary-800/30'].join(' ')}>
                 <div className="flex items-center gap-1.5 mb-1">
                   <Sparkles size={13} className="text-primary-500" />
                   <span className="text-xs font-medium text-primary-700 dark:text-primary-300">

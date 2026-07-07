@@ -86,27 +86,6 @@ const RankingPodium = ({ rankings, dailyStarUserId, todayWinUsers }: RankingPodi
                     </div>
                   )}
                 </div>
-                <div className={`absolute -top-2 -right-2 w-8 h-8 ${
-                  designVersion === 'v2'
-                    ? config.rank === 1
-                      ? 'rounded-full bg-gradient-to-br from-yellow-300 via-yellow-400 to-amber-500 text-yellow-900'
-                      : config.rank === 2
-                        ? 'rounded-full bg-gradient-to-br from-gray-200 via-gray-300 to-gray-400 text-gray-700'
-                        : 'rounded-full bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 text-white'
-                    : 'rounded-full bg-white dark:bg-neutral-800 border-2 border-neutral-100 dark:border-neutral-700'
-                } flex items-center justify-center text-base font-bold`}>
-                  <span className={
-                    designVersion === 'v2'
-                    ? config.rank === 1
-                      ? 'text-yellow-900'
-                      : config.rank === 2
-                        ? 'text-gray-700'
-                        : 'text-white'
-                      : config.rank === 1 ? 'text-gold-600' : config.rank === 2 ? 'text-neutral-500' : 'text-amber-700'
-                  }>
-                    {config.rank}
-                  </span>
-                </div>
               </div>
 
               <div className="flex items-center gap-1 mb-1">
