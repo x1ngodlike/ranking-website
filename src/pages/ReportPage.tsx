@@ -5,7 +5,6 @@ import { ChevronDown, ChevronUp, X } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { generateReportData, formatDateCN, formatMoney, type ReportData } from '@/utils/reportData';
 import { getTeamFlag } from '@/utils/aiParser';
-import Avatar from '@/components/Avatar';
 
 const TOTAL_PAGES = 14;
 
@@ -21,9 +20,9 @@ const C = {
 };
 
 const pageVariants = {
-  enter: (d: number) => ({ y: d > 0 ? '100%' : '-100%', opacity: 0 }),
-  center: { y: 0, opacity: 1 },
-  exit: (d: number) => ({ y: d < 0 ? '100%' : '-100%', opacity: 0 }),
+  enter: (d: number) => ({ y: d > 0 ? '100%' : '-100%' }),
+  center: { y: 0 },
+  exit: (d: number) => ({ y: d < 0 ? '100%' : '-100%' }),
 };
 
 /* ── 每页背景图映射（14页全覆盖） ── */
@@ -44,13 +43,21 @@ const PAGE_BGS: Record<number, string> = {
   13: '/report/scoreboard.jpg',     // 结尾
 };
 
+/* ── 预加载所有背景图 ── */
+if (typeof window !== 'undefined') {
+  Object.values(PAGE_BGS).forEach((src) => {
+    const img = new Image();
+    img.src = src;
+  });
+}
+
 /* ── 背景图容器 ── */
 function PageBg({ children, pageIndex }: { children: React.ReactNode; pageIndex?: number }) {
   const bg = pageIndex !== undefined ? PAGE_BGS[pageIndex] : undefined;
   return (
     <div className="w-full h-full relative overflow-hidden bg-[#08080c] flex flex-col items-center justify-center">
       {bg && (
-        <div className="absolute inset-0 bg-cover bg-center bg-no-repeat scale-110 opacity-20"
+        <div className="absolute inset-0 bg-cover bg-center bg-no-repeat scale-110 opacity-20 will-change-transform"
           style={{ backgroundImage: `url(${bg})` }} />
       )}
       <div className="absolute inset-0 bg-gradient-to-b from-black/35 via-black/25 to-black/70" />
@@ -68,7 +75,7 @@ function Ch({ children, delay = 0.2 }: { children: React.ReactNode; delay?: numb
   return (
     <motion.p initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
       transition={{ delay, duration: 0.4 }}
-      className="text-[10px] tracking-[5px] uppercase mb-6 font-light"
+      className="text-[10px] tracking-[5px] uppercase mb-5 font-medium"
       style={{ color: C.gold }}>
       {children}
     </motion.p>
@@ -76,7 +83,7 @@ function Ch({ children, delay = 0.2 }: { children: React.ReactNode; delay?: numb
 }
 
 /* ── 标题 ── */
-function Title({ children, delay = 0.3, size = 'text-2xl', className = '' }: { children: React.ReactNode; delay?: number; size?: string; className?: string }) {
+function Title({ children, delay = 0.3, size = 'text-[26px]', className = '' }: { children: React.ReactNode; delay?: number; size?: string; className?: string }) {
   return (
     <motion.h2 initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
       transition={{ delay, duration: 0.5 }}
@@ -91,14 +98,14 @@ function Sub({ children, delay = 0.5, className = '' }: { children: React.ReactN
   return (
     <motion.p initial={{ y: 12, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
       transition={{ delay, duration: 0.4 }}
-      className={`text-white/50 text-sm ${className}`}>
+      className={`text-white/50 text-base ${className}`}>
       {children}
     </motion.p>
   );
 }
 
 /* ── 大数字 ── */
-function Num({ value, color, delay = 0.6, size = 'text-5xl' }: { value: string; color?: string; delay?: number; size?: string }) {
+function Num({ value, color, delay = 0.6, size = 'text-[52px]' }: { value: string; color?: string; delay?: number; size?: string }) {
   return (
     <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
       transition={{ delay, type: 'spring', stiffness: 200 }}
@@ -134,7 +141,7 @@ function Quote({ children, delay = 1.2 }: { children: React.ReactNode; delay?: n
   return (
     <motion.p initial={{ y: 12, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
       transition={{ delay, duration: 0.4 }}
-      className="text-white/25 text-sm mt-8 italic max-w-[260px]">
+      className="text-white/25 text-base mt-8 italic max-w-[280px]">
       {children}
     </motion.p>
   );
@@ -168,25 +175,29 @@ function P01({ data }: { data: ReportData }) {
   return (
     <PageBg pageIndex={0}>
       <motion.img initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-        transition={{ delay: 0.1 }} src="/logo.png" alt="Logo"
-        className="w-12 h-12 mb-10 rounded-xl" />
+        transition={{ delay: 0.1 }} src="/report/world-cup-2026-logo.jpg" alt="World Cup 2026"
+        className="w-[120px] h-[120px] mb-6 rounded-2xl object-contain" />
       <motion.h1 initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.4, duration: 0.6 }}
-        className="text-[28px] font-semibold text-white mb-2 tracking-wider">
+        className="text-[30px] font-semibold text-white mb-2 tracking-wider">
         你的2026世界杯
       </motion.h1>
       <motion.p initial={{ y: 25, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.6, duration: 0.5 }}
-        className="text-base font-light text-white/35 mb-10 tracking-widest">
+        className="text-lg font-light text-white/35 mb-10 tracking-widest">
         中奖回忆录
       </motion.p>
       <motion.div initial={{ y: 15, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.8, duration: 0.4 }}
         className="flex items-center gap-3 mb-14">
-        <div className="w-11 h-11 rounded-full overflow-hidden ring-2 ring-white/10">
-          <Avatar src={data.avatar} alt={data.nickname} size="sm" />
+        <div className="w-12 h-12 rounded-full overflow-hidden ring-2 ring-white/10 shrink-0 bg-white/5 flex items-center justify-center">
+          {data.avatar && (data.avatar.startsWith('/') || data.avatar.startsWith('http') || data.avatar.startsWith('data:')) ? (
+            <img src={data.avatar} alt={data.nickname} className="w-full h-full object-cover" />
+          ) : (
+            <span className="text-xl">{data.avatar}</span>
+          )}
         </div>
-        <span className="text-sm text-white/50">{data.nickname}</span>
+        <span className="text-base text-white/50">{data.nickname}</span>
       </motion.div>
       <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }}
         transition={{ delay: 1.3 }} className="text-white/25 text-xs mb-2">
@@ -579,15 +590,27 @@ function P13({ data }: { data: ReportData }) {
           className="text-sm font-bold text-white mb-4 text-left">你的中奖搭子</motion.h3>
         {data.bestCP ? (
           <Card delay={0.4} className="p-5 mb-8">
-            <div className="flex items-center justify-center gap-5">
-              <div className="text-center">
-                <div className="w-10 h-10 rounded-full overflow-hidden ring-1 ring-white/10 mx-auto"><Avatar src={data.avatar} alt={data.nickname} size="sm" /></div>
-                <div className="text-[10px] text-white/40 mt-1.5">{data.nickname}</div>
+            <div className="flex items-center justify-center gap-6">
+              <div className="text-center shrink-0">
+                <div className="w-12 h-12 rounded-full overflow-hidden ring-1 ring-white/10 mx-auto bg-white/5 flex items-center justify-center">
+                  {data.avatar && (data.avatar.startsWith('/') || data.avatar.startsWith('http') || data.avatar.startsWith('data:')) ? (
+                    <img src={data.avatar} alt={data.nickname} className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-xl">{data.avatar}</span>
+                  )}
+                </div>
+                <div className="text-xs text-white/40 mt-2">{data.nickname}</div>
               </div>
-              <div className="text-base text-white/15">~</div>
-              <div className="text-center">
-                <div className="w-10 h-10 rounded-full overflow-hidden ring-1 ring-white/10 mx-auto"><Avatar src={data.bestCP.avatar} alt={data.bestCP.nickname} size="sm" /></div>
-                <div className="text-[10px] text-white/40 mt-1.5">{data.bestCP.nickname}</div>
+              <div className="text-lg text-white/15 shrink-0">~</div>
+              <div className="text-center shrink-0">
+                <div className="w-12 h-12 rounded-full overflow-hidden ring-1 ring-white/10 mx-auto bg-white/5 flex items-center justify-center">
+                  {data.bestCP.avatar && (data.bestCP.avatar.startsWith('/') || data.bestCP.avatar.startsWith('http') || data.bestCP.avatar.startsWith('data:')) ? (
+                    <img src={data.bestCP.avatar} alt={data.bestCP.nickname} className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-xl">{data.bestCP.avatar}</span>
+                  )}
+                </div>
+                <div className="text-xs text-white/40 mt-2">{data.bestCP.nickname}</div>
               </div>
             </div>
             <div className="text-center mt-4 text-sm font-bold font-mono text-white">一起中奖 {data.bestCP.commonWinDays} 天</div>
