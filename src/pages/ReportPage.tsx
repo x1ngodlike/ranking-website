@@ -984,13 +984,21 @@ function Page11SocialCompare({ data }: { data: ReportData }) {
               className="flex-1 flex flex-col items-center"
               style={{ marginBottom: `${(2 - i) * 12}px` }}
             >
-              <div className={`w-12 h-12 rounded-full flex items-center justify-center text-xl mb-2 ${
-                i === 0 ? 'bg-gradient-to-br from-amber-400 to-yellow-500' :
-                i === 1 ? 'bg-gradient-to-br from-gray-300 to-gray-400' :
-                'bg-gradient-to-br from-amber-700 to-amber-800'
-              }`}>
-                {user.avatar || '👤'}
-              </div>
+              {user.avatar && (user.avatar.startsWith('/') || user.avatar.startsWith('http')) ? (
+                <img
+                  src={user.avatar}
+                  alt={user.nickname}
+                  className="w-12 h-12 rounded-full object-cover mb-2 border-2 border-white/20"
+                />
+              ) : (
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center text-xl mb-2 ${
+                  i === 0 ? 'bg-gradient-to-br from-amber-400 to-yellow-500' :
+                  i === 1 ? 'bg-gradient-to-br from-gray-300 to-gray-400' :
+                  'bg-gradient-to-br from-amber-700 to-amber-800'
+                }`}>
+                  {user.avatar || '👤'}
+                </div>
+              )}
               <div className="text-xs text-white/80 truncate w-full text-center mb-1">
                 {user.nickname}
               </div>
