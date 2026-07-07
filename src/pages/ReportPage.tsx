@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, ChevronUp, X } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { generateReportData, formatDateCN, formatMoney, type ReportData } from '@/utils/reportData';
@@ -648,9 +648,6 @@ function P13({ data }: { data: ReportData }) {
 function P14({ data }: { data: ReportData }) {
   return (
     <PageBg pageIndex={13}>
-      <motion.img initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 0.3, scale: 1 }}
-        transition={{ delay: 0.1, duration: 0.5 }}
-        src="/report/illust-crown.jpg" alt="" className="w-20 h-20 rounded-full mb-4" />
       <motion.div initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
         transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
         className="w-16 h-16 rounded-full bg-amber-400/[0.08] ring-1 ring-amber-400/15 flex items-center justify-center mb-6">
@@ -776,16 +773,14 @@ export default function ReportPage() {
         </button>
       )}
       <ProgressDots current={page} />
-      <div className="absolute inset-0" style={{
-        transform: `translateY(-${page * 100}%)`,
-        transition: 'transform 0.45s cubic-bezier(0.4, 0, 0.2, 1)',
-      }}>
-        {pages.map((p, i) => (
-          <div key={i} className="w-full h-full relative">
-            {p}
-          </div>
-        ))}
-      </div>
+      <AnimatePresence initial={false} custom={dir} mode="wait">
+        <motion.div key={page} custom={dir} variants={pageVariants}
+          initial="enter" animate="center" exit="exit"
+          transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
+          className="absolute inset-0">
+          {pages[page]}
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
 }
