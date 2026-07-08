@@ -37,9 +37,11 @@ const BatchImportModal = ({ isOpen, onClose }: BatchImportModalProps) => {
 
   const recognizeText = useCallback(async (text: string): Promise<RecognizedBet[]> => {
     const lines = text.split('\n').map((l) => l.trim()).filter(Boolean);
-    const results: RecognizedBet[] = [];
 
-    for (const line of lines) {
+    const recognizeLine = async (line: string): Promise<RecognizedBet> => {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 30000);
+
       try {
         const response = await fetch('/api/ai/recognize-text', {
           method: 'POST',
@@ -47,13 +49,14 @@ const BatchImportModal = ({ isOpen, onClose }: BatchImportModalProps) => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({ text: line }),
+          signal: controller.signal,
         });
 
         const data = await response.json();
 
         if (data.success && data.result) {
           const r = data.result;
-          results.push({
+          return {
             originalText: line,
             date: r.date || '',
             homeTeam: r.homeTeam || '',
@@ -65,9 +68,9 @@ const BatchImportModal = ({ isOpen, onClose }: BatchImportModalProps) => {
             winAmount: typeof r.winAmount === 'number' ? r.winAmount : 0,
             comment: r.comment || '',
             recognized: true,
-          });
+          };
         } else {
-          results.push({
+          return {
             originalText: line,
             date: '',
             homeTeam: '',
@@ -80,10 +83,10 @@ const BatchImportModal = ({ isOpen, onClose }: BatchImportModalProps) => {
             comment: '',
             recognized: false,
             error: data.message || '识别失败',
-          });
+          };
         }
       } catch (e) {
-        results.push({
+        return {
           originalText: line,
           date: '',
           homeTeam: '',
@@ -96,11 +99,14 @@ const BatchImportModal = ({ isOpen, onClose }: BatchImportModalProps) => {
           comment: '',
           recognized: false,
           error: 'AI接口调用失败',
-        });
+        };
+      } finally {
+        clearTimeout(timeout);
       }
-    }
+    };
 
-    return results;
+    const promises = lines.map(recognizeLine);
+    return Promise.all(promises);
   }, []);
 
   const handleRecognize = async () => {
