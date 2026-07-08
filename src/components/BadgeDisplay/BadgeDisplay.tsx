@@ -1,36 +1,19 @@
 import { useEffect, useState } from 'react';
 import { BADGES, RARITY_STYLES, CATEGORY_NAMES, BadgeDefinition, BadgeRarity, BadgeCategory } from '../../utils/badges';
+import { getBadgeIconSrc } from '../../utils/badgeIcons';
 
-/* ── Badge 图标映射（id → 图片路径） ── */
-const BADGE_ICON_MAP: Record<string, string> = {
-  meierduka:       '/report/badge-meierduka.jpg',
-  maozixifa:       '/report/badge-maozixifa.jpg',
-  sixilinmen:      '/report/badge-sixilinmen.jpg',
-  xiaoyouhuoshou:  '/report/badge-xiaoyouhuoshou.jpg',
-  caiyunggungun:    '/report/badge-caiyuanggungun-v2.jpg',
-  jinkubazhu:       '/report/badge-jinkubazhu.jpg',
-  rijindoujin:      '/report/badge-rijindoujin.jpg',
-  yiwanfuweng:      '/report/badge-yiwanfuweng.jpg',
-  kaimenhong:       '/report/badge-kaimenhong.jpg',
-  shinaojiuwen:     '/report/badge-shinaojiuwen.jpg',
-  baizhanbaisheng:  '/report/badge-baizhanbaisheng.jpg',
-  jijunsaiyuyanjia: '/report/badge-jijunsaiyuyanjia.jpg',
-  juesaiyuyanjia:   '/report/badge-juesaiyuyanjia.jpg',
-  yiyebaofu:        '/report/badge-yiyebaofu.jpg',
-  caishenjianglin:  '/report/badge-caishenjianglin.jpg',
-  fuguizaitian:     '/report/badge-fuguizaitian.jpg',
-};
-
-function BadgeIcon({ badgeId, size = 40, grayscale = false }: { badgeId: string; size?: number; grayscale?: boolean }) {
-  const src = BADGE_ICON_MAP[badgeId];
-  if (!src) return <span className={`text-inherit ${grayscale ? 'grayscale' : ''}`}>🏅</span>;
+function BadgeIcon({ badgeId, size = 60, grayscale = false }: { badgeId: string; size?: number; grayscale?: boolean }) {
+  const src = getBadgeIconSrc(badgeId);
   return (
     <img
       src={src}
       alt=""
       className={`rounded-full object-cover ${grayscale ? 'grayscale opacity-50' : ''}`}
       style={{ width: size, height: size }}
-      onError={(e) => { e.currentTarget.style.display = 'none'; }}
+      onError={(e) => {
+        const el = e.currentTarget as HTMLImageElement;
+        el.style.display = 'none';
+      }}
     />
   );
 }
@@ -110,7 +93,7 @@ export default function BadgeDisplay({ userId }: BadgeDisplayProps) {
                 {earnedInCategory}/{categoryBadges.length}
               </span>
             </div>
-            <div className={designVersion === 'v2' ? 'flex flex-col gap-2' : 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3'}>
+            <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
               {categoryBadges.map(badgeDef => {
                 const earned = earnedBadges.find(e => e.id === badgeDef.id);
                 return (
@@ -135,26 +118,21 @@ function BadgeItem({ badge, earned }: { badge: BadgeDefinition; earned?: EarnedB
   const isEarned = Boolean(earned);
   const designVersion = useAppStore((s) => s.designVersion);
 
-  // V2: compact inline badge with emoji + name + stars in one row
+  // V2: 卡片式 grid 布局，突出勋章图标
   if (designVersion === 'v2') {
     return (
       <div
-        className={`flex items-center gap-2.5 px-3 py-2 rounded-lg border transition-all ${
+        className={`relative flex flex-col items-center justify-center p-3 rounded-xl border transition-all ${
           isEarned
             ? `${style.borderColor} ${style.bgColor} ${style.glow} ${style.animation}`
             : 'border-[var(--v2-border)] bg-[var(--v2-bg-muted)] opacity-50'
         }`}
       >
-        <BadgeIcon badgeId={badge.id} size={32} grayscale={!isEarned} />
-        <div className="flex-1 min-w-0">
-          <p className={`font-v2-body text-xs font-medium truncate ${isEarned ? 'text-[var(--v2-text)]' : 'text-[var(--v2-text-muted)]'}`}>
-            {badge.name}
-          </p>
-          <p className={`font-v2-body text-[10px] leading-tight truncate ${isEarned ? 'text-[var(--v2-text-secondary)]' : 'text-[var(--v2-text-muted)]'}`}>
-            {badge.condition}
-          </p>
-        </div>
-        <div className="flex items-center gap-px flex-shrink-0">
+        <BadgeIcon badgeId={badge.id} size={60} grayscale={!isEarned} />
+        <p className={`font-v2-body text-[11px] font-medium mt-1.5 text-center leading-tight ${isEarned ? 'text-[var(--v2-text)]' : 'text-[var(--v2-text-muted)]'}`}>
+          {badge.name}
+        </p>
+        <div className="flex items-center gap-px mt-0.5">
           {[...Array(rarity)].map((_, i) => (
             <span key={i} className={`text-[10px] ${isEarned ? 'text-v2-gold-500' : 'text-neutral-400'}`}>
               ★
@@ -174,7 +152,7 @@ function BadgeItem({ badge, earned }: { badge: BadgeDefinition; earned?: EarnedB
         }
       `}
     >
-      <BadgeIcon badgeId={badge.id} size={48} grayscale={!isEarned} />
+      <BadgeIcon badgeId={badge.id} size={60} grayscale={!isEarned} />
       <p className={`text-sm mt-2 text-center font-medium
         ${isEarned
           ? 'text-neutral-800 dark:text-neutral-200'

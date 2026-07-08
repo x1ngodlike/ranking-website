@@ -3,6 +3,7 @@ import type { RankingItem } from '@/types';
 import { motion } from 'framer-motion';
 import { isImageAvatar } from '@/components/Avatar';
 import { RARITY_STYLES, BadgeRarity } from '@/utils/badges';
+import { getBadgeIconSrc } from '@/utils/badgeIcons';
 import { TrendingUp, Minus } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 
@@ -123,10 +124,10 @@ const RankingPodium = ({ rankings, dailyStarUserId, todayWinUsers }: RankingPodi
                   {item.topBadges.map((badge) => (
                     <div
                       key={badge.id}
-                      className={`flex items-center justify-center w-6 h-6 sm:w-auto sm:h-auto sm:gap-1 sm:px-2 sm:py-0.5 rounded-full border ${RARITY_STYLES[badge.rarity as BadgeRarity].borderColor} ${RARITY_STYLES[badge.rarity as BadgeRarity].bgColor} ${RARITY_STYLES[badge.rarity as BadgeRarity].animation}`}
+                      className={`flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 rounded-full border overflow-hidden ${RARITY_STYLES[badge.rarity as BadgeRarity].borderColor} ${RARITY_STYLES[badge.rarity as BadgeRarity].bgColor} ${RARITY_STYLES[badge.rarity as BadgeRarity].animation}`}
                       title={badge.name}
                     >
-                      <span className="text-xs sm:text-sm">{badge.emoji}</span>
+                      <img src={getBadgeIconSrc(badge.id)} alt={badge.name} className="w-full h-full object-cover rounded-full" />
                     </div>
                   ))}
                 </div>
