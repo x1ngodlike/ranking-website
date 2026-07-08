@@ -4,8 +4,6 @@ import { X, Upload, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { User as UserType } from '@/types';
 
-const API_BASE = import.meta.env.VITE_API_BASE || '';
-
 interface RecognizedBet {
   originalText: string;
   date: string;
@@ -26,6 +24,99 @@ interface BatchImportModalProps {
   onClose: () => void;
 }
 
+const currentYear = new Date().getFullYear();
+
+const parseBetLine = (line: string): Partial<RecognizedBet> | null => {
+  const trimmed = line.trim();
+  if (!trimmed) return null;
+
+  // 尝试多种正则模式
+  const patterns = [
+    // 6.12，加拿大 vs 波黑，胜平负：平，赔率 3.4，投注金额 13，盈利金额 31.2
+    /(\d{1,2})[\.\/月](\d{1,2})日?[，,\s]+(.+?)\s*(?:vs|VS|对)\s*(.+?)[，,\s]+(.+?)[：:]\s*(.+?)[，,\s]+赔率\s*([\d.]+)[，,\s]+投注金额\s*([\d.]+)[，,\s]+盈利金额\s*([\d.]+)/i,
+    // 6.12 加拿大vs波黑 平 3.4倍 投13中31.2
+    /(\d{1,2})[\.\/月](\d{1,2})日?\s+(.+?)\s*(?:vs|VS|对)\s*(.+?)\s+(.+?)\s+([\d.]+)(?:倍|赔率)?\s+(?:投|投注)?\s*([\d.]+)\s*(?:中|盈利)?\s*([\d.]+)/i,
+    // 6.12，加拿大 vs 波黑，平，3.4，13，31.2
+    /(\d{1,2})[\.\/月](\d{1,2})日?[，,\s]+(.+?)\s*(?:vs|VS|对)\s*(.+?)[，,\s]+(.+?)[，,\s]+([\d.]+)[，,\s]+([\d.]+)[，,\s]+([\d.]+)/i,
+  ];
+
+  for (const pattern of patterns) {
+    const match = trimmed.match(pattern);
+    if (match) {
+      const [, month, day, home, away, playOrOption, optionOrOdds, oddsOrBet, betOrWin, winOrExtra] = match;
+
+      let playType = '胜平负';
+      let option = '';
+      let odds = 0;
+      let betAmount = 0;
+      let winAmount = 0;
+
+      // 判断第5个分组是玩法还是选项
+      if (/胜平负|让球|比分|进球数|半全场/i.test(playOrOption)) {
+        playType = playOrOption.trim();
+        option = optionOrOdds.trim();
+        odds = parseFloat(oddsOrBet) || 0;
+        betAmount = parseFloat(betOrWin) || 0;
+        winAmount = parseFloat(winOrExtra) || 0;
+      } else {
+        option = playOrOption.trim();
+        odds = parseFloat(optionOrOdds) || 0;
+        betAmount = parseFloat(oddsOrBet) || 0;
+        winAmount = parseFloat(betOrWin) || 0;
+      }
+
+      const date = `${currentYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+
+      return {
+        originalText: trimmed,
+        date,
+        homeTeam: home.trim(),
+        awayTeam: away.trim(),
+        playType,
+        option,
+        odds,
+        betAmount,
+        winAmount,
+      };
+    }
+  }
+
+  return null;
+};
+
+const generateComment = (bet: Partial<RecognizedBet>): string => {
+  const { homeTeam, awayTeam, playType, option, odds, betAmount, winAmount } = bet;
+  const h = homeTeam || '?';
+  const a = awayTeam || '?';
+  const p = playType || '?';
+  const o = option || '?';
+  const odd = odds || 0;
+  const ba = betAmount || 0;
+  const wa = winAmount || 0;
+
+  let emoji = '🎯';
+  if (odd >= 5) emoji = '🚀';
+  else if (odd >= 3) emoji = '⚡';
+  else if (odd <= 1.5) emoji = '🛡️';
+
+  const comments = [
+    `${emoji} 搏一搏，单车变摩托！`,
+    `${emoji} 这眼光，不去当球探可惜了！`,
+    `${emoji} 买彩票的最高境界：随便买都能中！`,
+    `${emoji} 这波操作，体彩中心都哭了！`,
+    `${emoji} 稳如老狗，恭喜收米！`,
+  ];
+  const randomComment = comments[Math.floor(Math.random() * comments.length)];
+
+  return `📋 票面解析
+${h} vs ${a} | ${p}：${o} | 赔率${odd}
+🔗 过关：1场1关 | 投注1注
+💰 本金：¥${ba}元 | 中奖：¥${wa}元
+
+💬 点评
+${randomComment}`;
+};
+
 const BatchImportModal = ({ isOpen, onClose }: BatchImportModalProps) => {
   const users = useAppStore((state) => state.users);
   const addBet = useAppStore((state) => state.addBet);
@@ -38,81 +129,31 @@ const BatchImportModal = ({ isOpen, onClose }: BatchImportModalProps) => {
   const [importResult, setImportResult] = useState<{ success: number; failed: number } | null>(null);
   const [globalError, setGlobalError] = useState<string | null>(null);
 
-  const recognizeText = useCallback(async (
-    text: string
-  ): Promise<RecognizedBet[]> => {
+  const recognizeText = useCallback((text: string): RecognizedBet[] => {
     const lines = text.split('\n').map((l) => l.trim()).filter(Boolean);
 
     if (lines.length === 0) return [];
 
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 120000);
+    return lines.map((line) => {
+      const parsed = parseBetLine(line);
 
-    try {
-      const response = await fetch(`${API_BASE}/api/ai/recognize-text`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ text }),
-        signal: controller.signal,
-      });
-
-      const data = await response.json();
-
-      if (data.success && data.result && Array.isArray(data.result)) {
-        const aiResults = data.result;
-        return lines.map((line, index) => {
-          const r = aiResults[index];
-          if (r) {
-            return {
-              originalText: line,
-              date: r.date || '',
-              homeTeam: r.homeTeam || '',
-              awayTeam: r.awayTeam || '',
-              playType: r.playType || '胜平负',
-              option: r.option || '',
-              odds: typeof r.odds === 'number' ? r.odds : 0,
-              betAmount: typeof r.betAmount === 'number' ? r.betAmount : 0,
-              winAmount: typeof r.winAmount === 'number' ? r.winAmount : 0,
-              comment: r.comment || '',
-              recognized: true,
-            };
-          }
-          return {
-            originalText: line,
-            date: '',
-            homeTeam: '',
-            awayTeam: '',
-            playType: '',
-            option: '',
-            odds: 0,
-            betAmount: 0,
-            winAmount: 0,
-            comment: '',
-            recognized: false,
-            error: '未能识别',
-          };
-        });
-      } else {
-        return lines.map((line) => ({
+      if (parsed && parsed.homeTeam && parsed.winAmount) {
+        return {
           originalText: line,
-          date: '',
-          homeTeam: '',
-          awayTeam: '',
-          playType: '',
-          option: '',
-          odds: 0,
-          betAmount: 0,
-          winAmount: 0,
-          comment: '',
-          recognized: false,
-          error: data.message || '识别失败',
-        }));
+          date: parsed.date || '',
+          homeTeam: parsed.homeTeam,
+          awayTeam: parsed.awayTeam || '',
+          playType: parsed.playType || '胜平负',
+          option: parsed.option || '',
+          odds: parsed.odds || 0,
+          betAmount: parsed.betAmount || 0,
+          winAmount: parsed.winAmount,
+          comment: generateComment(parsed),
+          recognized: true,
+        };
       }
-    } catch (e: any) {
-      const errorMsg = e.name === 'AbortError' ? '请求超时(120秒)' : (e.message || 'AI接口调用失败');
-      return lines.map((line) => ({
+
+      return {
         originalText: line,
         date: '',
         homeTeam: '',
@@ -124,11 +165,9 @@ const BatchImportModal = ({ isOpen, onClose }: BatchImportModalProps) => {
         winAmount: 0,
         comment: '',
         recognized: false,
-        error: errorMsg,
-      }));
-    } finally {
-      clearTimeout(timeout);
-    }
+        error: '格式无法识别',
+      };
+    });
   }, []);
 
   const handleRecognize = async () => {
@@ -138,12 +177,12 @@ const BatchImportModal = ({ isOpen, onClose }: BatchImportModalProps) => {
     setGlobalError(null);
     setRecognizedBets([]);
     setImportProgress(0);
-    try {
-      const results = await recognizeText(inputText);
-      setRecognizedBets(results);
-    } catch (e: any) {
-      setGlobalError(e.message || '识别过程出错');
-    }
+
+    // 模拟异步，让UI有响应
+    await new Promise((r) => setTimeout(r, 300));
+
+    const results = recognizeText(inputText);
+    setRecognizedBets(results);
     setIsRecognizing(false);
     setImportResult(null);
   };
@@ -213,7 +252,7 @@ const BatchImportModal = ({ isOpen, onClose }: BatchImportModalProps) => {
                 </div>
                 <div>
                   <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">批量导入投注</h2>
-                  <p className="text-xs text-neutral-500">AI智能识别文本格式投注记录</p>
+                  <p className="text-xs text-neutral-500">智能识别文本格式投注记录</p>
                 </div>
               </div>
               <button
@@ -253,7 +292,7 @@ const BatchImportModal = ({ isOpen, onClose }: BatchImportModalProps) => {
                   className="w-full px-3 py-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400 focus:outline-none focus:border-primary-500/50 transition-all text-sm h-32 resize-none"
                 />
                 <p className="text-xs text-neutral-500 mt-1">
-                  AI将自动识别日期、对阵、玩法、赔率、金额等信息
+                  将自动识别日期、对阵、玩法、赔率、金额等信息
                 </p>
               </div>
 
@@ -265,21 +304,15 @@ const BatchImportModal = ({ isOpen, onClose }: BatchImportModalProps) => {
                 {isRecognizing ? (
                   <>
                     <Loader2 size={16} className="animate-spin" />
-                    AI识别中，请稍候...
+                    识别中...
                   </>
                 ) : (
                   <>
                     <Loader2 size={16} />
-                    AI智能识别
+                    智能识别
                   </>
                 )}
               </button>
-
-              {isRecognizing && (
-                <div className="text-center text-xs text-neutral-500">
-                  正在批量识别所有记录，请耐心等待（约10-30秒）
-                </div>
-              )}
 
               {globalError && (
                 <div className="p-3 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30">
