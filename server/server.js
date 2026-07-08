@@ -960,7 +960,7 @@ app.post('/api/ai/recognize-text', async (req, res) => {
     const prompt = `你是一个专业的体育彩票评论员，风格幽默风趣。分析以下文本格式的投注记录，按指定格式输出。
 ${matchList}${finishedScores}${newsSection}
 
-## 输入文本
+## 输入文本（每行一条投注记录）
 ${text}
 
 ## 竞彩足球玩法说明（必须严格遵守）
@@ -974,27 +974,31 @@ ${text}
 **重要：所有玩法均按90分钟常规时间（含伤停补时）的比分结算，加时赛和点球大战不算！**
 
 ## 分析要求
-1. 从文本中提取比赛日期、对阵双方、玩法类型、投注选项、赔率、投注金额、中奖金额
+1. 逐行从文本中提取比赛日期、对阵双方、玩法类型、投注选项、赔率、投注金额、中奖金额
 2. 对照"已结束比赛比分"判断投注对错
 3. 风格要求：幽默风趣、轻松好玩，带点调侃但不要阴阳怪气
-4. 如果文本格式不规范，尝试智能推断，不要报错
+4. 如果某行格式不规范，尝试智能推断，不要跳过
 
 ## 返回格式
-严格返回以下JSON格式，不要任何其他内容：
+严格返回以下JSON格式，不要任何其他内容。bets数组的顺序必须与输入文本的行顺序一一对应：
 {
-  "date": "YYYY-MM-DD",
-  "homeTeam": "主队名称",
-  "awayTeam": "客队名称",
-  "playType": "玩法类型",
-  "option": "投注选项",
-  "odds": 赔率数字,
-  "betAmount": 投注金额数字,
-  "winAmount": 中奖金额数字,
-  "comment": "按以下模板填写：\\n📋 票面解析\\n主队 vs 客队 | 玩法：投注选项 | 比分X:X → ✅中/❌错\\n🔗 过关：X场X关 | 投注X注\\n💰 本金：¥X元 | 中奖：¥X元\\n\\n💬 点评\\n【自由发挥的幽默点评，50字以内】"
+  "bets": [
+    {
+      "date": "YYYY-MM-DD",
+      "homeTeam": "主队名称",
+      "awayTeam": "客队名称",
+      "playType": "玩法类型",
+      "option": "投注选项",
+      "odds": 赔率数字,
+      "betAmount": 投注金额数字,
+      "winAmount": 中奖金额数字,
+      "comment": "📋 票面解析\\n主队 vs 客队 | 玩法：投注选项 | 比分X:X → ✅中/❌错\\n🔗 过关：1场1关 | 投注1注\\n💰 本金：¥X元 | 中奖：¥X元\\n\\n💬 点评\\n【幽默点评，50字以内】"
+    }
+  ]
 }`;
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 60000);
+    const timeoutId = setTimeout(() => controller.abort(), 120000);
 
     try {
       const response = await fetch(aiConfig.apiEndpoint, {
@@ -1013,7 +1017,7 @@ ${text}
               ],
             },
           ],
-          max_tokens: 800,
+          max_tokens: 4000,
           temperature: 0.3,
           response_format: { type: 'json_object' },
         }),
@@ -1043,7 +1047,7 @@ ${text}
         result = JSON.parse(jsonMatch[0]);
       }
 
-      res.json({ success: true, result });
+      res.json({ success: true, result: result.bets || result });
     } catch (error) {
       if (error.name === 'AbortError') {
         throw new Error('AI识别超时，请稍后重试');

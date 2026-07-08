@@ -38,43 +38,47 @@ const BatchImportModal = ({ isOpen, onClose }: BatchImportModalProps) => {
   const [importResult, setImportResult] = useState<{ success: number; failed: number } | null>(null);
   const [globalError, setGlobalError] = useState<string | null>(null);
 
-  const recognizeText = useCallback(async (text: string): Promise<RecognizedBet[]> => {
+  const recognizeText = useCallback(async (
+    text: string
+  ): Promise<RecognizedBet[]> => {
     const lines = text.split('\n').map((l) => l.trim()).filter(Boolean);
 
     if (lines.length === 0) return [];
 
-    const recognizeLine = async (line: string): Promise<RecognizedBet> => {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 30000);
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 120000);
 
-      try {
-        const response = await fetch(`${API_BASE}/api/ai/recognize-text`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ text: line }),
-          signal: controller.signal,
-        });
+    try {
+      const response = await fetch(`${API_BASE}/api/ai/recognize-text`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ text }),
+        signal: controller.signal,
+      });
 
-        const data = await response.json();
+      const data = await response.json();
 
-        if (data.success && data.result) {
-          const r = data.result;
-          return {
-            originalText: line,
-            date: r.date || '',
-            homeTeam: r.homeTeam || '',
-            awayTeam: r.awayTeam || '',
-            playType: r.playType || '胜平负',
-            option: r.option || '',
-            odds: typeof r.odds === 'number' ? r.odds : 0,
-            betAmount: typeof r.betAmount === 'number' ? r.betAmount : 0,
-            winAmount: typeof r.winAmount === 'number' ? r.winAmount : 0,
-            comment: r.comment || '',
-            recognized: true,
-          };
-        } else {
+      if (data.success && data.result && Array.isArray(data.result)) {
+        const aiResults = data.result;
+        return lines.map((line, index) => {
+          const r = aiResults[index];
+          if (r) {
+            return {
+              originalText: line,
+              date: r.date || '',
+              homeTeam: r.homeTeam || '',
+              awayTeam: r.awayTeam || '',
+              playType: r.playType || '胜平负',
+              option: r.option || '',
+              odds: typeof r.odds === 'number' ? r.odds : 0,
+              betAmount: typeof r.betAmount === 'number' ? r.betAmount : 0,
+              winAmount: typeof r.winAmount === 'number' ? r.winAmount : 0,
+              comment: r.comment || '',
+              recognized: true,
+            };
+          }
           return {
             originalText: line,
             date: '',
@@ -87,12 +91,11 @@ const BatchImportModal = ({ isOpen, onClose }: BatchImportModalProps) => {
             winAmount: 0,
             comment: '',
             recognized: false,
-            error: data.message || '识别失败',
+            error: '未能识别',
           };
-        }
-      } catch (e: any) {
-        const errorMsg = e.name === 'AbortError' ? '请求超时(30秒)' : (e.message || 'AI接口调用失败');
-        return {
+        });
+      } else {
+        return lines.map((line) => ({
           originalText: line,
           date: '',
           homeTeam: '',
@@ -104,15 +107,28 @@ const BatchImportModal = ({ isOpen, onClose }: BatchImportModalProps) => {
           winAmount: 0,
           comment: '',
           recognized: false,
-          error: errorMsg,
-        };
-      } finally {
-        clearTimeout(timeout);
+          error: data.message || '识别失败',
+        }));
       }
-    };
-
-    const promises = lines.map(recognizeLine);
-    return Promise.all(promises);
+    } catch (e: any) {
+      const errorMsg = e.name === 'AbortError' ? '请求超时(120秒)' : (e.message || 'AI接口调用失败');
+      return lines.map((line) => ({
+        originalText: line,
+        date: '',
+        homeTeam: '',
+        awayTeam: '',
+        playType: '',
+        option: '',
+        odds: 0,
+        betAmount: 0,
+        winAmount: 0,
+        comment: '',
+        recognized: false,
+        error: errorMsg,
+      }));
+    } finally {
+      clearTimeout(timeout);
+    }
   }, []);
 
   const handleRecognize = async () => {
@@ -121,6 +137,7 @@ const BatchImportModal = ({ isOpen, onClose }: BatchImportModalProps) => {
     setIsRecognizing(true);
     setGlobalError(null);
     setRecognizedBets([]);
+    setImportProgress(0);
     try {
       const results = await recognizeText(inputText);
       setRecognizedBets(results);
@@ -248,7 +265,7 @@ const BatchImportModal = ({ isOpen, onClose }: BatchImportModalProps) => {
                 {isRecognizing ? (
                   <>
                     <Loader2 size={16} className="animate-spin" />
-                    AI识别中...
+                    AI识别中，请稍候...
                   </>
                 ) : (
                   <>
@@ -257,6 +274,12 @@ const BatchImportModal = ({ isOpen, onClose }: BatchImportModalProps) => {
                   </>
                 )}
               </button>
+
+              {isRecognizing && (
+                <div className="text-center text-xs text-neutral-500">
+                  正在批量识别所有记录，请耐心等待（约10-30秒）
+                </div>
+              )}
 
               {globalError && (
                 <div className="p-3 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30">
