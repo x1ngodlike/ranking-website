@@ -4,6 +4,8 @@ import { X, Upload, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { User as UserType } from '@/types';
 
+const API_BASE = import.meta.env.VITE_API_BASE || '';
+
 interface RecognizedBet {
   originalText: string;
   date: string;
@@ -34,16 +36,19 @@ const BatchImportModal = ({ isOpen, onClose }: BatchImportModalProps) => {
   const [isImporting, setIsImporting] = useState(false);
   const [importProgress, setImportProgress] = useState(0);
   const [importResult, setImportResult] = useState<{ success: number; failed: number } | null>(null);
+  const [globalError, setGlobalError] = useState<string | null>(null);
 
   const recognizeText = useCallback(async (text: string): Promise<RecognizedBet[]> => {
     const lines = text.split('\n').map((l) => l.trim()).filter(Boolean);
+
+    if (lines.length === 0) return [];
 
     const recognizeLine = async (line: string): Promise<RecognizedBet> => {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 30000);
 
       try {
-        const response = await fetch('/api/ai/recognize-text', {
+        const response = await fetch(`${API_BASE}/api/ai/recognize-text`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -85,7 +90,8 @@ const BatchImportModal = ({ isOpen, onClose }: BatchImportModalProps) => {
             error: data.message || '识别失败',
           };
         }
-      } catch (e) {
+      } catch (e: any) {
+        const errorMsg = e.name === 'AbortError' ? '请求超时(30秒)' : (e.message || 'AI接口调用失败');
         return {
           originalText: line,
           date: '',
@@ -98,7 +104,7 @@ const BatchImportModal = ({ isOpen, onClose }: BatchImportModalProps) => {
           winAmount: 0,
           comment: '',
           recognized: false,
-          error: 'AI接口调用失败',
+          error: errorMsg,
         };
       } finally {
         clearTimeout(timeout);
@@ -113,8 +119,14 @@ const BatchImportModal = ({ isOpen, onClose }: BatchImportModalProps) => {
     if (!inputText.trim()) return;
 
     setIsRecognizing(true);
-    const results = await recognizeText(inputText);
-    setRecognizedBets(results);
+    setGlobalError(null);
+    setRecognizedBets([]);
+    try {
+      const results = await recognizeText(inputText);
+      setRecognizedBets(results);
+    } catch (e: any) {
+      setGlobalError(e.message || '识别过程出错');
+    }
     setIsRecognizing(false);
     setImportResult(null);
   };
@@ -245,6 +257,15 @@ const BatchImportModal = ({ isOpen, onClose }: BatchImportModalProps) => {
                   </>
                 )}
               </button>
+
+              {globalError && (
+                <div className="p-3 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30">
+                  <div className="flex items-center gap-2">
+                    <AlertCircle size={16} className="text-red-500" />
+                    <span className="text-sm text-red-700 dark:text-red-400">{globalError}</span>
+                  </div>
+                </div>
+              )}
 
               {recognizedBets.length > 0 && (
                 <div>
