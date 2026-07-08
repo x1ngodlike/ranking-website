@@ -28,20 +28,20 @@ const pageVariants = {
 
 /* ── 每页背景图映射（14页全覆盖） ── */
 const PAGE_BGS: Record<number, string> = {
-  0:  '/report/world-cup-heroes-cover.jpg', // 封面（球星竖屏）
-  1:  '/report/first-win-bg.jpg',    // 开门红
-  2:  '/report/overview-bg.jpg',     // 总览
-  3:  '/report/goal-net.jpg',        // 财富曲线
-  4:  '/report/time-pattern-bg.jpg', // 时间规律
-  5:  '/report/celebration.jpg',     // 巅峰时刻
-  6:  '/report/celebration.jpg',     // 最大中奖
-  7:  '/report/ai-comment-bg.jpg',   // AI金句
-  8:  '/report/playtype-bg.jpg',     // 玩法
-  9:  '/report/team-bg.jpg',         // 最有缘球队
-  10: '/report/streak-bg.jpg',       // 连胜
-  11: '/report/pitch-aerial.jpg',    // 群内排名
-  12: '/report/cp-badge-bg.jpg',     // 搭子+成就
-  13: '/report/scoreboard.jpg',     // 结尾
+  0:  '/report/backgrounds/world-cup-heroes-cover.jpg', // 封面（球星竖屏）
+  1:  '/report/backgrounds/first-win-bg.jpg',    // 开门红
+  2:  '/report/backgrounds/overview-bg.jpg',     // 总览
+  3:  '/report/backgrounds/goal-net.jpg',        // 财富曲线
+  4:  '/report/backgrounds/time-pattern-bg.jpg', // 时间规律
+  5:  '/report/backgrounds/celebration.jpg',     // 巅峰时刻
+  6:  '/report/backgrounds/celebration.jpg',     // 最大中奖
+  7:  '/report/backgrounds/ai-comment-bg.jpg',   // AI金句
+  8:  '/report/backgrounds/playtype-bg.jpg',     // 玩法
+  9:  '/report/backgrounds/team-bg.jpg',         // 最有缘球队
+  10: '/report/backgrounds/streak-bg.jpg',       // 连胜
+  11: '/report/backgrounds/pitch-aerial.jpg',    // 群内排名
+  12: '/report/backgrounds/cp-badge-bg.jpg',     // 搭子+成就
+  13: '/report/backgrounds/scoreboard.jpg',     // 结尾
 };
 
 /* ── 预加载所有背景图 ── */
@@ -176,7 +176,7 @@ function P01({ data }: { data: ReportData }) {
   return (
     <PageBg pageIndex={0}>
       <motion.img initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-        transition={{ delay: 0.1 }} src="/report/world-cup-2026-logo.jpg" alt="World Cup 2026"
+        transition={{ delay: 0.1 }} src="/report/illustrations/world-cup-2026-logo.jpg" alt="World Cup 2026"
         className="w-[120px] h-[120px] mb-6 rounded-2xl object-contain" />
       <motion.h1 initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.4, duration: 0.6 }}
@@ -224,7 +224,7 @@ function P02({ data }: { data: ReportData }) {
       <Sub delay={0.45} className="font-mono text-white/50 mb-6">{formatDateCN(data.firstWin.date)}</Sub>
       <motion.img initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 0.55, duration: 0.5 }}
-        src="/report/illust-trophy.jpg" alt="" className="w-16 h-16 rounded-full opacity-60 mb-4" />
+        src="/report/illustrations/illust-trophy.jpg" alt="" className="w-16 h-16 rounded-full opacity-60 mb-4" />
       <p className="text-white/45 text-[15px] mb-4">你记录了第一笔中奖</p>
       <Num value={`¥${formatMoney(data.firstWin.amount)}`} delay={0.7} color="#F0C05A" />
       <Sep />
@@ -422,7 +422,7 @@ function P09({ data }: { data: ReportData }) {
       <Ch>Chapter 08</Ch>
       <motion.img initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 0.5, scale: 1 }}
         transition={{ delay: 0.35, duration: 0.5 }}
-        src="/report/illust-soccer.jpg" alt="" className="w-14 h-14 rounded-full mb-3" />
+        src="/report/illustrations/illust-soccer.jpg" alt="" className="w-14 h-14 rounded-full mb-3" />
       <Title size="text-xl">你最擅长的玩法是</Title>
       <motion.div initial={{ y: 16, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.5 }} className="text-3xl font-bold text-white mb-1">{fav.type}</motion.div>
@@ -501,7 +501,7 @@ function P11({ data }: { data: ReportData }) {
       <Title size="text-xl">你曾连续</Title>
       <div className="my-2 relative">
         <motion.img initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 0.15, scale: 1 }}
-          transition={{ delay: 0.4 }} src="/report/illust-fire.jpg" alt=""
+          transition={{ delay: 0.4 }} src="/report/illustrations/illust-fire.jpg" alt=""
           className="absolute -inset-16 w-[200%] h-[200%] object-cover pointer-events-none" />
         <Num value={String(data.maxStreak)} delay={0.5} size="text-6xl" color="#FB923C" />
       </div>
