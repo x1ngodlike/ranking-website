@@ -132,6 +132,9 @@ function BadgeItem({ badge, earned }: { badge: BadgeDefinition; earned?: EarnedB
         <p className={`font-v2-body text-[11px] font-medium mt-1.5 text-center leading-tight ${isEarned ? 'text-[var(--v2-text)]' : 'text-[var(--v2-text-muted)]'}`}>
           {badge.name}
         </p>
+        <p className={`font-v2-body text-[9px] mt-0.5 text-center leading-tight ${isEarned ? 'text-[var(--v2-text-secondary)]' : 'text-[var(--v2-text-muted)]'}`}>
+          {badge.condition}
+        </p>
         <div className="flex items-center gap-px mt-0.5">
           {[...Array(rarity)].map((_, i) => (
             <span key={i} className={`text-[10px] ${isEarned ? 'text-v2-gold-500' : 'text-neutral-400'}`}>
@@ -160,6 +163,14 @@ function BadgeItem({ badge, earned }: { badge: BadgeDefinition; earned?: EarnedB
         }
       `}>
         {badge.name}
+      </p>
+      <p className={`text-[10px] mt-0.5 text-center leading-tight
+        ${isEarned
+          ? 'text-neutral-400 dark:text-neutral-500'
+          : 'text-neutral-400 dark:text-neutral-600'
+        }
+      `}>
+        {badge.condition}
       </p>
       <div className="flex items-center gap-0.5 mt-1">
         {[...Array(rarity)].map((_, i) => (
