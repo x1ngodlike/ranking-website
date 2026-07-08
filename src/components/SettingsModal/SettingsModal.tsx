@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useAppStore } from '@/store/useAppStore';
-import { X, Settings, Lock, LogOut, RefreshCw, Eye, EyeOff, Trash2, Database, Brain, Newspaper, Users, AlertTriangle, ChevronRight, Shield } from 'lucide-react';
+import { X, Settings, Lock, LogOut, RefreshCw, Eye, EyeOff, Trash2, Database, Brain, Newspaper, Users, AlertTriangle, ChevronRight, Shield, Layers } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getAdminToken } from '@/utils/api';
+import { applyDesignVersion } from '@/utils/theme';
 import BackupModal from '../BackupModal/BackupModal';
 import AIConfigModal from '../AIConfigModal/AIConfigModal';
 import UsersModal from '../UsersModal/UsersModal';
@@ -21,6 +22,7 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
   const switchEnvironment = useAppStore((state) => state.switchEnvironment);
   const clearEnvironmentData = useAppStore((state) => state.clearEnvironmentData);
   const designVersion = useAppStore((s) => s.designVersion);
+  const setDesignVersion = useAppStore((s) => s.setDesignVersion);
 
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -213,6 +215,34 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                           } disabled:opacity-50`}
                         >
                           {env === 'production' ? '正式' : '测试'}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* 界面风格 */}
+                  <div className={`flex items-center justify-between p-3.5 ${designVersion === 'v2' ? 'rounded-xl border border-[var(--v2-border)] hover:bg-[var(--v2-bg-muted)]' : 'rounded-xl border border-neutral-100 dark:border-neutral-700/60 hover:bg-neutral-50 dark:hover:bg-neutral-800/40'} transition-colors`}>
+                    <div className="flex items-center gap-3">
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${designVersion === 'v2' ? 'bg-[var(--v2-bg-muted)] text-[var(--v2-text)]' : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400'}`}>
+                        <Layers size={16} />
+                      </div>
+                      <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100">界面风格</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      {(['v2', 'v1'] as const).map((v) => (
+                        <button
+                          key={v}
+                          onClick={() => {
+                            setDesignVersion(v);
+                            applyDesignVersion(v);
+                          }}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                            designVersion === v
+                              ? 'bg-primary-500 text-white'
+                              : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-700'
+                          }`}
+                        >
+                          {v === 'v2' ? '新版' : '旧版'}
                         </button>
                       ))}
                     </div>

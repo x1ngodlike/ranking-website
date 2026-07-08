@@ -1,12 +1,19 @@
-import { useMemo, useRef, useState, useEffect } from 'react';
+import { useMemo, useRef, useState, useEffect, lazy, Suspense } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { calculateRankings, calculateDailyTrend, getDailyStarUserId, getTodayStr } from '@/utils/calculations';
 import { Trophy, Hash, RefreshCw, TrendingUp } from 'lucide-react';
 import RankingPodium from '@/components/RankingPodium/RankingPodium';
 import RankingList from '@/components/RankingList/RankingList';
-import TrendChart from '@/components/TrendChart/TrendChart';
 import type { RankingSortType } from '@/types';
 import { motion, AnimatePresence } from 'framer-motion';
+
+const TrendChart = lazy(() => import('@/components/TrendChart/TrendChart'));
+
+const ChartLoader = () => (
+  <div className="flex items-center justify-center py-20">
+    <div className="w-8 h-8 border-3 border-primary-500/20 border-t-primary-500 rounded-full animate-spin" />
+  </div>
+);
 
 type TabType = RankingSortType | 'trend';
 
@@ -277,7 +284,9 @@ const RankingPage = () => {
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.3 }}
             >
-              <TrendChart data={dailyTrend} />
+              <Suspense fallback={<ChartLoader />}>
+                <TrendChart data={dailyTrend} />
+              </Suspense>
             </motion.div>
           ) : (
             <motion.div

@@ -2,7 +2,6 @@ import { Link, useLocation } from 'react-router-dom';
 import { Trophy, Ticket, Calendar, Settings, Calculator, Newspaper } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import ThemeToggle from '@/components/ThemeToggle/ThemeToggle';
-import DesignVersionToggle from '@/components/DesignVersionToggle/DesignVersionToggle';
 
 const navItems = [
   { path: '/', label: '排行榜', icon: Trophy },
@@ -68,7 +67,6 @@ const Header = () => {
           </nav>
 
           <div className="flex items-center gap-2">
-            <DesignVersionToggle />
             <ThemeToggle />
             <button
               onClick={openSettings}
