@@ -43,6 +43,26 @@ const PAGE_BGS: Record<number, string> = {
   13: '/report/scoreboard.jpg',     // 结尾
 };
 
+/* ── Badge 图标映射（id → 图片路径） ── */
+const BADGE_ICON_MAP: Record<string, string> = {
+  meierduka:       '/report/badge-meierduka.jpg',
+  maozixifa:       '/report/badge-maozixifa.jpg',
+  sixilinmen:      '/report/badge-sixilinmen.jpg',
+  xiaoyouhuoshou:  '/report/badge-xiaoyouhuoshou.jpg',
+  caiyunggungun:    '/report/badge-caiyuanggungun-v2.jpg',
+  jinkubazhu:       '/report/badge-jinkubazhu.jpg',
+  rijindoujin:      '/report/badge-rijindoujin.jpg',
+  yiwanfuweng:      '/report/badge-yiwanfuweng.jpg',
+  kaimenhong:       '/report/badge-kaimenhong.jpg',
+  shinaojiuwen:     '/report/badge-shinaojiuwen.jpg',
+  baizhanbaisheng:  '/report/badge-baizhanbaisheng.jpg',
+  jijunsaiyuyanjia: '/report/badge-jijunsaiyuyanjia.jpg',
+  juesaiyuyanjia:   '/report/badge-juesaiyuyanjia.jpg',
+  yiyebaofu:        '/report/badge-yiyebaofu.jpg',
+  caishenjianglin:  '/report/badge-caishenjianglin.jpg',
+  fuguizaitian:     '/report/badge-fuguizaitian.jpg',
+};
+
 /* ── 预加载所有背景图 ── */
 if (typeof window !== 'undefined') {
   Object.values(PAGE_BGS).forEach((src) => {
@@ -630,7 +650,10 @@ function P13({ data }: { data: ReportData }) {
             {data.topBadges.slice(0, 6).map((b, i) => (
               <Card key={b.id} delay={0.8 + i * 0.08}
                 className={`p-3 text-center ${b.rarity >= 4 ? 'border-amber-400/15' : ''}`}>
-                <div className="text-2xl mb-1">{b.emoji}</div>
+                <div className="w-10 h-10 mx-auto mb-1.5 rounded-full overflow-hidden">
+                  <img src={BADGE_ICON_MAP[b.id] || ''} alt={b.name}
+                    className="w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                </div>
                 <div className="text-[11px] text-white/50">{b.name}</div>
                 <div className="text-[10px] mt-0.5 text-amber-400/50">{'★'.repeat(b.rarity)}</div>
               </Card>
