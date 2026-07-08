@@ -891,6 +891,173 @@ app.post('/api/ai/recognize', async (req, res) => {
   }
 });
 
+app.post('/api/ai/recognize-text', async (req, res) => {
+  try {
+    const { text, winAmount } = req.body;
+    if (!text || !text.trim()) {
+      return res.status(400).json({ success: false, message: '缺少文本内容' });
+    }
+
+    const aiConfig = getAIConfig();
+    if (!aiConfig.apiKey) {
+      return res.status(400).json({ success: false, message: 'AI API密钥未配置' });
+    }
+
+    const matches = readMatches();
+    const news = getAllNews();
+
+    let matchList = '';
+    let finishedScores = '';
+    let newsSection = '';
+
+    if (matches && matches.length > 0) {
+      const lines = matches
+        .filter(m => m.stage === 'knockout')
+        .map(m => {
+          const num = m.matchNumber || '';
+          const home = m.homeTeam || '待定';
+          const away = m.awayTeam || '待定';
+          const time = m.matchTime ? new Date(m.matchTime).toLocaleDateString('zh-CN', { month: 'numeric', day: 'numeric' }) : '';
+          return `- 第${num}场 ${home} vs ${away} (${time})`;
+        });
+      if (lines.length > 0) {
+        matchList = `\n\n## 2026世界杯赛程参考（请对照此列表识别球队名称）\n${lines.join('\n')}`;
+      }
+
+      const finishedMatches = matches.filter(m => m.status === 'finished' && m.regularTimeHomeScore !== null && m.regularTimeHomeScore !== undefined);
+      if (finishedMatches.length > 0) {
+        const scoreLines = finishedMatches.map(m => {
+          const home = m.homeTeam || '待定';
+          const away = m.awayTeam || '待定';
+          const rtScore = `${m.regularTimeHomeScore}-${m.regularTimeAwayScore}`;
+          let rtResult;
+          if (m.regularTimeHomeScore > m.regularTimeAwayScore) rtResult = '主队胜(90分钟)';
+          else if (m.regularTimeHomeScore < m.regularTimeAwayScore) rtResult = '客队胜(90分钟)';
+          else rtResult = '平局(90分钟)';
+          let fullScore = rtScore;
+          if (m.homePenaltyScore !== null && m.homePenaltyScore !== undefined) {
+            fullScore = `${m.homeScore}[${m.homePenaltyScore}]-${m.awayScore}[${m.awayPenaltyScore}]`;
+            const penaltyWinner = m.homePenaltyScore > m.awayPenaltyScore ? '主队胜(点球)' : '客队胜(点球)';
+            return `- ${home} vs ${away}：90分钟 ${rtScore}(${rtResult})，最终 ${fullScore}(${penaltyWinner}) → 体彩按90分钟算`;
+          } else if (m.homeScore !== m.regularTimeHomeScore || m.awayScore !== m.regularTimeAwayScore) {
+            fullScore = `${m.homeScore}-${m.awayScore}`;
+            return `- ${home} vs ${away}：90分钟 ${rtScore}(${rtResult})，加时后 ${fullScore} → 体彩按90分钟算`;
+          }
+          return `- ${home} vs ${away}：${rtScore} → ${rtResult}`;
+        });
+        finishedScores = `\n\n## 已结束比赛比分（体彩竞彩按90分钟常规时间结算，加时赛/点球不算！）\n${scoreLines.join('\n')}`;
+      }
+    }
+
+    if (news && news.length > 0) {
+      const newsLines = news.slice(0, 10).map(n => {
+        const date = n.pubDate ? new Date(n.pubDate).toLocaleDateString('zh-CN', { month: 'numeric', day: 'numeric' }) : '';
+        return `- ${date} ${n.title}`;
+      });
+      newsSection = `\n\n## 近期世界杯热点新闻（可结合玩梗吐槽）\n${newsLines.join('\n')}`;
+    }
+
+    const prompt = `你是一个专业的体育彩票评论员，风格幽默风趣。分析以下文本格式的投注记录，按指定格式输出。
+${matchList}${finishedScores}${newsSection}
+
+## 输入文本
+${text}
+
+## 竞彩足球玩法说明（必须严格遵守）
+中国体彩竞彩足球包含多种玩法：
+- 胜平负：胜（主队赢）、平（打平）、负（客队赢）
+- 让球胜平负：带让球数的胜平负
+- 比分玩法：主队比分在前，如1:0、2:1等
+- 总进球数：0球、1球、2球、3球、4球、5球、6球、7+
+- 半全场胜平负：胜胜、胜平、胜负、平胜、平平、平负、负胜、负平、负负
+
+**重要：所有玩法均按90分钟常规时间（含伤停补时）的比分结算，加时赛和点球大战不算！**
+
+## 分析要求
+1. 从文本中提取比赛日期、对阵双方、玩法类型、投注选项、赔率、投注金额、中奖金额
+2. 对照"已结束比赛比分"判断投注对错
+3. 风格要求：幽默风趣、轻松好玩，带点调侃但不要阴阳怪气
+4. 如果文本格式不规范，尝试智能推断，不要报错
+
+## 返回格式
+严格返回以下JSON格式，不要任何其他内容：
+{
+  "date": "YYYY-MM-DD",
+  "homeTeam": "主队名称",
+  "awayTeam": "客队名称",
+  "playType": "玩法类型",
+  "option": "投注选项",
+  "odds": 赔率数字,
+  "betAmount": 投注金额数字,
+  "winAmount": 中奖金额数字,
+  "comment": "按以下模板填写：\\n📋 票面解析\\n主队 vs 客队 | 玩法：投注选项 | 比分X:X → ✅中/❌错\\n🔗 过关：X场X关 | 投注X注\\n💰 本金：¥X元 | 中奖：¥X元\\n\\n💬 点评\\n【自由发挥的幽默点评，50字以内】"
+}`;
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000);
+
+    try {
+      const response = await fetch(aiConfig.apiEndpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${aiConfig.apiKey}`,
+        },
+        body: JSON.stringify({
+          model: aiConfig.model,
+          messages: [
+            {
+              role: 'user',
+              content: [
+                { type: 'text', text: prompt },
+              ],
+            },
+          ],
+          max_tokens: 800,
+          temperature: 0.3,
+          response_format: { type: 'json_object' },
+        }),
+        signal: controller.signal,
+      });
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error?.message || `AI识别失败: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const content = data.choices?.[0]?.message?.content || '';
+
+      if (!content) {
+        return res.json({ success: true, result: null, message: '未能识别出比赛信息' });
+      }
+
+      let result;
+      try {
+        result = JSON.parse(content);
+      } catch {
+        const jsonMatch = content.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) {
+          return res.json({ success: true, result: null, message: '未能识别出比赛信息' });
+        }
+        result = JSON.parse(jsonMatch[0]);
+      }
+
+      res.json({ success: true, result });
+    } catch (error) {
+      if (error.name === 'AbortError') {
+        throw new Error('AI识别超时，请稍后重试');
+      }
+      throw error;
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  } catch (error) {
+    console.error('AI文本识别错误:', error);
+    res.status(500).json({ success: false, message: error.message || 'AI识别失败' });
+  }
+});
+
 // 批量更新所有中奖记录的AI评价（管理员权限）
 app.post('/api/ai/update-all', requireAuth, async (req, res) => {
   try {

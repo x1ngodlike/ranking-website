@@ -1,12 +1,11 @@
 import { useState, useCallback } from 'react';
 import { useAppStore } from '@/store/useAppStore';
-import { X, Upload, CheckCircle, AlertCircle, Loader2, User } from 'lucide-react';
+import { X, Upload, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import Avatar from '../Avatar';
-import { api } from '@/utils/api';
-import type { User as UserType, Match } from '@/types';
+import type { User as UserType } from '@/types';
 
-interface ParsedBet {
+interface RecognizedBet {
+  originalText: string;
   date: string;
   homeTeam: string;
   awayTeam: string;
@@ -15,7 +14,8 @@ interface ParsedBet {
   odds: number;
   betAmount: number;
   winAmount: number;
-  valid: boolean;
+  comment: string;
+  recognized: boolean;
   error?: string;
 }
 
@@ -26,24 +26,49 @@ interface BatchImportModalProps {
 
 const BatchImportModal = ({ isOpen, onClose }: BatchImportModalProps) => {
   const users = useAppStore((state) => state.users);
-  const matches = useAppStore((state) => state.matches);
   const addBet = useAppStore((state) => state.addBet);
   const [selectedUserId, setSelectedUserId] = useState<string>('');
   const [inputText, setInputText] = useState('');
-  const [parsedBets, setParsedBets] = useState<ParsedBet[]>([]);
+  const [recognizedBets, setRecognizedBets] = useState<RecognizedBet[]>([]);
+  const [isRecognizing, setIsRecognizing] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [importProgress, setImportProgress] = useState(0);
   const [importResult, setImportResult] = useState<{ success: number; failed: number } | null>(null);
 
-  const parseInput = useCallback((text: string): ParsedBet[] => {
+  const recognizeText = useCallback(async (text: string): Promise<RecognizedBet[]> => {
     const lines = text.split('\n').map((l) => l.trim()).filter(Boolean);
-    const currentYear = new Date().getFullYear();
+    const results: RecognizedBet[] = [];
 
-    return lines.map((line) => {
+    for (const line of lines) {
       try {
-        const parts = line.split('，');
-        if (parts.length < 7) {
-          return {
+        const response = await fetch('/api/ai/recognize-text', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ text: line }),
+        });
+
+        const data = await response.json();
+
+        if (data.success && data.result) {
+          const r = data.result;
+          results.push({
+            originalText: line,
+            date: r.date || '',
+            homeTeam: r.homeTeam || '',
+            awayTeam: r.awayTeam || '',
+            playType: r.playType || '胜平负',
+            option: r.option || '',
+            odds: typeof r.odds === 'number' ? r.odds : 0,
+            betAmount: typeof r.betAmount === 'number' ? r.betAmount : 0,
+            winAmount: typeof r.winAmount === 'number' ? r.winAmount : 0,
+            comment: r.comment || '',
+            recognized: true,
+          });
+        } else {
+          results.push({
+            originalText: line,
             date: '',
             homeTeam: '',
             awayTeam: '',
@@ -52,89 +77,14 @@ const BatchImportModal = ({ isOpen, onClose }: BatchImportModalProps) => {
             odds: 0,
             betAmount: 0,
             winAmount: 0,
-            valid: false,
-            error: '格式不正确',
-          };
+            comment: '',
+            recognized: false,
+            error: data.message || '识别失败',
+          });
         }
-
-        const datePart = parts[0].trim();
-        const dateMatch = datePart.match(/(\d+)\.(\d+)/);
-        if (!dateMatch) {
-          return {
-            date: '',
-            homeTeam: '',
-            awayTeam: '',
-            playType: '',
-            option: '',
-            odds: 0,
-            betAmount: 0,
-            winAmount: 0,
-            valid: false,
-            error: '日期格式错误',
-          };
-        }
-
-        const month = parseInt(dateMatch[1], 10);
-        const day = parseInt(dateMatch[2], 10);
-        const date = `${currentYear}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
-
-        const vsPart = parts[1].trim();
-        const vsMatch = vsPart.match(/(.+?)\s*vs\s*(.+)/);
-        if (!vsMatch) {
-          return {
-            date: '',
-            homeTeam: '',
-            awayTeam: '',
-            playType: '',
-            option: '',
-            odds: 0,
-            betAmount: 0,
-            winAmount: 0,
-            valid: false,
-            error: '对阵格式错误',
-          };
-        }
-
-        const homeTeam = vsMatch[1].trim();
-        const awayTeam = vsMatch[2].trim();
-
-        const playPart = parts[2].trim();
-        const playMatch = playPart.match(/(.+?)[:：]\s*(.+)/);
-        const playType = playMatch ? playMatch[1].trim() : '胜平负';
-        const option = playMatch ? playMatch[2].trim() : parts[2].split('：')[1]?.trim() || '';
-
-        const odds = parseFloat(parts[3]?.replace('赔率', '').trim() || '0');
-        const betAmount = parseFloat(parts[4]?.replace('投注金额', '').trim() || '0');
-        const winAmount = parseFloat(parts[5]?.replace('盈利金额', '').trim() || parts[6]?.replace('盈利金额', '').trim() || '0');
-
-        if (isNaN(odds) || isNaN(betAmount) || isNaN(winAmount)) {
-          return {
-            date,
-            homeTeam,
-            awayTeam,
-            playType,
-            option,
-            odds,
-            betAmount,
-            winAmount,
-            valid: false,
-            error: '金额格式错误',
-          };
-        }
-
-        return {
-          date,
-          homeTeam,
-          awayTeam,
-          playType,
-          option,
-          odds,
-          betAmount,
-          winAmount,
-          valid: true,
-        };
       } catch (e) {
-        return {
+        results.push({
+          originalText: line,
           date: '',
           homeTeam: '',
           awayTeam: '',
@@ -143,90 +93,55 @@ const BatchImportModal = ({ isOpen, onClose }: BatchImportModalProps) => {
           odds: 0,
           betAmount: 0,
           winAmount: 0,
-          valid: false,
-          error: '解析失败',
-        };
-      }
-    });
-  }, []);
-
-  const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const text = e.target.value;
-    setInputText(text);
-    setParsedBets(parseInput(text));
-    setImportResult(null);
-  };
-
-  const findMatchResult = useCallback((homeTeam: string, awayTeam: string): { homeScore: number; awayScore: number; result: string } | null => {
-    const match = matches.find((m: Match) => {
-      const mHome = m.homeTeam;
-      const mAway = m.awayTeam;
-      return (
-        (mHome?.includes(homeTeam) || homeTeam.includes(mHome)) &&
-        (mAway?.includes(awayTeam) || awayTeam.includes(mAway))
-      );
-    });
-
-    if (!match || match.status !== 'finished') return null;
-
-    const homeScore = match.regularTimeHomeScore ?? match.homeScore ?? 0;
-    const awayScore = match.regularTimeAwayScore ?? match.awayScore ?? 0;
-
-    let result: string;
-    if (homeScore > awayScore) result = '主队胜';
-    else if (homeScore < awayScore) result = '客队胜';
-    else result = '平局';
-
-    return { homeScore, awayScore, result };
-  }, [matches]);
-
-  const generateAIComment = useCallback((bet: ParsedBet): string => {
-    const matchResult = findMatchResult(bet.homeTeam, bet.awayTeam);
-    const score = matchResult ? `${matchResult.homeScore}:${matchResult.awayScore}` : '未知';
-    
-    let isWin = false;
-    if (matchResult) {
-      if (bet.playType === '胜平负') {
-        if (bet.option === '胜' && matchResult.result === '主队胜') isWin = true;
-        if (bet.option === '平' && matchResult.result === '平局') isWin = true;
-        if (bet.option === '负' && matchResult.result === '客队胜') isWin = true;
+          comment: '',
+          recognized: false,
+          error: 'AI接口调用失败',
+        });
       }
     }
 
-    return `📋 票面解析\n${bet.homeTeam} vs ${bet.awayTeam} | ${bet.playType}：${bet.option}@${bet.odds}元 | 比分${score} → ${isWin ? '✅中' : '❌错'}\n🔗 过关：1场1关 | 投注1注\n💰 本金：¥${bet.betAmount}元 | 中奖：¥${bet.winAmount}元\n\n💬 买${bet.option}搏一搏，单车变摩托！`;
-  }, [findMatchResult]);
+    return results;
+  }, []);
+
+  const handleRecognize = async () => {
+    if (!inputText.trim()) return;
+
+    setIsRecognizing(true);
+    const results = await recognizeText(inputText);
+    setRecognizedBets(results);
+    setIsRecognizing(false);
+    setImportResult(null);
+  };
 
   const handleImport = async () => {
-    if (!selectedUserId || parsedBets.filter((b) => b.valid).length === 0) return;
+    if (!selectedUserId || recognizedBets.filter((b) => b.recognized).length === 0) return;
 
     setIsImporting(true);
     setImportProgress(0);
     setImportResult(null);
 
-    const validBets = parsedBets.filter((b) => b.valid);
+    const validBets = recognizedBets.filter((b) => b.recognized);
     let success = 0;
     let failed = 0;
 
     for (let i = 0; i < validBets.length; i++) {
       const bet = validBets[i];
       try {
-        const aiComment = generateAIComment(bet);
-        
         addBet({
           id: `bet-${Date.now()}-${i}`,
           userId: selectedUserId,
-          date: bet.date,
+          date: bet.date || new Date().toISOString().split('T')[0],
           winAmount: bet.winAmount,
-          note: `${bet.homeTeam} vs ${bet.awayTeam} ${bet.playType}: ${bet.option}`,
-          aiComment,
+          note: bet.originalText,
+          aiComment: bet.comment,
           createdAt: new Date().toISOString(),
         });
-        
+
         success++;
       } catch (e) {
         failed++;
       }
-      
+
       setImportProgress(((i + 1) / validBets.length) * 100);
       await new Promise((r) => setTimeout(r, 100));
     }
@@ -235,8 +150,8 @@ const BatchImportModal = ({ isOpen, onClose }: BatchImportModalProps) => {
     setImportResult({ success, failed });
   };
 
-  const validCount = parsedBets.filter((b) => b.valid).length;
-  const invalidCount = parsedBets.filter((b) => !b.valid).length;
+  const recognizedCount = recognizedBets.filter((b) => b.recognized).length;
+  const unrecognizedCount = recognizedBets.filter((b) => !b.recognized).length;
 
   return (
     <AnimatePresence>
@@ -263,7 +178,7 @@ const BatchImportModal = ({ isOpen, onClose }: BatchImportModalProps) => {
                 </div>
                 <div>
                   <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">批量导入投注</h2>
-                  <p className="text-xs text-neutral-500">导入纯文本格式的投注记录</p>
+                  <p className="text-xs text-neutral-500">AI智能识别文本格式投注记录</p>
                 </div>
               </div>
               <button
@@ -294,51 +209,83 @@ const BatchImportModal = ({ isOpen, onClose }: BatchImportModalProps) => {
               <div>
                 <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">
                   粘贴投注数据
-                  <span className="text-neutral-400 font-normal ml-2">（每行一条）</span>
+                  <span className="text-neutral-400 font-normal ml-2">（每行一条，任意格式）</span>
                 </label>
                 <textarea
                   value={inputText}
-                  onChange={handleTextChange}
-                  placeholder="6.12，加拿大 vs 波黑，胜平负：平，赔率 3.4，投注金额 13，盈利金额 31.2"
+                  onChange={(e) => setInputText(e.target.value)}
+                  placeholder="6.12 加拿大vs波黑 平 3.4倍 投13中31.2"
                   className="w-full px-3 py-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400 focus:outline-none focus:border-primary-500/50 transition-all text-sm h-32 resize-none"
                 />
                 <p className="text-xs text-neutral-500 mt-1">
-                  格式：日期，主队 vs 客队，玩法：选项，赔率 X，投注金额 X，盈利金额 X
+                  AI将自动识别日期、对阵、玩法、赔率、金额等信息
                 </p>
               </div>
 
-              {parsedBets.length > 0 && (
+              <button
+                onClick={handleRecognize}
+                disabled={!inputText.trim() || isRecognizing}
+                className="w-full py-2.5 rounded-xl bg-primary-500 text-white text-sm font-medium hover:bg-primary-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {isRecognizing ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" />
+                    AI识别中...
+                  </>
+                ) : (
+                  <>
+                    <Loader2 size={16} />
+                    AI智能识别
+                  </>
+                )}
+              </button>
+
+              {recognizedBets.length > 0 && (
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-neutral-500">解析结果</span>
+                    <span className="text-sm text-neutral-500">识别结果</span>
                     <span className="text-xs">
-                      <span className="text-green-500">{validCount}条有效</span>
-                      {invalidCount > 0 && (
-                        <span className="text-red-500 ml-2">{invalidCount}条无效</span>
+                      <span className="text-green-500">{recognizedCount}条成功</span>
+                      {unrecognizedCount > 0 && (
+                        <span className="text-red-500 ml-2">{unrecognizedCount}条失败</span>
                       )}
                     </span>
                   </div>
-                  <div className="space-y-1 max-h-40 overflow-y-auto">
-                    {parsedBets.map((bet, i) => (
+                  <div className="space-y-2 max-h-60 overflow-y-auto">
+                    {recognizedBets.map((bet, i) => (
                       <div
                         key={i}
-                        className={`flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs ${
-                          bet.valid
-                            ? 'bg-green-50 dark:bg-green-500/10 text-green-800 dark:text-green-400'
-                            : 'bg-red-50 dark:bg-red-500/10 text-red-800 dark:text-red-400'
+                        className={`p-3 rounded-xl border ${
+                          bet.recognized
+                            ? 'bg-green-50 dark:bg-green-500/10 border-green-200 dark:border-green-500/30'
+                            : 'bg-red-50 dark:bg-red-500/10 border-red-200 dark:border-red-500/30'
                         }`}
                       >
-                        {bet.valid ? (
-                          <>
-                            <CheckCircle size={14} />
-                            <span>{bet.date} {bet.homeTeam} vs {bet.awayTeam} {bet.playType}:{bet.option} ¥{bet.winAmount}</span>
-                          </>
-                        ) : (
-                          <>
-                            <AlertCircle size={14} />
-                            <span>第{i + 1}行：{bet.error}</span>
-                          </>
-                        )}
+                        <div className="flex items-start gap-2">
+                          {bet.recognized ? (
+                            <CheckCircle size={16} className="text-green-500 mt-0.5 flex-shrink-0" />
+                          ) : (
+                            <AlertCircle size={16} className="text-red-500 mt-0.5 flex-shrink-0" />
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs text-neutral-500 mb-1 truncate">{bet.originalText}</p>
+                            {bet.recognized ? (
+                              <div className="text-sm">
+                                <span className="text-neutral-900 dark:text-neutral-100">
+                                  {bet.date} {bet.homeTeam} vs {bet.awayTeam}
+                                </span>
+                                <span className="text-neutral-600 dark:text-neutral-400 ml-2">
+                                  {bet.playType}:{bet.option}
+                                </span>
+                                <span className="text-green-600 dark:text-green-400 ml-2">
+                                  ¥{bet.winAmount}
+                                </span>
+                              </div>
+                            ) : (
+                              <p className="text-xs text-red-600 dark:text-red-400">{bet.error}</p>
+                            )}
+                          </div>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -381,7 +328,7 @@ const BatchImportModal = ({ isOpen, onClose }: BatchImportModalProps) => {
                   <button
                     onClick={() => {
                       setInputText('');
-                      setParsedBets([]);
+                      setRecognizedBets([]);
                       setImportResult(null);
                       setSelectedUserId('');
                     }}
@@ -396,7 +343,7 @@ const BatchImportModal = ({ isOpen, onClose }: BatchImportModalProps) => {
             <div className="p-5 border-t border-neutral-100 dark:border-neutral-800">
               <button
                 onClick={handleImport}
-                disabled={!selectedUserId || validCount === 0 || isImporting}
+                disabled={!selectedUserId || recognizedCount === 0 || isImporting}
                 className="w-full py-2.5 rounded-xl bg-primary-500 text-white text-sm font-medium hover:bg-primary-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {isImporting ? (
@@ -407,7 +354,7 @@ const BatchImportModal = ({ isOpen, onClose }: BatchImportModalProps) => {
                 ) : (
                   <>
                     <Upload size={16} />
-                    导入 {validCount} 条记录
+                    导入 {recognizedCount} 条记录
                   </>
                 )}
               </button>
