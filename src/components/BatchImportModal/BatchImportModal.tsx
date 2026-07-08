@@ -109,7 +109,7 @@ const generateComment = (bet: Partial<RecognizedBet>): string => {
   const randomComment = comments[Math.floor(Math.random() * comments.length)];
 
   return `📋 票面解析
-${h} vs ${a} | ${p}：${o} | 赔率${odd}
+${h} vs ${a} | ${p}：${o} | 赔率${odd} → ✅中
 🔗 过关：1场1关 | 投注1注
 💰 本金：¥${ba}元 | 中奖：¥${wa}元
 
