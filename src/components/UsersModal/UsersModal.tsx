@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { useAppStore } from '@/store/useAppStore';
-import { X, Users, Plus, Edit2, Trash2 } from 'lucide-react';
+import { X, Users, Plus, Edit2, Trash2, Upload } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Avatar from '../Avatar';
 import { AvatarPicker } from '../AvatarPicker/AvatarPicker';
 import EditUserModal from '../EditUserModal/EditUserModal';
+import BatchImportModal from '../BatchImportModal/BatchImportModal';
 import type { User } from '@/types';
 
 interface UsersModalProps {
@@ -24,6 +25,7 @@ const UsersModal = ({ isOpen, onClose }: UsersModalProps) => {
   const [newAvatar, setNewAvatar] = useState('⚽️');
   const [newCustomImage, setNewCustomImage] = useState<string | null>(null);
   const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [showBatchImport, setShowBatchImport] = useState(false);
 
   const getUserStats = (userId: string) => {
     const userBets = bets.filter((b) => b.userId === userId);
@@ -88,13 +90,22 @@ const UsersModal = ({ isOpen, onClose }: UsersModalProps) => {
               <div className="flex-1 overflow-y-auto p-5">
                 <div className="flex items-center justify-between mb-4">
                   <span className="text-sm text-neutral-500">成员列表</span>
-                  <button
-                    onClick={() => setShowAddForm(true)}
-                    className="flex items-center gap-1.5 text-sm text-primary-600 dark:text-primary-400 font-medium hover:text-primary-700 dark:hover:text-primary-300 transition-colors"
-                  >
-                    <Plus size={16} />
-                    添加成员
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setShowBatchImport(true)}
+                      className="flex items-center gap-1.5 text-sm text-neutral-600 dark:text-neutral-400 font-medium hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+                    >
+                      <Upload size={16} />
+                      批量导入
+                    </button>
+                    <button
+                      onClick={() => setShowAddForm(true)}
+                      className="flex items-center gap-1.5 text-sm text-primary-600 dark:text-primary-400 font-medium hover:text-primary-700 dark:hover:text-primary-300 transition-colors"
+                    >
+                      <Plus size={16} />
+                      添加成员
+                    </button>
+                  </div>
                 </div>
 
                 <div className="space-y-2">
@@ -218,6 +229,11 @@ const UsersModal = ({ isOpen, onClose }: UsersModalProps) => {
         user={editingUser}
         onClose={() => setEditingUser(null)}
         onSave={(userId, nickname, avatar) => updateUser(userId, nickname, avatar)}
+      />
+
+      <BatchImportModal
+        isOpen={showBatchImport}
+        onClose={() => setShowBatchImport(false)}
       />
     </>
   );
