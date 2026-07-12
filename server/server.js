@@ -81,9 +81,34 @@ const readJsonFile = (file, defaultValue) => {
   }
 };
 
+// 原子写：先写临时文件再 rename（同一文件系统下 rename 是原子操作）。
+// 这样即使进程在写入中途崩溃，磁盘上的旧文件依然完整，不会出现半截 JSON 导致数据损坏。
 const writeJsonFile = (file, data) => {
-  fs.writeFileSync(file, JSON.stringify(data, null, JSON_INDENT), 'utf-8');
+  const tmpFile = `${file}.${process.pid}.${Date.now()}.tmp`;
+  fs.writeFileSync(tmpFile, JSON.stringify(data, null, JSON_INDENT), 'utf-8');
+  fs.renameSync(tmpFile, file);
 };
+
+// 所有 JSON 写入串行化：通过单一 Promise 链排队，避免并发请求（例如多人同时保存）
+// 交错写同一文件。配合上面的原子写，保证落盘数据永远不会处于"写了一半"的状态。
+let writeChain = Promise.resolve();
+const enqueueWrite = (task) => {
+  const run = writeChain.then(task, task);
+  // 即使某个写入任务抛错，也保持链条继续，不阻塞后续写入。
+  writeChain = run.then(() => {}, () => {});
+  return run;
+};
+
+// 串行化写入：吞掉写入异常并记录日志（与原有"失败仅告警、不中断"的行为一致），
+// 调用方无需 await 也不会产生未处理的 Promise 拒绝。
+const serializedWrite = (file, data) =>
+  enqueueWrite(() => {
+    try {
+      writeJsonFile(file, data);
+    } catch (e) {
+      console.error('Write failed (data may not be persisted):', file, e);
+    }
+  });
 
 const splitDataAndMatches = (oldData) => {
   const { matches, ...dataOnly } = oldData;
@@ -188,7 +213,7 @@ const writeData = (env, data) => {
     competition: data.competition || 'WC',
     currentUserId: data.currentUserId || null,
   };
-  writeJsonFile(getDataFile(env), dataToSave);
+  return serializedWrite(getDataFile(env), dataToSave);
 };
 
 const getWinner = (match) => {
@@ -407,7 +432,7 @@ const readMatches = (env = 'production') => {
 
 const writeMatches = (env, matches) => {
   ensureEnvDir(env);
-  writeJsonFile(getMatchesFile(env), matches);
+  return serializedWrite(getMatchesFile(env), matches);
 };
 
 const readAuth = () => {
@@ -421,10 +446,10 @@ const readAuth = () => {
 };
 
 const writeAuth = (auth) => {
-  writeJsonFile(AUTH_FILE, auth);
+  return serializedWrite(AUTH_FILE, auth);
 };
 
-const createBackup = (env, label = 'manual') => {
+const createBackup = async (env, label = 'manual') => {
   const dir = ensureBackupDir(env);
   const data = readData(env);
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
@@ -439,7 +464,7 @@ const createBackup = (env, label = 'manual') => {
     data,
   };
 
-  writeJsonFile(filepath, backupContent);
+  await serializedWrite(filepath, backupContent);
   cleanOldBackups(env);
 
   return { filename, createdAt: backupContent.createdAt, label, size: fs.statSync(filepath).size };
@@ -504,7 +529,7 @@ const deleteBackup = (env, filename) => {
   return true;
 };
 
-const restoreBackup = (env, filename) => {
+const restoreBackup = async (env, filename) => {
   const filepath = resolveBackupPath(env, filename);
   if (!fs.existsSync(filepath)) {
     throw new Error('备份文件不存在');
@@ -513,7 +538,7 @@ const restoreBackup = (env, filename) => {
   if (!content.data) {
     throw new Error('备份文件格式错误');
   }
-  writeData(env, content.data);
+  await writeData(env, content.data);
   return content.data;
 };
 
@@ -639,13 +664,17 @@ app.get('/api/data', (req, res) => {
   res.json({ ...data, matches, environment });
 });
 
-app.post('/api/data', (req, res) => {
-  const { environment = 'production', matches, ...data } = req.body;
-  writeData(environment, data);
-  if (matches) {
-    writeMatches(environment, matches);
+app.post('/api/data', async (req, res) => {
+  try {
+    const { environment = 'production', matches, ...data } = req.body;
+    await writeData(environment, data);
+    if (matches) {
+      await writeMatches(environment, matches);
+    }
+    res.json({ success: true });
+  } catch (e) {
+    handleError(res, e, '保存数据失败');
   }
-  res.json({ success: true });
 });
 
 app.get('/api/matches', (req, res) => {
@@ -654,12 +683,16 @@ app.get('/api/matches', (req, res) => {
   res.json({ matches, environment });
 });
 
-app.post('/api/matches', (req, res) => {
-  const { environment = 'production', matches } = req.body;
-  if (matches) {
-    writeMatches(environment, matches);
+app.post('/api/matches', async (req, res) => {
+  try {
+    const { environment = 'production', matches } = req.body;
+    if (matches) {
+      await writeMatches(environment, matches);
+    }
+    res.json({ success: true });
+  } catch (e) {
+    handleError(res, e, '保存赛程失败');
   }
-  res.json({ success: true });
 });
 
 // 手动触发赛程同步
@@ -675,7 +708,7 @@ app.post('/api/matches/sync', async (req, res) => {
 
   const result = await syncMatches(apiKey, competition);
   if (result.success) {
-    writeMatches(environment, result.matches);
+    await writeMatches(environment, result.matches);
     // 同步成功后重新调度定时器
     scheduleNextMatchSync(result.matches);
     res.json({
@@ -834,16 +867,20 @@ app.post('/api/ai-config', requireAuth, (req, res) => {
   res.json({ success: true, config });
 });
 
-app.post('/api/admin/password', requireAuth, (req, res) => {
-  const { oldPassword, newPassword } = req.body;
-  const auth = readAuth();
-  const valid = bcrypt.compareSync(oldPassword, auth.adminPasswordHash);
-  if (!valid) {
-    return res.status(401).json({ success: false, message: '原密码错误' });
+app.post('/api/admin/password', requireAuth, async (req, res) => {
+  try {
+    const { oldPassword, newPassword } = req.body;
+    const auth = readAuth();
+    const valid = bcrypt.compareSync(oldPassword, auth.adminPasswordHash);
+    if (!valid) {
+      return res.status(401).json({ success: false, message: '原密码错误' });
+    }
+    auth.adminPasswordHash = bcrypt.hashSync(newPassword, 10);
+    await writeAuth(auth);
+    res.json({ success: true });
+  } catch (e) {
+    handleError(res, e, '修改密码失败');
   }
-  auth.adminPasswordHash = bcrypt.hashSync(newPassword, 10);
-  writeAuth(auth);
-  res.json({ success: true });
 });
 
 app.post('/api/upload/avatar', upload.single('file'), (req, res) => {
@@ -1108,7 +1145,7 @@ app.post('/api/ai/update-all', requireAuth, async (req, res) => {
     }
     
     // 保存更新后的数据
-    writeData(environment, data);
+    await writeData(environment, data);
     
     res.json({ 
       success: true, 
@@ -1196,8 +1233,9 @@ const deleteUploadedFile = (filePath) => {
   }
 };
 
-app.post('/api/admin/clear-data', requireAuth, (req, res) => {
-  const { environment = 'production' } = req.body;
+app.post('/api/admin/clear-data', requireAuth, async (req, res) => {
+  try {
+    const { environment = 'production' } = req.body;
 
   const oldData = readData(environment);
 
@@ -1228,8 +1266,11 @@ app.post('/api/admin/clear-data', requireAuth, (req, res) => {
     theme: 'system',
     currentUserId: null,
   };
-  writeData(environment, data);
+  await writeData(environment, data);
   res.json({ success: true });
+  } catch (e) {
+    handleError(res, e, '清空数据失败');
+  }
 });
 
 app.get('/api/admin/backups', requireAuth, (req, res) => {
@@ -1238,23 +1279,23 @@ app.get('/api/admin/backups', requireAuth, (req, res) => {
   res.json({ success: true, backups });
 });
 
-app.post('/api/admin/backups/create', requireAuth, (req, res) => {
+app.post('/api/admin/backups/create', requireAuth, async (req, res) => {
   try {
     const { environment = 'production', label = 'manual' } = req.body;
-    const result = createBackup(environment, label);
+    const result = await createBackup(environment, label);
     res.json({ success: true, backup: result });
   } catch (e) {
     handleError(res, e, '创建备份失败');
   }
 });
 
-app.post('/api/admin/backups/restore', requireAuth, (req, res) => {
+app.post('/api/admin/backups/restore', requireAuth, async (req, res) => {
   try {
     const { environment = 'production', filename } = req.body;
     if (!filename) {
       return res.status(400).json({ success: false, message: '请选择备份文件' });
     }
-    restoreBackup(environment, filename);
+    await restoreBackup(environment, filename);
     res.json({ success: true, message: '还原成功' });
   } catch (e) {
     handleError(res, e, '还原失败');
@@ -1335,7 +1376,7 @@ const runMatchSync = async () => {
 
     const result = await syncMatches(apiKey, competition);
     if (result.success) {
-      writeMatches(env, result.matches);
+      await writeMatches(env, result.matches);
       console.log(`[MatchSync] Synced ${result.matches.length} matches`);
 
       // 根据是否有直播比赛调整下次同步间隔

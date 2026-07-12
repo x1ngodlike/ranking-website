@@ -82,8 +82,21 @@ interface AppState {
   refreshData: () => Promise<void>;
 }
 
-const saveToServer = async (state: AppState) => {
-  if (!state.isDataLoaded) return;
+// 保存防抖：前端每次操作都会触发 saveToServer，但整份 state 全量上传开销不小，
+// 且快速连续操作会产生大量并发写。这里做 600ms 尾部防抖，始终以最新 state 落盘，
+// 既减少写入频次，也降低服务端并发写压力。调用点（saveToServer(get())）无需改动。
+let saveTimer: ReturnType<typeof setTimeout> | null = null;
+let pendingSaveState: AppState | null = null;
+const SAVE_DEBOUNCE_MS = 600;
+
+const flushSave = async () => {
+  if (saveTimer) {
+    clearTimeout(saveTimer);
+    saveTimer = null;
+  }
+  const state = pendingSaveState;
+  pendingSaveState = null;
+  if (!state || !state.isDataLoaded) return;
   try {
     await api.saveData({
       environment: state.environment,
@@ -98,6 +111,21 @@ const saveToServer = async (state: AppState) => {
     console.warn('Failed to save data to server:', e);
   }
 };
+
+const saveToServer = (state: AppState): void => {
+  pendingSaveState = state;
+  if (saveTimer) clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    void flushSave();
+  }, SAVE_DEBOUNCE_MS);
+};
+
+// 标签页关闭前，尽量把挂起的保存刷盘，避免最后 600ms 内的改动丢失。
+if (typeof window !== 'undefined') {
+  window.addEventListener('beforeunload', () => {
+    void flushSave();
+  });
+}
 
 const getInitialState = (): Omit<AppState, keyof ReturnType<typeof createStoreActions>> => {
   const apiConfig = loadApiConfig();
