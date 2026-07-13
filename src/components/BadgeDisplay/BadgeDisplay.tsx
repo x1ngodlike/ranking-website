@@ -2,14 +2,13 @@ import { useEffect, useState } from 'react';
 import { BADGES, RARITY_STYLES, CATEGORY_NAMES, BadgeDefinition, BadgeRarity, BadgeCategory } from '../../utils/badges';
 import { getBadgeIconSrc } from '../../utils/badgeIcons';
 
-function BadgeIcon({ badgeId, size = 60, grayscale = false }: { badgeId: string; size?: number; grayscale?: boolean }) {
+function BadgeIcon({ badgeId, grayscale = false }: { badgeId: string; grayscale?: boolean }) {
   const src = getBadgeIconSrc(badgeId);
   return (
     <img
       src={src}
       alt=""
-      className={`rounded-full object-cover ${grayscale ? 'grayscale opacity-50' : ''}`}
-      style={{ width: size, height: size }}
+      className={`rounded-full object-cover w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 ${grayscale ? 'grayscale opacity-50' : ''}`}
       onError={(e) => {
         const el = e.currentTarget as HTMLImageElement;
         el.style.display = 'none';
@@ -128,7 +127,7 @@ function BadgeItem({ badge, earned }: { badge: BadgeDefinition; earned?: EarnedB
             : 'border-[var(--v2-border)] bg-[var(--v2-bg-muted)] opacity-50'
         }`}
       >
-        <BadgeIcon badgeId={badge.id} size={60} grayscale={!isEarned} />
+        <BadgeIcon badgeId={badge.id} grayscale={!isEarned} />
         <p className={`font-v2-body text-[11px] font-medium mt-1.5 text-center leading-tight ${isEarned ? 'text-[var(--v2-text)]' : 'text-[var(--v2-text-muted)]'}`}>
           {badge.name}
         </p>
@@ -155,7 +154,7 @@ function BadgeItem({ badge, earned }: { badge: BadgeDefinition; earned?: EarnedB
         }
       `}
     >
-      <BadgeIcon badgeId={badge.id} size={60} grayscale={!isEarned} />
+      <BadgeIcon badgeId={badge.id} grayscale={!isEarned} />
       <p className={`text-sm mt-2 text-center font-medium
         ${isEarned
           ? 'text-neutral-800 dark:text-neutral-200'
