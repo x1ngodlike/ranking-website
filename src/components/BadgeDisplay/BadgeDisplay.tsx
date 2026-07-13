@@ -61,7 +61,7 @@ export default function BadgeDisplay({ userId }: BadgeDisplayProps) {
     );
   }
 
-  const categories: BadgeCategory[] = ['daily_burst', 'profit_total', 'count_total', 'milestone', 'daily_profit'];
+  const categories: BadgeCategory[] = ['daily_burst', 'count_total', 'daily_profit', 'profit_total', 'milestone'];
   const earnedCount = earnedBadges.length;
   const totalCount = BADGES.length;
 
