@@ -734,27 +734,27 @@ app.post('/api/matches/sync', async (req, res) => {
 
 // 徽章配置
 const BADGE_DEFINITIONS = [
-  // 单日爆发类
-  { id: 'meierduka', name: '梅开二度', condition: { type: 'dailyWins', value: 2 }, rarity: 3 },
-  { id: 'maozixifa', name: '帽子戏法', condition: { type: 'dailyWins', value: 3 }, rarity: 4 },
-  { id: 'sixilinmen', name: '四喜临门', condition: { type: 'dailyWins', value: 4 }, rarity: 5 },
+  // 连续中奖类（按最大连续中奖天数判定）
+  { id: 'meierduka', name: '梅开二度', condition: { type: 'streak', value: 2 }, rarity: 3 },
+  { id: 'maozixifa', name: '帽子戏法', condition: { type: 'streak', value: 3 }, rarity: 4 },
+  { id: 'sixilinmen', name: '四喜临门', condition: { type: 'streak', value: 4 }, rarity: 5 },
   // 累计盈利类
-  { id: 'xiaoyouhuoshou', name: '小有收获', condition: { type: 'totalProfit', value: 200 }, rarity: 1 },
-  { id: 'caiyuanggungun', name: '财源滚滚', condition: { type: 'totalProfit', value: 1000 }, rarity: 2 },
-  { id: 'jinkubazhu', name: '金库霸主', condition: { type: 'totalProfit', value: 2000 }, rarity: 3 },
-  { id: 'rijindoujin', name: '日进斗金', condition: { type: 'totalProfit', value: 5000 }, rarity: 4 },
-  { id: 'yiwanfuweng', name: '亿万富翁', condition: { type: 'totalProfit', value: 10000 }, rarity: 5 },
+  { id: 'xiaoyouhuoshou', name: '小有收获', condition: { type: 'totalProfit', value: 80 }, rarity: 1 },
+  { id: 'caiyuanggungun', name: '财源滚滚', condition: { type: 'totalProfit', value: 600 }, rarity: 2 },
+  { id: 'jinkubazhu', name: '金库霸主', condition: { type: 'totalProfit', value: 1800 }, rarity: 3 },
+  { id: 'rijindoujin', name: '日进斗金', condition: { type: 'totalProfit', value: 3600 }, rarity: 4 },
+  { id: 'yiwanfuweng', name: '亿万富翁', condition: { type: 'totalProfit', value: 8000 }, rarity: 5 },
   // 累计次数类
   { id: 'kaimenhong', name: '开门红', condition: { type: 'totalWins', value: 1 }, rarity: 1 },
   { id: 'shinaojiuwen', name: '十拿九稳', condition: { type: 'totalWins', value: 10 }, rarity: 3 },
-  { id: 'baizhanbaisheng', name: '百战百胜', condition: { type: 'totalWins', value: 20 }, rarity: 5 },
+  { id: 'baizhanbaisheng', name: '百战百胜', condition: { type: 'totalWins', value: 15 }, rarity: 5 },
   // 特殊里程碑类
   { id: 'jijunsaiyuyanjia', name: '季军赛预言家', condition: { type: 'milestoneDate', value: '2026-07-19' }, rarity: 2 },
   { id: 'juesaiyuyanjia', name: '决赛预言家', condition: { type: 'milestoneDate', value: '2026-07-20' }, rarity: 5 },
   // 单日盈利类
-  { id: 'yiyebaofu', name: '一夜暴富', condition: { type: 'dailyProfit', value: 500 }, rarity: 3 },
-  { id: 'caishenjianglin', name: '财神降临', condition: { type: 'dailyProfit', value: 2000 }, rarity: 4 },
-  { id: 'fuguizaitian', name: '富贵在天', condition: { type: 'dailyProfit', value: 5000 }, rarity: 5 },
+  { id: 'yiyebaofu', name: '一夜暴富', condition: { type: 'dailyProfit', value: 600 }, rarity: 3 },
+  { id: 'caishenjianglin', name: '财神降临', condition: { type: 'dailyProfit', value: 1200 }, rarity: 4 },
+  { id: 'fuguizaitian', name: '富贵在天', condition: { type: 'dailyProfit', value: 1800 }, rarity: 5 },
 ];
 
 // 计算用户成就徽章
@@ -788,6 +788,22 @@ app.get('/api/badges/:userId', (req, res) => {
   const maxDailyWins = Math.max(0, ...Object.values(dailyStats).map(d => d.wins));
   const maxDailyProfit = Math.max(0, ...Object.values(dailyStats).map(d => d.profit));
 
+  // 计算最大连续中奖天数（连续有中奖的日期的最大连续天数）
+  const winDates = Array.from(new Set(winBets.map(b => b.date).filter(Boolean))).sort();
+  let maxStreak = 0;
+  let currentStreak = 0;
+  for (let i = 0; i < winDates.length; i++) {
+    if (i === 0) {
+      currentStreak = 1;
+    } else {
+      const prev = new Date(winDates[i - 1]).getTime();
+      const curr = new Date(winDates[i]).getTime();
+      const diffDays = Math.floor((curr - prev) / (1000 * 60 * 60 * 24));
+      currentStreak = diffDays === 1 ? currentStreak + 1 : 1;
+    }
+    maxStreak = Math.max(maxStreak, currentStreak);
+  }
+
   // 检查特殊日期是否有中奖
   const milestoneDates = {
     '2026-06-15': dailyStats['2026-06-15']?.wins > 0,
@@ -800,6 +816,8 @@ app.get('/api/badges/:userId', (req, res) => {
     switch (type) {
       case 'dailyWins':
         return maxDailyWins >= value;
+      case 'streak':
+        return maxStreak >= value;
       case 'totalProfit':
         return totalProfit >= value;
       case 'totalWins':
@@ -828,6 +846,7 @@ app.get('/api/badges/:userId', (req, res) => {
       totalWins,
       maxDailyWins,
       maxDailyProfit,
+      maxStreak,
     },
   });
 });

@@ -119,6 +119,22 @@ const calculateUserTopBadges = (userId: string, bets: Bet[]): UserBadge[] => {
   const maxDailyWins = Math.max(0, ...Object.values(dailyStats).map((d) => d.wins));
   const maxDailyProfit = Math.max(0, ...Object.values(dailyStats).map((d) => d.profit));
 
+  // 计算最大连续中奖天数（连续有中奖的日期的最大连续天数）
+  const winDates = Array.from(new Set(winBets.map((b) => b.date).filter(Boolean))).sort();
+  let maxStreak = 0;
+  let currentStreak = 0;
+  for (let i = 0; i < winDates.length; i++) {
+    if (i === 0) {
+      currentStreak = 1;
+    } else {
+      const prev = new Date(winDates[i - 1]).getTime();
+      const curr = new Date(winDates[i]).getTime();
+      const diffDays = Math.floor((curr - prev) / (1000 * 60 * 60 * 24));
+      currentStreak = diffDays === 1 ? currentStreak + 1 : 1;
+    }
+    maxStreak = Math.max(maxStreak, currentStreak);
+  }
+
   const milestoneDates: Record<string, boolean> = {
     '2026-07-19': (dailyStats['2026-07-19']?.wins ?? 0) > 0,
     '2026-07-20': (dailyStats['2026-07-20']?.wins ?? 0) > 0,
@@ -132,6 +148,8 @@ const calculateUserTopBadges = (userId: string, bets: Bet[]): UserBadge[] => {
     switch (type) {
       case 'checkDailyWins':
         return maxDailyWins >= value;
+      case 'checkStreak':
+        return maxStreak >= value;
       case 'checkTotalProfit':
         return totalProfit >= value;
       case 'checkTotalWins':
