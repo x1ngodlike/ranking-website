@@ -133,13 +133,15 @@ const BetsPage = () => {
               </button>
             </div>
           )}
-          <button
-            onClick={() => setShowForm(true)}
-            className={`flex items-center gap-2 ${designVersion === 'v2' ? 'px-5 py-2.5 rounded-lg bg-profit-500 text-white font-v2-body font-bold text-sm hover:bg-profit-600 active:scale-[0.98] transition-all shadow-sm shadow-profit-500/25' : 'btn-gold'}`}
-          >
-            <Plus size={18} />
-            新增记录
-          </button>
+          {isAdminLoggedIn && (
+            <button
+              onClick={() => setShowForm(true)}
+              className={`flex min-h-11 items-center gap-2 ${designVersion === 'v2' ? 'px-5 py-2.5 rounded-lg bg-profit-500 text-white font-v2-body font-bold text-sm hover:bg-profit-600 active:scale-[0.98] transition-all shadow-sm shadow-profit-500/25' : 'btn-gold'}`}
+            >
+              <Plus size={18} />
+              新增记录
+            </button>
+          )}
         </div>
       </motion.div>
 
@@ -260,6 +262,9 @@ const BetsPage = () => {
               transition={{ duration: 0.2 }}
               className="w-full max-w-lg"
               onClick={(e) => e.stopPropagation()}
+              role="dialog"
+              aria-modal="true"
+              aria-label="新增中奖记录"
             >
               <BetForm onClose={() => setShowForm(false)} />
             </motion.div>

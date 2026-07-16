@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import type { RankingItem } from '@/types';
 import { motion } from 'framer-motion';
-import { isImageAvatar } from '@/components/Avatar';
+import { isImageAvatar } from '@/utils/avatar';
 import { RARITY_STYLES, BadgeRarity } from '@/utils/badges';
 import { getBadgeIconSrc } from '@/utils/badgeIcons';
 import { TrendingUp, Minus } from 'lucide-react';

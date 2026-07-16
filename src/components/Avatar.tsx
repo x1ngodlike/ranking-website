@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { avatarOptions } from './AvatarPicker/AvatarPicker';
+import { isImageAvatar } from '@/utils/avatar';
 
 interface AvatarProps {
   src: string;
@@ -14,14 +14,6 @@ const sizeClasses = {
   md: 'w-10 h-10 text-xl',
   lg: 'w-14 h-14 text-3xl',
   xl: 'w-24 h-24 text-5xl',
-};
-
-export const isEmojiAvatar = (avatar: string): boolean => {
-  return avatarOptions.includes(avatar);
-};
-
-export const isImageAvatar = (avatar: string): boolean => {
-  return avatar.startsWith('data:') || avatar.startsWith('http') || avatar.startsWith('/');
 };
 
 // 全局懒加载观察器

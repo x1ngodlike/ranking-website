@@ -16,6 +16,22 @@ interface RankingListProps {
 const RankingList = ({ rankings, sortType, todayWinUsers }: RankingListProps) => {
   const designVersion = useAppStore((state) => state.designVersion);
 
+  if (rankings.length === 0) {
+    return (
+      <section
+        className={designVersion === 'v2' ? 'rounded-xl p-8 border border-[var(--v2-border)] bg-[var(--v2-bg-card)] text-center' : 'card p-8 text-center'}
+        aria-labelledby="ranking-empty-title"
+      >
+        <h2 id="ranking-empty-title" className="text-base font-medium text-neutral-700 dark:text-neutral-200">
+          暂无排行数据
+        </h2>
+        <p className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">
+          管理员添加成员和投注记录后，排行会自动生成。
+        </p>
+      </section>
+    );
+  }
+
   const getRankBadgeClass = (rank: number) => {
     if (designVersion === 'v2') {
       if (rank === 1) return 'rounded-lg bg-gradient-to-br from-yellow-400 to-yellow-500 text-yellow-900';

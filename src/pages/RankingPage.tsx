@@ -253,6 +253,7 @@ const RankingPage = () => {
               <button
                 key={tab.type}
                 onClick={handleClick}
+                aria-pressed={isActive}
                 className={
                   designVersion === 'v2'
                     ? `flex items-center gap-2 px-4 sm:px-5 py-2 rounded-lg text-sm font-v2-body font-medium transition-all duration-300 ${

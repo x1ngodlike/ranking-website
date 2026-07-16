@@ -2,24 +2,11 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ExternalLink, Sparkles, Calculator, Star, RefreshCw, AlertCircle, History, ChevronLeft, Check, X, Lock } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
+import { api, type AIPrediction } from '@/utils/api';
 
 const CALCULATOR_URL = 'https://m.sporttery.cn/mjc/jsq/zqspf/';
 
-interface Prediction {
-  matchNumber: number;
-  homeTeam: string;
-  awayTeam: string;
-  homeScore: number;
-  awayScore: number;
-  result: string;
-  analysis: string;
-  confidence: number;
-  actualHomeScore?: number | null;
-  actualAwayScore?: number | null;
-  actualResult?: string | null;
-  isCorrect?: boolean | null;
-  matchTime?: string | null;
-}
+type Prediction = AIPrediction;
 
 interface PredictionRecord {
   date: string;
@@ -76,8 +63,7 @@ const CalculatorPage = () => {
     setIsLoading(true);
     setError('');
     try {
-      const res = await fetch('/api/ai/predict');
-      const data = await res.json();
+      const data = await api.generatePredictions();
       if (data.success) {
         setPredictions(data.predictions || []);
         fetchHistory();

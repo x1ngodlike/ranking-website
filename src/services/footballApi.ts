@@ -42,7 +42,7 @@ export interface ApiMatch {
 
 export interface ApiMatchesResponse {
   matches: ApiMatch[];
-  filters: any;
+  filters: Record<string, unknown>;
   resultSet: {
     count: number;
     competitions?: string;
@@ -50,6 +50,10 @@ export interface ApiMatchesResponse {
     last?: string;
     played?: number;
   };
+}
+
+interface ApiCompetitionsResponse {
+  competitions: Array<{ id: number | string; name: string }>;
 }
 
 const statusMap: Record<string, Match['status']> = {
@@ -482,11 +486,11 @@ export const fetchLiveMatches = async (): Promise<Match[]> => {
 };
 
 export const getCompetitions = async (): Promise<Array<{ id: string; name: string }>> => {
-  const data = await fetchFootballApi<any>(
+  const data = await fetchFootballApi<ApiCompetitionsResponse>(
     'competitions?plan=TIER_ONE',
     { updateRateLimit: false, detailedErrors: false }
   );
-  return data.competitions.map((c: any) => ({
+  return data.competitions.map((c) => ({
     id: String(c.id),
     name: c.name,
   }));

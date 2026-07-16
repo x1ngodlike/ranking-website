@@ -9,7 +9,7 @@ services:
       - "5936:5936"
     environment:
       - PORT=5936
-      - ADMIN_PASSWORD=159357
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:?请先设置 ADMIN_PASSWORD}
       - NODE_ENV=production
       - TZ=Asia/Shanghai
       - AUTO_BACKUP_INTERVAL_MS=3600000

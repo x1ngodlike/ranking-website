@@ -43,10 +43,14 @@ const ImageViewer = ({ isOpen, imageUrl, onClose }: ImageViewerProps) => {
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-[200] bg-black/90 flex items-center justify-center"
           onClick={onClose}
+          role="dialog"
+          aria-modal="true"
+          aria-label="图片预览"
         >
           <button
             onClick={onClose}
             className="absolute top-4 right-4 p-2 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors z-10"
+            aria-label="关闭图片预览"
           >
             <X size={24} />
           </button>
@@ -58,6 +62,7 @@ const ImageViewer = ({ isOpen, imageUrl, onClose }: ImageViewerProps) => {
                 setScale((s) => Math.max(s - 0.25, 0.5));
               }}
               className="p-2 rounded-full text-white hover:bg-white/20 transition-colors"
+              aria-label="缩小图片"
             >
               <ZoomOut size={20} />
             </button>
@@ -70,6 +75,7 @@ const ImageViewer = ({ isOpen, imageUrl, onClose }: ImageViewerProps) => {
                 setScale((s) => Math.min(s + 0.25, 3));
               }}
               className="p-2 rounded-full text-white hover:bg-white/20 transition-colors"
+              aria-label="放大图片"
             >
               <ZoomIn size={20} />
             </button>

@@ -24,7 +24,7 @@ interface BatchImportModalProps {
   onClose: () => void;
 }
 
-const currentYear = new Date().getFullYear();
+const WORLD_CUP_YEAR = 2026;
 
 const parseBetLine = (line: string): Partial<RecognizedBet> | null => {
   const trimmed = line.trim();
@@ -33,11 +33,11 @@ const parseBetLine = (line: string): Partial<RecognizedBet> | null => {
   // 尝试多种正则模式
   const patterns = [
     // 6.12，加拿大 vs 波黑，胜平负：平，赔率 3.4，投注金额 13，盈利金额 31.2
-    /(\d{1,2})[\.\/月](\d{1,2})日?[，,\s]+(.+?)\s*(?:vs|VS|对)\s*(.+?)[，,\s]+(.+?)[：:]\s*(.+?)[，,\s]+赔率\s*([\d.]+)[，,\s]+投注金额\s*([\d.]+)[，,\s]+盈利金额\s*([\d.]+)/i,
+    /(\d{1,2})[./月](\d{1,2})日?[，,\s]+(.+?)\s*(?:vs|VS|对)\s*(.+?)[，,\s]+(.+?)[：:]\s*(.+?)[，,\s]+赔率\s*([\d.]+)[，,\s]+投注金额\s*([\d.]+)[，,\s]+盈利金额\s*([\d.]+)/i,
     // 6.12 加拿大vs波黑 平 3.4倍 投13中31.2
-    /(\d{1,2})[\.\/月](\d{1,2})日?\s+(.+?)\s*(?:vs|VS|对)\s*(.+?)\s+(.+?)\s+([\d.]+)(?:倍|赔率)?\s+(?:投|投注)?\s*([\d.]+)\s*(?:中|盈利)?\s*([\d.]+)/i,
+    /(\d{1,2})[./月](\d{1,2})日?\s+(.+?)\s*(?:vs|VS|对)\s*(.+?)\s+(.+?)\s+([\d.]+)(?:倍|赔率)?\s+(?:投|投注)?\s*([\d.]+)\s*(?:中|盈利)?\s*([\d.]+)/i,
     // 6.12，加拿大 vs 波黑，平，3.4，13，31.2
-    /(\d{1,2})[\.\/月](\d{1,2})日?[，,\s]+(.+?)\s*(?:vs|VS|对)\s*(.+?)[，,\s]+(.+?)[，,\s]+([\d.]+)[，,\s]+([\d.]+)[，,\s]+([\d.]+)/i,
+    /(\d{1,2})[./月](\d{1,2})日?[，,\s]+(.+?)\s*(?:vs|VS|对)\s*(.+?)[，,\s]+(.+?)[，,\s]+([\d.]+)[，,\s]+([\d.]+)[，,\s]+([\d.]+)/i,
   ];
 
   for (const pattern of patterns) {
@@ -65,7 +65,7 @@ const parseBetLine = (line: string): Partial<RecognizedBet> | null => {
         winAmount = parseFloat(betOrWin) || 0;
       }
 
-      const date = `${currentYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+      const date = `${WORLD_CUP_YEAR}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
 
       return {
         originalText: trimmed,
@@ -106,10 +106,13 @@ const generateComment = (bet: Partial<RecognizedBet>): string => {
     `${emoji} 这波操作，体彩中心都哭了！`,
     `${emoji} 稳如老狗，恭喜收米！`,
   ];
-  const randomComment = comments[Math.floor(Math.random() * comments.length)];
+  const isWin = wa > 0;
+  const randomComment = isWin
+    ? comments[Math.floor(Math.random() * comments.length)]
+    : '未中奖记录已保存，下一场继续。';
 
   return `📋 票面解析
-${h} vs ${a} | ${p}：${o} | 赔率${odd} → ✅中
+  ${h} vs ${a} | ${p}：${o} | 赔率${odd} → ${isWin ? '✅中' : '❌未中'}
 🔗 过关：1场1关 | 投注1注
 💰 本金：¥${ba}元 | 中奖：¥${wa}元
 
@@ -137,7 +140,7 @@ const BatchImportModal = ({ isOpen, onClose }: BatchImportModalProps) => {
     return lines.map((line) => {
       const parsed = parseBetLine(line);
 
-      if (parsed && parsed.homeTeam && parsed.winAmount) {
+      if (parsed && parsed.homeTeam && parsed.winAmount !== undefined) {
         return {
           originalText: line,
           date: parsed.date || '',
@@ -212,7 +215,7 @@ const BatchImportModal = ({ isOpen, onClose }: BatchImportModalProps) => {
         });
 
         success++;
-      } catch (e) {
+      } catch {
         failed++;
       }
 

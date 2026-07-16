@@ -10,6 +10,7 @@ const { initAIConfig, getAIConfig, saveAIConfig } = require('./aiConfig');
 const { recognizeBetImage } = require('./aiRecognition');
 const { initNewsService, fetchAllNews, getAllNews, getNewsForTeams } = require('./footballNews');
 const { predictMatches, getPredictionHistory, getLatestPrediction, updatePredictionResults } = require('./aiPrediction');
+const { ENVIRONMENTS, parseEnvironment, getImageExtension, toPublicData } = require('./validation');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -20,7 +21,7 @@ const AVATAR_DIR = path.join(UPLOAD_DIR, 'avatars');
 const BET_DIR = path.join(UPLOAD_DIR, 'bets');
 const DIST_DIR = process.env.DIST_DIR || path.join(__dirname, '..', 'dist');
 const BACKUP_DIR = path.join(DATA_DIR, 'backups');
-const DEFAULT_ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '159357';
+const DEFAULT_ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || (IS_PRODUCTION ? null : '159357');
 const AUTO_BACKUP_INTERVAL_MS = parseInt(process.env.AUTO_BACKUP_INTERVAL_MS || '900000', 10);
 const MAX_BACKUPS = parseInt(process.env.MAX_BACKUPS || '50', 10);
 
@@ -29,9 +30,11 @@ const JSON_INDENT = 2;
 const AVATAR_MAX_SIZE = 5 * 1024 * 1024;
 const BET_IMAGE_MAX_SIZE = 10 * 1024 * 1024;
 const FOOTBALL_API_BASE = 'https://api.football-data.org/v4/';
-const ENVIRONMENTS = ['production', 'test'];
+const LOGIN_WINDOW_MS = 15 * 60 * 1000;
+const LOGIN_MAX_ATTEMPTS = 5;
 
 let adminTokens = new Set();
+const loginAttempts = new Map();
 
 const generateToken = () => {
   const token = crypto.randomBytes(32).toString('hex');
@@ -99,16 +102,9 @@ const enqueueWrite = (task) => {
   return run;
 };
 
-// 串行化写入：吞掉写入异常并记录日志（与原有"失败仅告警、不中断"的行为一致），
-// 调用方无需 await 也不会产生未处理的 Promise 拒绝。
+// 串行化写入并向调用方传播失败，避免界面在实际未落盘时误报成功。
 const serializedWrite = (file, data) =>
-  enqueueWrite(() => {
-    try {
-      writeJsonFile(file, data);
-    } catch (e) {
-      console.error('Write failed (data may not be persisted):', file, e);
-    }
-  });
+  enqueueWrite(() => writeJsonFile(file, data));
 
 const splitDataAndMatches = (oldData) => {
   const { matches, ...dataOnly } = oldData;
@@ -169,16 +165,16 @@ const createMulterStorage = (destination) => multer.diskStorage({
   destination: (req, file, cb) => cb(null, destination),
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const ext = path.extname(file.originalname);
+    const ext = getImageExtension(file.mimetype) || '';
     cb(null, uniqueSuffix + ext);
   }
 });
 
 const createImageFilter = () => (req, file, cb) => {
-  if (file.mimetype.startsWith('image/')) {
+  if (getImageExtension(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error('Only image files are allowed'));
+    cb(new Error('Only JPEG, PNG and WebP images are allowed'));
   }
 };
 
@@ -437,12 +433,22 @@ const writeMatches = (env, matches) => {
 
 const readAuth = () => {
   if (!fs.existsSync(AUTH_FILE)) {
+    if (!DEFAULT_ADMIN_PASSWORD) {
+      throw new Error('ADMIN_PASSWORD must be set before the first production start');
+    }
     const hash = bcrypt.hashSync(DEFAULT_ADMIN_PASSWORD, 10);
     const auth = { adminPasswordHash: hash };
     writeJsonFile(AUTH_FILE, auth);
     return auth;
   }
-  return readJsonFile(AUTH_FILE, { adminPasswordHash: bcrypt.hashSync(DEFAULT_ADMIN_PASSWORD, 10) });
+  const fallback = DEFAULT_ADMIN_PASSWORD
+    ? { adminPasswordHash: bcrypt.hashSync(DEFAULT_ADMIN_PASSWORD, 10) }
+    : null;
+  const auth = readJsonFile(AUTH_FILE, fallback);
+  if (!auth?.adminPasswordHash) {
+    throw new Error('管理员密码文件无效，请从备份恢复或设置 ADMIN_PASSWORD 后重新初始化');
+  }
+  return auth;
 };
 
 const writeAuth = (auth) => {
@@ -649,9 +655,33 @@ const handleError = (res, error, defaultMessage) => {
   res.status(500).json({ success: false, message: error.message || defaultMessage });
 };
 
-app.use(cors());
+const configuredOrigins = (process.env.ALLOWED_ORIGINS || '')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+app.use(cors({
+  origin(origin, callback) {
+    if (!origin) return callback(null, true);
+    if (configuredOrigins.includes(origin)) return callback(null, true);
+    if (!IS_PRODUCTION && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
+      return callback(null, true);
+    }
+    return callback(null, false);
+  },
+}));
 app.use(express.json({ limit: '10mb' }));
 app.use('/uploads', express.static(UPLOAD_DIR));
+
+app.use('/api', (req, res, next) => {
+  const rawEnvironment = req.body?.environment ?? req.query?.environment;
+  const environment = parseEnvironment(rawEnvironment);
+  if (!environment) {
+    return res.status(400).json({ success: false, message: '无效的运行环境' });
+  }
+  if (req.body && rawEnvironment !== undefined) req.body.environment = environment;
+  if (req.query && rawEnvironment !== undefined) req.query.environment = environment;
+  return next();
+});
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
@@ -661,12 +691,18 @@ app.get('/api/data', (req, res) => {
   const environment = req.query.environment || 'production';
   const data = readData(environment);
   const matches = readMatches(environment);
-  res.json({ ...data, matches, environment });
+  res.json({ ...toPublicData(data), matches, environment });
 });
 
-app.post('/api/data', async (req, res) => {
+app.post('/api/data', requireAuth, async (req, res) => {
   try {
     const { environment = 'production', matches, ...data } = req.body;
+    if (!Array.isArray(data.users) || !Array.isArray(data.bets)) {
+      return res.status(400).json({ success: false, message: '用户或记录数据格式无效' });
+    }
+    if (matches !== undefined && !Array.isArray(matches)) {
+      return res.status(400).json({ success: false, message: '赛程数据格式无效' });
+    }
     await writeData(environment, data);
     if (matches) {
       await writeMatches(environment, matches);
@@ -683,12 +719,13 @@ app.get('/api/matches', (req, res) => {
   res.json({ matches, environment });
 });
 
-app.post('/api/matches', async (req, res) => {
+app.post('/api/matches', requireAuth, async (req, res) => {
   try {
     const { environment = 'production', matches } = req.body;
-    if (matches) {
-      await writeMatches(environment, matches);
+    if (!Array.isArray(matches)) {
+      return res.status(400).json({ success: false, message: '赛程数据格式无效' });
     }
+    await writeMatches(environment, matches);
     res.json({ success: true });
   } catch (e) {
     handleError(res, e, '保存赛程失败');
@@ -696,7 +733,7 @@ app.post('/api/matches', async (req, res) => {
 });
 
 // 手动触发赛程同步
-app.post('/api/matches/sync', async (req, res) => {
+app.post('/api/matches/sync', requireAuth, async (req, res) => {
   const environment = req.query.environment || 'production';
   const data = readData(environment);
   const apiKey = data.apiKey;
@@ -853,12 +890,25 @@ app.get('/api/badges/:userId', (req, res) => {
 
 app.post('/api/admin/login', (req, res) => {
   const { password } = req.body;
+  const attemptKey = req.ip || req.socket.remoteAddress || 'unknown';
+  const now = Date.now();
+  const recentAttempts = (loginAttempts.get(attemptKey) || []).filter(
+    (timestamp) => now - timestamp < LOGIN_WINDOW_MS
+  );
+  if (recentAttempts.length >= LOGIN_MAX_ATTEMPTS) {
+    return res.status(429).json({ success: false, message: '登录尝试过多，请15分钟后重试' });
+  }
+  if (typeof password !== 'string' || password.length === 0) {
+    return res.status(400).json({ success: false, message: '请输入管理员密码' });
+  }
   const auth = readAuth();
   const valid = bcrypt.compareSync(password, auth.adminPasswordHash);
   if (valid) {
+    loginAttempts.delete(attemptKey);
     const token = generateToken();
     res.json({ success: true, token });
   } else {
+    loginAttempts.set(attemptKey, [...recentAttempts, now]);
     res.status(401).json({ success: false, message: '密码错误' });
   }
 });
@@ -867,6 +917,10 @@ app.post('/api/admin/logout', requireAuth, (req, res) => {
   const authHeader = req.headers.authorization;
   const token = authHeader && authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
   if (token) adminTokens.delete(token);
+  res.json({ success: true });
+});
+
+app.get('/api/admin/session', requireAuth, (req, res) => {
   res.json({ success: true });
 });
 
@@ -889,6 +943,9 @@ app.post('/api/ai-config', requireAuth, (req, res) => {
 app.post('/api/admin/password', requireAuth, async (req, res) => {
   try {
     const { oldPassword, newPassword } = req.body;
+    if (typeof newPassword !== 'string' || newPassword.length < 10) {
+      return res.status(400).json({ success: false, message: '新密码至少需要10个字符' });
+    }
     const auth = readAuth();
     const valid = bcrypt.compareSync(oldPassword, auth.adminPasswordHash);
     if (!valid) {
@@ -902,7 +959,7 @@ app.post('/api/admin/password', requireAuth, async (req, res) => {
   }
 });
 
-app.post('/api/upload/avatar', upload.single('file'), (req, res) => {
+app.post('/api/upload/avatar', requireAuth, upload.single('file'), (req, res) => {
   if (!req.file) {
     return res.status(400).json({ success: false, message: 'No file uploaded' });
   }
@@ -910,7 +967,7 @@ app.post('/api/upload/avatar', upload.single('file'), (req, res) => {
   res.json({ success: true, url });
 });
 
-app.post('/api/upload/bet', uploadBet.single('file'), (req, res) => {
+app.post('/api/upload/bet', requireAuth, uploadBet.single('file'), (req, res) => {
   if (!req.file) {
     return res.status(400).json({ success: false, message: 'No file uploaded' });
   }
@@ -918,7 +975,7 @@ app.post('/api/upload/bet', uploadBet.single('file'), (req, res) => {
   res.json({ success: true, url });
 });
 
-app.post('/api/ai/recognize', async (req, res) => {
+app.post('/api/ai/recognize', requireAuth, async (req, res) => {
   try {
     const { imageUrl, winAmount } = req.body;
     if (!imageUrl) {
@@ -947,7 +1004,7 @@ app.post('/api/ai/recognize', async (req, res) => {
   }
 });
 
-app.post('/api/ai/recognize-text', async (req, res) => {
+app.post('/api/ai/recognize-text', requireAuth, async (req, res) => {
   try {
     const { text, winAmount } = req.body;
     if (!text || !text.trim()) {
@@ -1194,7 +1251,7 @@ app.post('/api/news/refresh', requireAuth, async (req, res) => {
   }
 });
 
-app.get('/api/ai/predict', async (req, res) => {
+app.get('/api/ai/predict', requireAuth, async (req, res) => {
   try {
     const environment = req.query.environment || 'production';
     const matches = readMatches(environment);
@@ -1225,15 +1282,6 @@ app.get('/api/ai/predict/history', (req, res) => {
 
 app.get('/api/ai/predict/latest', (req, res) => {
   try {
-    const environment = req.query.environment || 'production';
-    const matches = readMatches(environment);
-
-    try {
-      updatePredictionResults(matches);
-    } catch (e) {
-      console.error('[Predict] 更新预测结果失败:', e.message);
-    }
-
     const latest = getLatestPrediction();
     res.json({ success: true, prediction: latest });
   } catch (error) {

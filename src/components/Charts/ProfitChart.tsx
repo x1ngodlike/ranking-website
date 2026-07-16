@@ -11,7 +11,7 @@ import {
   ArcElement,
 } from 'chart.js';
 import { Line, Doughnut } from 'react-chartjs-2';
-import type { ChartOptions } from 'chart.js';
+import type { ChartOptions, ScriptableContext } from 'chart.js';
 import { useAppStore } from '@/store/useAppStore';
 
 ChartJS.register(
@@ -39,7 +39,7 @@ export const ProfitChart = ({ data }: ProfitChartProps) => {
         label: '累计中奖',
         data: data.map((d) => d.cumulative),
         borderColor: '#3F51B5',
-        backgroundColor: (context: any) => {
+        backgroundColor: (context: ScriptableContext<'line'>) => {
           const ctx = context.chart.ctx;
           const gradient = ctx.createLinearGradient(0, 0, 0, 200);
           gradient.addColorStop(0, 'rgba(63, 81, 181, 0.3)');

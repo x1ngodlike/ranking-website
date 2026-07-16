@@ -1,4 +1,4 @@
-import type { User, Bet, RankingItem, RankingSortType, Environment, UserBadge, DailyTrendItem } from '../types';
+import type { User, Bet, Match, RankingItem, RankingSortType, Environment, UserBadge, DailyTrendItem } from '../types';
 import { BADGES } from './badges';
 
 const STORAGE_KEY = 'world_cup_betting_app';
@@ -51,17 +51,20 @@ export const saveAdminConfig = (config: { password: string; isLoggedIn: boolean 
 
 export interface AppData {
   users: User[];
-  matches: any[];
+  matches: Match[];
   bets: Bet[];
   currentUserId: string | null;
 }
 
-const migrateBetData = (parsed: any): void => {
+type LegacyBet = Partial<Bet> & { amount?: number; profitLoss?: number };
+type StoredData = Omit<Partial<AppData>, 'bets'> & { bets?: LegacyBet[] };
+
+const migrateBetData = (parsed: StoredData): void => {
   if (!parsed.bets || parsed.bets.length === 0) return;
 
   const firstBet = parsed.bets[0];
   if ('amount' in firstBet && !('winAmount' in firstBet)) {
-    parsed.bets = parsed.bets.map((bet: any) => ({
+    parsed.bets = parsed.bets.map((bet) => ({
       id: bet.id,
       userId: bet.userId,
       date: bet.date || new Date(bet.createdAt).toISOString().split('T')[0],
@@ -71,7 +74,7 @@ const migrateBetData = (parsed: any): void => {
       createdAt: bet.createdAt,
     }));
   }
-  parsed.bets = parsed.bets.map((bet: any) => ({
+  parsed.bets = parsed.bets.map((bet) => ({
     ...bet,
     winAmount: bet.winAmount ?? undefined,
   }));
@@ -81,9 +84,9 @@ export const loadFromStorage = (env: Environment = 'production'): AppData | null
   try {
     const data = localStorage.getItem(getStorageKey(env));
     if (data) {
-      const parsed = JSON.parse(data);
+      const parsed = JSON.parse(data) as StoredData;
       migrateBetData(parsed);
-      return parsed;
+      return parsed as AppData;
     }
   } catch (e) {
     console.error('Failed to load from localStorage:', e);

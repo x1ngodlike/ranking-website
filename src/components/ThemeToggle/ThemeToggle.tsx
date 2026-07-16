@@ -34,6 +34,9 @@ const ThemeToggle = () => {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
+        aria-label={`主题设置：${currentOption.label}`}
+        aria-expanded={isOpen}
+        aria-haspopup="menu"
         className={`flex items-center gap-2 px-3 py-2 ${designVersion === 'v2' ? 'rounded-lg' : 'rounded-full'} transition-all duration-300 text-neutral-600 dark:text-neutral-400 hover:text-primary-500 dark:hover:text-primary-400 ${designVersion === 'v2' ? 'hover:bg-[var(--v2-bg-muted)]' : 'hover:bg-neutral-100 dark:hover:bg-neutral-800'}`}
       >
         <CurrentIcon size={18} />
@@ -48,6 +51,7 @@ const ThemeToggle = () => {
             exit={{ opacity: 0, y: -10, scale: 0.95 }}
             transition={{ duration: 0.15 }}
             className={`absolute top-full right-0 mt-2 py-2 ${designVersion === 'v2' ? 'rounded-lg bg-[var(--v2-bg-card)] border border-[var(--v2-border)]' : 'rounded-xl bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700'} shadow-xl min-w-[140px] z-50`}
+            role="menu"
           >
             {options.map((option) => {
               const Icon = option.icon;
@@ -55,6 +59,8 @@ const ThemeToggle = () => {
               return (
                 <button
                   key={option.key}
+                  role="menuitemradio"
+                  aria-checked={isActive}
                   onClick={() => {
                     setTheme(option.key);
                     setIsOpen(false);

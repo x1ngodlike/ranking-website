@@ -5,7 +5,7 @@
 ## 功能特性
 
 ### 核心功能
-- 🏆 **中奖排行榜**：按总盈亏、胜率、投注次数排序，Top3 领奖台展示
+- 🏆 **中奖排行榜**：按中奖总额、中奖天数、记录次数排序，Top3 领奖台展示
 - 👥 **多用户管理**：支持添加/编辑成员，自定义头像（emoji/图片），头像懒加载
 - 📝 **中奖记录**：记录投注信息、中奖金额、备注、图片上传
 - 🖼️ **图片上传**：支持点击、拖拽、粘贴上传
@@ -77,7 +77,7 @@
 
 ```bash
 # 安装前端依赖
-npm install
+npm ci
 
 # 启动前端开发服务器
 npm run dev
@@ -87,15 +87,15 @@ npm run dev
 
 ```bash
 cd server
-npm install
-node server.js
+npm ci
+npm start
 ```
 
-后端默认端口：`5936`
+后端开发默认端口：`3001`；Docker 生产环境使用 `5936`
 
 ### 访问地址
-- 本地开发：http://localhost:5178/
-- 后端 API：http://localhost:5936/
+- 本地开发：http://localhost:5173/
+- 后端 API：http://localhost:3001/
 
 ## Docker 部署
 
@@ -106,6 +106,7 @@ docker build -t ranking-website .
 # 运行容器
 docker run -d \
   -p 5936:5936 \
+  -e ADMIN_PASSWORD='请替换为强密码' \
   -v /path/to/data:/app/data \
   -v /path/to/uploads:/app/uploads \
   ranking-website
@@ -234,9 +235,7 @@ cd /mnt/user/appdata/ranking-website/deploy
 
 ## 管理员
 
-默认管理员密码：`159357`
-
-登录后可在设置中修改密码。
+生产部署必须通过 `ADMIN_PASSWORD` 环境变量显式设置管理员密码；首次启动未设置时服务会拒绝初始化。登录后可在设置中修改密码。
 
 ### 管理员可见功能
 - 🔄 刷新按钮（赛程/新闻/AI预测）

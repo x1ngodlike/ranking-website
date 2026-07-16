@@ -3,9 +3,18 @@ import react from '@vitejs/plugin-react'
 import tsconfigPaths from "vite-tsconfig-paths";
 
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   build: {
-    sourcemap: 'hidden',
+    sourcemap: false,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom', 'react-router-dom', 'zustand'],
+          'vendor-motion': ['framer-motion'],
+          'vendor-chart': ['chart.js', 'react-chartjs-2'],
+        },
+      },
+    },
   },
   server: {
     proxy: {
@@ -30,11 +39,9 @@ export default defineConfig({
   plugins: [
     react({
       babel: {
-        plugins: [
-          'react-dev-locator',
-        ],
+        plugins: mode === 'development' ? ['react-dev-locator'] : [],
       },
     }),
     tsconfigPaths()
   ],
-})
+}))

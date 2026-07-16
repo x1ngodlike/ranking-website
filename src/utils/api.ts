@@ -1,3 +1,5 @@
+import type { Bet, Match, User } from '@/types';
+
 const API_BASE = import.meta.env.VITE_API_BASE || '';
 const TOKEN_STORAGE_KEY = 'ranking_admin_token';
 
@@ -15,9 +17,9 @@ export const setAdminToken = (token: string | null) => {
 export const getAdminToken = () => adminToken;
 
 export interface ServerData {
-  users: any[];
-  bets: any[];
-  matches: any[];
+  users: User[];
+  bets: Bet[];
+  matches: Match[];
   apiKey?: string;
   competition?: string;
   currentUserId: string | null;
@@ -55,7 +57,7 @@ async function request<T>(url: string, options: RequestInit = {}, requireAuth = 
   return res.json();
 }
 
-async function uploadRequest(url: string, formData: FormData, requireAuth = false): Promise<any> {
+async function uploadRequest<T>(url: string, formData: FormData, requireAuth = false): Promise<T> {
   const headers = buildAuthHeaders(requireAuth);
   const res = await fetch(`${API_BASE}${url}`, {
     method: 'POST',
@@ -77,7 +79,7 @@ export const api = {
     request<{ success: boolean }>('/api/data', {
       method: 'POST',
       body: JSON.stringify(data),
-    }, false),
+    }, true),
 
   syncMatches: (environment: string) =>
     request<{ success: boolean; count?: number; liveCount?: number; message?: string }>(
@@ -102,6 +104,9 @@ export const api = {
       method: 'POST',
     }, true).then(() => setAdminToken(null)),
 
+  validateAdminSession: () =>
+    request<{ success: boolean }>('/api/admin/session', {}, true),
+
   changeAdminPassword: (oldPassword: string, newPassword: string) =>
     request<{ success: boolean; message?: string }>('/api/admin/password', {
       method: 'POST',
@@ -111,14 +116,14 @@ export const api = {
   uploadAvatar: async (file: File | Blob, filename = 'avatar.png'): Promise<string> => {
     const formData = new FormData();
     formData.append('file', file, filename);
-    const data = await uploadRequest('/api/upload/avatar', formData, false);
+    const data = await uploadRequest<{ url: string }>('/api/upload/avatar', formData, true);
     return data.url;
   },
 
   uploadBetImage: async (file: File | Blob, filename = 'bet.jpg'): Promise<string> => {
     const formData = new FormData();
     formData.append('file', file, filename);
-    const data = await uploadRequest('/api/upload/bet', formData, false);
+    const data = await uploadRequest<{ url: string }>('/api/upload/bet', formData, true);
     return data.url;
   },
 
@@ -180,7 +185,7 @@ export const api = {
     request<{ success: boolean; result: AIRecognitionResult | null; message?: string }>('/api/ai/recognize', {
       method: 'POST',
       body: JSON.stringify({ imageUrl, winAmount }),
-    }, false),
+    }, true),
 
   updateAllAiComments: (environment: string) =>
     request<{ success: boolean; message?: string; updated?: number; failed?: number; total?: number }>(
@@ -188,7 +193,30 @@ export const api = {
       { method: 'POST' },
       true
     ),
+
+  generatePredictions: () =>
+    request<{ success: boolean; predictions?: AIPrediction[]; message?: string }>(
+      '/api/ai/predict',
+      {},
+      true
+    ),
 };
+
+export interface AIPrediction {
+  matchNumber: number;
+  homeTeam: string;
+  awayTeam: string;
+  homeScore: number;
+  awayScore: number;
+  result: string;
+  analysis: string;
+  confidence: number;
+  actualHomeScore?: number | null;
+  actualAwayScore?: number | null;
+  actualResult?: string | null;
+  isCorrect?: boolean | null;
+  matchTime?: string | null;
+}
 
 export interface BackupContent {
   version: number;
@@ -196,8 +224,8 @@ export interface BackupContent {
   createdAt: string;
   label: string;
   data: {
-    users: any[];
-    bets: any[];
+    users: User[];
+    bets: Bet[];
     apiKey: string;
     competition: string;
   };

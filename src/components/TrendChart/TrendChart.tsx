@@ -2,12 +2,14 @@ import { useMemo, useRef, useState, useEffect } from 'react';
 import type { DailyTrendItem } from '@/types';
 import { TrendingUp, Users, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { isImageAvatar } from '@/components/Avatar';
+import { isImageAvatar } from '@/utils/avatar';
 import { useAppStore } from '@/store/useAppStore';
 
 interface TrendChartProps {
   data: DailyTrendItem[];
 }
+
+type TrendPoint = DailyTrendItem & { x: number; y: number };
 
 const formatDateShort = (dateStr: string): string => {
   const d = new Date(dateStr);
@@ -86,7 +88,7 @@ const TrendChart = ({ data }: TrendChartProps) => {
 
   const { points, maxVal, pathD, areaD } = useMemo(() => {
     if (data.length === 0 || width === 0) {
-      return { points: [] as any[], maxVal: 1, pathD: '', areaD: '' };
+      return { points: [] as TrendPoint[], maxVal: 1, pathD: '', areaD: '' };
     }
     const n = data.length;
     const maxVal = Math.max(...data.map((d) => d.cumulative), 1);
@@ -457,7 +459,7 @@ const TrendChart = ({ data }: TrendChartProps) => {
                             贡献者 ({p.contributors.length}人)
                           </p>
                           <div className="space-y-1 max-h-[120px] overflow-y-auto">
-                            {p.contributors.map((c: any, ci: number) => (
+                            {p.contributors.map((c, ci: number) => (
                               <div
                                 key={c.userId}
                                 className="flex items-center justify-between gap-2"

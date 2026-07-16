@@ -2,7 +2,9 @@ import { useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import Layout from './components/Layout/Layout';
+import ErrorBoundary from './components/ErrorBoundary';
 import RankingPage from './pages/RankingPage';
+import NotFoundPage from './pages/NotFoundPage';
 import { useAppStore } from './store/useAppStore';
 import { applyTheme, initThemeListener, applyDesignVersion } from './utils/theme';
 
@@ -72,6 +74,7 @@ function AnimatedRoutes() {
               </Suspense>
             }
           />
+          <Route path="*" element={<NotFoundPage />} />
         </Route>
         <Route
           path="/report/:userId"
@@ -111,8 +114,10 @@ export default function App() {
   }, [designVersion]);
 
   return (
-    <Router>
-      <AnimatedRoutes />
-    </Router>
+    <ErrorBoundary>
+      <Router>
+        <AnimatedRoutes />
+      </Router>
+    </ErrorBoundary>
   );
 }

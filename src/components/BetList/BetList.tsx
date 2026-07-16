@@ -140,9 +140,11 @@ const BetList = ({ bets, showUser = false, canDelete = false }: BetListProps) =>
                 )}
 
                 {bet.imageUrl && (
-                  <div
-                    className="mt-2 inline-block cursor-pointer group"
+                  <button
+                    type="button"
+                    className="mt-2 inline-block cursor-pointer group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
                     onClick={() => setViewerImage(bet.imageUrl!)}
+                    aria-label="查看记录图片"
                   >
                     <img
                       src={bet.imageUrl}
@@ -150,7 +152,7 @@ const BetList = ({ bets, showUser = false, canDelete = false }: BetListProps) =>
                       className="w-20 h-20 object-cover rounded-lg border border-neutral-200 dark:border-neutral-700 group-hover:opacity-80 transition-opacity"
                       loading="lazy"
                     />
-                  </div>
+                  </button>
                 )}
 
               </div>
@@ -276,6 +278,9 @@ const BetList = ({ bets, showUser = false, canDelete = false }: BetListProps) =>
             transition={{ duration: 0.2 }}
             className="w-full max-w-md"
             onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-label="编辑中奖记录"
           >
             <BetForm bet={editingBet} onClose={() => setEditingBet(null)} />
           </motion.div>
@@ -299,13 +304,16 @@ const BetList = ({ bets, showUser = false, canDelete = false }: BetListProps) =>
             transition={{ duration: 0.2 }}
             className="card p-6 w-full max-w-sm"
             onClick={(e) => e.stopPropagation()}
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="delete-bet-title"
           >
             <div className="flex items-center gap-3 mb-4">
               <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center text-red-500">
                 <AlertTriangle size={24} />
               </div>
               <div>
-                <h3 className="font-display text-lg text-neutral-800 dark:text-neutral-200">
+                <h3 id="delete-bet-title" className="font-display text-lg text-neutral-800 dark:text-neutral-200">
                   确认删除
                 </h3>
                 <p className="text-sm text-neutral-500 dark:text-neutral-400">

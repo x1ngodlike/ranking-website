@@ -29,9 +29,9 @@ const Header = () => {
           <Link to="/" className="flex items-center gap-3">
             <img src="/logo.png" alt="Logo" className="h-10 w-auto" />
             <div>
-              <h1 className={designVersion === 'v2' ? 'font-v2-display text-xl font-bold text-[var(--v2-text)] leading-none' : 'font-display text-2xl text-gradient-gold leading-none'}>
+              <span className={designVersion === 'v2' ? 'block font-v2-display text-xl font-bold text-[var(--v2-text)] leading-none' : 'block font-display text-2xl text-gradient-gold leading-none'}>
                 WORLD CUP
-              </h1>
+              </span>
               <p className={`text-xs mt-0.5 ${designVersion === 'v2' ? 'font-v2-body text-[var(--v2-text-secondary)]' : 'text-neutral-600 dark:text-neutral-400'}`}>
                 世界杯中奖排行榜
               </p>
@@ -46,6 +46,7 @@ const Header = () => {
                 <Link
                   key={item.path}
                   to={item.path}
+                  aria-current={isActive ? 'page' : undefined}
                   className={designVersion === 'v2'
                     ? `flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-v2-body font-medium transition-all duration-300 ${
                         isActive
@@ -76,6 +77,7 @@ const Header = () => {
                   : 'hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:text-primary-500'
               }`}
               title="设置"
+              aria-label="打开设置"
             >
               <Settings size={20} />
             </button>

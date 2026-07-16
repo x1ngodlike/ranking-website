@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { X, Database, RotateCcw, Trash2, Download, Save, Clock, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -37,17 +37,17 @@ const BackupModal = ({ isOpen, onClose }: BackupModalProps) => {
   const [operating, setOperating] = useState<string | null>(null);
   const [error, setError] = useState('');
 
-  const loadBackups = async () => {
+  const loadBackups = useCallback(async () => {
     setLoading(true);
     setError('');
     const list = await listBackups(environment);
     setBackups(list);
     setLoading(false);
-  };
+  }, [environment, listBackups]);
 
   useEffect(() => {
     if (isOpen) loadBackups();
-  }, [isOpen, environment]);
+  }, [isOpen, loadBackups]);
 
   const handleCreate = async () => {
     if (operating) return;
@@ -126,6 +126,9 @@ const BackupModal = ({ isOpen, onClose }: BackupModalProps) => {
             transition={{ duration: 0.2, ease: [0.34, 1.56, 0.64, 1] }}
             className="bg-white dark:bg-neutral-900 rounded-2xl w-full max-w-lg max-h-[85vh] flex flex-col shadow-2xl"
             onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="backup-modal-title"
           >
             <div className="flex items-center justify-between p-5 border-b border-neutral-100 dark:border-neutral-800">
               <div className="flex items-center gap-3">
@@ -133,7 +136,7 @@ const BackupModal = ({ isOpen, onClose }: BackupModalProps) => {
                   <Database className="text-primary-500" size={20} />
                 </div>
                 <div>
-                  <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">备份与还原</h2>
+                  <h2 id="backup-modal-title" className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">备份与还原</h2>
                   <p className="text-xs text-neutral-500">
                     {environment === 'production' ? '正式环境' : '测试环境'} · 自动备份每15分钟
                   </p>
@@ -141,6 +144,7 @@ const BackupModal = ({ isOpen, onClose }: BackupModalProps) => {
               </div>
               <button
                 onClick={onClose}
+                aria-label="关闭备份与还原"
                 className="w-8 h-8 rounded-lg flex items-center justify-center text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
               >
                 <X size={18} />
@@ -168,7 +172,7 @@ const BackupModal = ({ isOpen, onClose }: BackupModalProps) => {
               </div>
 
               {error && (
-                <p className="text-sm text-red-500 mb-3">{error}</p>
+                <p role="alert" className="text-sm text-red-500 mb-3">{error}</p>
               )}
 
               {loading ? (

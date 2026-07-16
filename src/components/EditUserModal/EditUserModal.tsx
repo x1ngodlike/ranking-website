@@ -3,7 +3,8 @@ import { X, User } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { User as UserType } from '@/types';
 import { api } from '@/utils/api';
-import { AvatarPicker, avatarOptions } from '../AvatarPicker/AvatarPicker';
+import { avatarOptions } from '@/utils/avatar';
+import { AvatarPicker } from '../AvatarPicker/AvatarPicker';
 
 interface EditUserModalProps {
   isOpen: boolean;

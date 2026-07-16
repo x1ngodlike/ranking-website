@@ -33,7 +33,6 @@ export default function BadgeDisplay({ userId }: BadgeDisplayProps) {
   const [earnedBadges, setEarnedBadges] = useState<EarnedBadge[]>([]);
   const [loading, setLoading] = useState(true);
   const environment = useAppStore((state) => state.environment);
-  const designVersion = useAppStore((s) => s.designVersion);
 
   useEffect(() => {
     const fetchBadges = async () => {

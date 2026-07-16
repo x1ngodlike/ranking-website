@@ -37,8 +37,8 @@ const PasswordModal = ({ isOpen, onClose }: PasswordModalProps) => {
       setPasswordChangeMsg('两次输入的新密码不一致');
       return;
     }
-    if (newPassword.length < 4) {
-      setPasswordChangeMsg('新密码至少4位');
+    if (newPassword.length < 10) {
+      setPasswordChangeMsg('新密码至少10个字符');
       return;
     }
     setIsChangingPassword(true);
@@ -73,6 +73,9 @@ const PasswordModal = ({ isOpen, onClose }: PasswordModalProps) => {
             transition={{ duration: 0.2, ease: [0.34, 1.56, 0.64, 1] }}
             className="bg-white dark:bg-neutral-900 rounded-2xl w-full max-w-sm max-h-[85vh] flex flex-col shadow-2xl"
             onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="password-modal-title"
           >
             <div className="flex items-center justify-between p-5 border-b border-neutral-100 dark:border-neutral-800">
               <div className="flex items-center gap-3">
@@ -80,12 +83,13 @@ const PasswordModal = ({ isOpen, onClose }: PasswordModalProps) => {
                   <Lock className="text-primary-500" size={20} />
                 </div>
                 <div>
-                  <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">修改密码</h2>
+                  <h2 id="password-modal-title" className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">修改密码</h2>
                   <p className="text-xs text-neutral-500">设置新的管理员密码</p>
                 </div>
               </div>
               <button
                 onClick={handleClose}
+                aria-label="关闭修改密码"
                 className="w-8 h-8 rounded-lg flex items-center justify-center text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
               >
                 <X size={18} />
@@ -94,9 +98,10 @@ const PasswordModal = ({ isOpen, onClose }: PasswordModalProps) => {
 
             <form onSubmit={handleSubmit} className="p-5 space-y-4">
               <div>
-                <label className="block text-xs font-medium text-neutral-500 mb-1.5">旧密码</label>
+                <label htmlFor="old-admin-password" className="block text-xs font-medium text-neutral-500 mb-1.5">旧密码</label>
                 <div className="relative">
                   <input
+                    id="old-admin-password"
                     type={showOld ? 'text' : 'password'}
                     value={oldPassword}
                     onChange={(e) => setOldPassword(e.target.value)}
@@ -108,6 +113,7 @@ const PasswordModal = ({ isOpen, onClose }: PasswordModalProps) => {
                   <button
                     type="button"
                     onClick={() => setShowOld(!showOld)}
+                    aria-label={showOld ? '隐藏旧密码' : '显示旧密码'}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300"
                   >
                     {showOld ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -116,19 +122,21 @@ const PasswordModal = ({ isOpen, onClose }: PasswordModalProps) => {
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-neutral-500 mb-1.5">新密码</label>
+                <label htmlFor="new-admin-password" className="block text-xs font-medium text-neutral-500 mb-1.5">新密码</label>
                 <div className="relative">
                   <input
+                    id="new-admin-password"
                     type={showNew ? 'text' : 'password'}
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="请输入新密码（至少4位）"
+                    placeholder="请输入新密码（至少10个字符）"
                     disabled={isChangingPassword}
                     className={inputClass}
                   />
                   <button
                     type="button"
                     onClick={() => setShowNew(!showNew)}
+                    aria-label={showNew ? '隐藏新密码' : '显示新密码'}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300"
                   >
                     {showNew ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -137,8 +145,9 @@ const PasswordModal = ({ isOpen, onClose }: PasswordModalProps) => {
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-neutral-500 mb-1.5">确认新密码</label>
+                <label htmlFor="confirm-admin-password" className="block text-xs font-medium text-neutral-500 mb-1.5">确认新密码</label>
                 <input
+                  id="confirm-admin-password"
                   type={showNew ? 'text' : 'password'}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
@@ -149,7 +158,7 @@ const PasswordModal = ({ isOpen, onClose }: PasswordModalProps) => {
               </div>
 
               {passwordChangeMsg && (
-                <p className={`text-xs flex items-center gap-1 ${passwordChangeMsg.includes('成功') ? 'text-green-600 dark:text-green-400' : 'text-red-500'}`}>
+                <p role="status" className={`text-xs flex items-center gap-1 ${passwordChangeMsg.includes('成功') ? 'text-green-600 dark:text-green-400' : 'text-red-500'}`}>
                   <AlertTriangle size={12} /> {passwordChangeMsg}
                 </p>
               )}

@@ -185,6 +185,7 @@ const NewsPage = () => {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex-shrink-0 p-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-400 hover:text-primary-500 transition-colors"
+                aria-label={`打开新闻：${item.title}`}
               >
                 <ExternalLink size={18} />
               </a>

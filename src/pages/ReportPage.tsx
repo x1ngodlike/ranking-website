@@ -761,17 +761,20 @@ export default function ReportPage() {
     <div ref={containerRef} className="fixed inset-0 overflow-hidden z-[100] bg-black"
       onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
       <button onClick={() => navigate(-1)}
+        aria-label="关闭年度报告"
         className="fixed top-4 right-4 z-50 p-2 text-white/30 hover:text-white/70 transition-colors">
         <X size={20} />
       </button>
       {page > 0 && (
         <button onClick={() => go(page - 1)}
+          aria-label="上一页"
           className="fixed top-1/2 left-3 -translate-y-1/2 z-50 p-1.5 text-white/15 hover:text-white/50 transition-colors">
           <ChevronUp size={20} />
         </button>
       )}
       {page < TOTAL_PAGES - 1 && (
         <button onClick={() => go(page + 1)}
+          aria-label="下一页"
           className="fixed top-1/2 right-3 -translate-y-1/2 z-50 p-1.5 text-white/15 hover:text-white/50 transition-colors">
           <ChevronDown size={20} />
         </button>

@@ -1,11 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Upload, X, Image as ImageIcon } from 'lucide-react';
-
-export const avatarOptions = [
-  '⚽️', '🏆', '🎯', '🔥', '💎', '👑', '🚀', '⭐️',
-  '🎮', '🎸', '🎵', '🐐', '😈', '🤸', '👾', '🦊',
-  '🐯', '🦁', '🐻', '🦅',
-];
+import { avatarOptions } from '@/utils/avatar';
 
 interface AvatarPickerProps {
   value: string;

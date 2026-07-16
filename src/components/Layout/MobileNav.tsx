@@ -20,7 +20,7 @@ const MobileNav = () => {
         ? 'bg-[var(--v2-bg-card)]/95 border-[var(--v2-border)]'
         : 'bg-white/95 dark:bg-neutral-900/95 border-neutral-200 dark:border-neutral-700'
     }`}>
-      <div className="flex items-center justify-around py-2 px-4">
+      <div className="flex items-center justify-around px-2 py-1.5">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = location.pathname === item.path;
@@ -28,13 +28,14 @@ const MobileNav = () => {
             <Link
               key={item.path}
               to={item.path}
+              aria-current={isActive ? 'page' : undefined}
               className={designVersion === 'v2'
-                ? `flex flex-col items-center gap-0.5 px-3 py-2 rounded-lg transition-all ${isActive ? 'text-v2-primary-500' : 'text-[var(--v2-text-secondary)]'}`
-                : `flex flex-col items-center gap-1 px-2 py-2 rounded-xl transition-all ${isActive ? 'text-primary-500' : 'text-neutral-500 dark:text-neutral-500'}`
+                ? `flex min-h-11 min-w-11 flex-col items-center justify-center gap-0.5 px-3 py-1.5 rounded-lg transition-all ${isActive ? 'text-v2-primary-500' : 'text-[var(--v2-text-secondary)]'}`
+                : `flex min-h-11 min-w-11 flex-col items-center justify-center gap-0.5 px-2 py-1.5 rounded-xl transition-all ${isActive ? 'text-primary-500' : 'text-neutral-500 dark:text-neutral-500'}`
               }
             >
               <Icon size={20} />
-              <span className={`text-[10px] font-medium ${designVersion === 'v2' ? 'font-v2-body' : ''}`}>{item.label}</span>
+              <span className={`text-xs font-medium ${designVersion === 'v2' ? 'font-v2-body' : ''}`}>{item.label}</span>
             </Link>
           );
         })}

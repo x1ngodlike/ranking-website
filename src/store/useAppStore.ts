@@ -14,10 +14,15 @@ import {
   type ThemeMode,
   type DesignVersion,
 } from '@/utils/theme';
-import { api, getAdminToken, type BackupInfo } from '@/utils/api';
+import { api, getAdminToken, type BackupInfo, type ServerData } from '@/utils/api';
 
 const DEFAULT_AVATAR = '⚽️';
 const DEFAULT_USER_ID = 'user1';
+const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true';
+
+type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
+type StoreSet = (partial: Partial<AppState> | ((state: AppState) => Partial<AppState>)) => void;
+type StoreGet = () => AppState;
 
 interface AppState {
   users: User[];
@@ -35,6 +40,9 @@ interface AppState {
   isAdminLoggedIn: boolean;
   isLoading: boolean;
   isDataLoaded: boolean;
+  dataError: string | null;
+  saveStatus: SaveStatus;
+  saveError: string | null;
   showSettingsModal: boolean;
 
   init: () => Promise<void>;
@@ -98,6 +106,7 @@ const flushSave = async () => {
   pendingSaveState = null;
   if (!state || !state.isDataLoaded) return;
   try {
+    useAppStore.setState({ saveStatus: 'saving', saveError: null });
     await api.saveData({
       environment: state.environment,
       users: state.users,
@@ -107,8 +116,13 @@ const flushSave = async () => {
       competition: state.apiConfig.competition,
       currentUserId: state.currentUserId,
     });
+    useAppStore.setState({ saveStatus: 'saved', saveError: null });
   } catch (e) {
     console.warn('Failed to save data to server:', e);
+    useAppStore.setState({
+      saveStatus: 'error',
+      saveError: e instanceof Error ? e.message : '保存失败，请重试',
+    });
   }
 };
 
@@ -127,15 +141,16 @@ if (typeof window !== 'undefined') {
   });
 }
 
+const getFallbackData = () => DEMO_MODE
+  ? { users: mockUsers, matches: mockMatches, bets: mockBets, currentUserId: DEFAULT_USER_ID }
+  : { users: [], matches: [], bets: [], currentUserId: null };
+
 const getInitialState = (): Omit<AppState, keyof ReturnType<typeof createStoreActions>> => {
   const apiConfig = loadApiConfig();
   const theme = loadTheme();
 
   return {
-    users: mockUsers,
-    matches: mockMatches,
-    bets: mockBets,
-    currentUserId: DEFAULT_USER_ID,
+    ...getFallbackData(),
     sortType: 'totalWin' as RankingSortType,
     apiConfig,
     isRefreshing: false,
@@ -147,47 +162,59 @@ const getInitialState = (): Omit<AppState, keyof ReturnType<typeof createStoreAc
     isAdminLoggedIn: false,
     isLoading: true,
     isDataLoaded: false,
+    dataError: null,
+    saveStatus: 'idle',
+    saveError: null,
     showSettingsModal: false,
   };
 };
 
-const buildDataState = (data: any) => ({
-  users: (data.users && data.users.length > 0) ? data.users : mockUsers,
-  matches: (data.matches && data.matches.length > 0) ? data.matches : mockMatches,
-  bets: (data.bets && data.bets.length > 0) ? data.bets : mockBets,
-  currentUserId: data.currentUserId ?? DEFAULT_USER_ID,
+const buildDataState = (data: ServerData) => ({
+  users: Array.isArray(data.users) ? data.users : [],
+  matches: Array.isArray(data.matches) ? data.matches : [],
+  bets: Array.isArray(data.bets) ? data.bets : [],
+  currentUserId: data.currentUserId ?? null,
 });
 
-const updateApiConfigFromData = (set: any, data: any) => {
-  if (data.apiKey) {
-    set((s: AppState) => ({ apiConfig: { ...s.apiConfig, apiKey: data.apiKey } }));
-  }
+const updateApiConfigFromData = (set: (updater: (state: AppState) => Partial<AppState>) => void, data: ServerData) => {
   if (data.competition) {
     set((s: AppState) => ({ apiConfig: { ...s.apiConfig, competition: data.competition } }));
   }
 };
 
-const handleRefreshError = (set: any, error: unknown, defaultMessage: string) => {
+const handleRefreshError = (set: StoreSet, error: unknown, defaultMessage: string) => {
   const message = error instanceof Error ? error.message : defaultMessage;
   set({ isRefreshing: false, refreshError: message });
 };
 
-const createStoreActions = (set: any, get: any) => ({
+const createStoreActions = (set: StoreSet, get: StoreGet) => ({
   init: async () => {
     const state = get();
     try {
       const data = await api.getData(state.environment);
-      const isAdmin = !!getAdminToken();
+      let isAdmin = false;
+      if (getAdminToken()) {
+        try {
+          isAdmin = (await api.validateAdminSession()).success;
+        } catch {
+          isAdmin = false;
+        }
+      }
       set({
         ...buildDataState(data),
         isAdminLoggedIn: isAdmin,
         isLoading: false,
         isDataLoaded: true,
+        dataError: null,
       });
       updateApiConfigFromData(set, data);
     } catch (e) {
-      console.warn('Failed to load data from server, using mock data:', e);
-      set({ isLoading: false, isDataLoaded: true });
+      console.warn('Failed to load data from server:', e);
+      set({
+        isLoading: false,
+        isDataLoaded: true,
+        dataError: e instanceof Error ? e.message : '无法连接数据服务',
+      });
     }
   },
 
@@ -309,7 +336,7 @@ const createStoreActions = (set: any, get: any) => ({
   importData: (json: string) => {
     try {
       const data = JSON.parse(json);
-      if (!data.users || !data.matches || !data.bets) {
+      if (!Array.isArray(data.users) || !Array.isArray(data.matches) || !Array.isArray(data.bets)) {
         return false;
       }
       set({
@@ -327,10 +354,10 @@ const createStoreActions = (set: any, get: any) => ({
 
   resetData: () => {
     set({
-      users: mockUsers,
-      matches: mockMatches,
-      bets: mockBets,
-      currentUserId: DEFAULT_USER_ID,
+      users: [],
+      matches: [],
+      bets: [],
+      currentUserId: null,
       sortType: 'totalWin',
     });
     saveToServer(get());
@@ -417,17 +444,19 @@ const createStoreActions = (set: any, get: any) => ({
         ...buildDataState(data),
         isLoading: false,
         isDataLoaded: true,
+        dataError: null,
       });
       updateApiConfigFromData(set, data);
     } catch (e) {
-      console.warn('Failed to load environment data from server, using mock data:', e);
+      console.warn('Failed to load environment data from server:', e);
       set({
-        users: mockUsers,
-        matches: mockMatches,
-        bets: mockBets,
-        currentUserId: DEFAULT_USER_ID,
+        users: [],
+        matches: [],
+        bets: [],
+        currentUserId: null,
         isLoading: false,
         isDataLoaded: true,
+        dataError: e instanceof Error ? e.message : '无法加载环境数据',
       });
     }
   },
@@ -439,10 +468,10 @@ const createStoreActions = (set: any, get: any) => ({
         const state = get();
         if (state.environment === environment) {
           set({
-            users: mockUsers,
-            matches: mockMatches,
-            bets: mockBets,
-            currentUserId: DEFAULT_USER_ID,
+            users: [],
+            matches: [],
+            bets: [],
+            currentUserId: null,
           });
         }
         return true;
@@ -514,12 +543,15 @@ const createStoreActions = (set: any, get: any) => ({
       set({
         ...buildDataState(data),
         isLoading: false,
+        dataError: null,
       });
       updateApiConfigFromData(set, data);
-      await get().loadAutoRefreshSettings();
     } catch (e) {
       console.warn('Failed to refresh data:', e);
-      set({ isLoading: false });
+      set({
+        isLoading: false,
+        dataError: e instanceof Error ? e.message : '刷新失败，请重试',
+      });
     }
   },
 });

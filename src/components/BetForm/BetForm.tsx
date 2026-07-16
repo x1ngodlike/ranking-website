@@ -100,6 +100,8 @@ const BetForm = ({ onClose, preSelectedUserId, bet }: BetFormProps) => {
         {onClose && (
           <button
             onClick={onClose}
+            type="button"
+            aria-label="关闭记录表单"
             className={`p-2 transition-colors ${designVersion === 'v2' ? 'rounded-lg hover:bg-[var(--v2-bg-muted)] text-[var(--v2-text-muted)]' : 'rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-500 dark:text-neutral-400'}`}
           >
             <X size={20} />
@@ -109,16 +111,18 @@ const BetForm = ({ onClose, preSelectedUserId, bet }: BetFormProps) => {
 
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
-          <label className={`block mb-3 ${designVersion === 'v2' ? 'font-v2-body text-sm font-medium text-[var(--v2-text-secondary)]' : 'text-sm font-medium text-neutral-700 dark:text-neutral-300'}`}>
+          <span id="bet-user-label" className={`block mb-3 ${designVersion === 'v2' ? 'font-v2-body text-sm font-medium text-[var(--v2-text-secondary)]' : 'text-sm font-medium text-neutral-700 dark:text-neutral-300'}`}>
             选择用户
-          </label>
-          <div className="grid grid-cols-5 gap-2">
+          </span>
+          <div className="grid grid-cols-5 gap-2" role="radiogroup" aria-labelledby="bet-user-label">
             {users.map((user) => {
               const isSelected = selectedUserId === user.id;
               return (
                 <button
                   key={user.id}
                   type="button"
+                  role="radio"
+                  aria-checked={isSelected}
                   onClick={() => setSelectedUserId(user.id)}
                   className={`flex flex-col items-center gap-1.5 p-2 transition-all ${
                     isSelected
@@ -148,13 +152,14 @@ const BetForm = ({ onClose, preSelectedUserId, bet }: BetFormProps) => {
         </div>
 
         <div>
-          <label className={`block mb-2 ${designVersion === 'v2' ? 'font-v2-body text-sm font-medium text-[var(--v2-text-secondary)]' : 'text-sm font-medium text-neutral-700 dark:text-neutral-300'}`}>
+          <label htmlFor="bet-date" className={`block mb-2 ${designVersion === 'v2' ? 'font-v2-body text-sm font-medium text-[var(--v2-text-secondary)]' : 'text-sm font-medium text-neutral-700 dark:text-neutral-300'}`}>
             日期
           </label>
           <div className="relative">
             <Calendar size={18} className={`absolute left-3 top-1/2 -translate-y-1/2 ${designVersion === 'v2' ? 'text-[var(--v2-text-muted)]' : 'text-neutral-400'}`} />
             <input
               type="date"
+              id="bet-date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
               className={designVersion === 'v2' ? 'w-full pl-10 pr-4 py-2.5 rounded-lg border border-[var(--v2-border)] bg-[var(--v2-bg)] text-[var(--v2-text)] text-sm font-v2-body focus:border-v2-primary-500 focus:outline-none transition-colors' : 'w-full pl-10 pr-4 py-3 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-neutral-800 dark:text-neutral-200 focus:outline-none focus:border-primary-500/50 transition-colors'}
@@ -164,7 +169,7 @@ const BetForm = ({ onClose, preSelectedUserId, bet }: BetFormProps) => {
         </div>
 
         <div>
-          <label className={`block mb-2 ${designVersion === 'v2' ? 'font-v2-body text-sm font-medium text-[var(--v2-text-secondary)]' : 'text-sm font-medium text-neutral-700 dark:text-neutral-300'}`}>
+          <label htmlFor="bet-win-amount" className={`block mb-2 ${designVersion === 'v2' ? 'font-v2-body text-sm font-medium text-[var(--v2-text-secondary)]' : 'text-sm font-medium text-neutral-700 dark:text-neutral-300'}`}>
             中奖金额 (元)
           </label>
           <div className="relative">
@@ -173,6 +178,7 @@ const BetForm = ({ onClose, preSelectedUserId, bet }: BetFormProps) => {
             </span>
             <input
               type="number"
+              id="bet-win-amount"
               value={winAmount}
               onChange={(e) => setWinAmount(e.target.value)}
               placeholder="请输入中奖金额，没中填0"
@@ -185,11 +191,12 @@ const BetForm = ({ onClose, preSelectedUserId, bet }: BetFormProps) => {
         </div>
 
         <div>
-          <label className={`block mb-2 ${designVersion === 'v2' ? 'font-v2-body text-sm font-medium text-[var(--v2-text-secondary)]' : 'text-sm font-medium text-neutral-700 dark:text-neutral-300'}`}>
+          <label htmlFor="bet-note" className={`block mb-2 ${designVersion === 'v2' ? 'font-v2-body text-sm font-medium text-[var(--v2-text-secondary)]' : 'text-sm font-medium text-neutral-700 dark:text-neutral-300'}`}>
             备注 {designVersion === 'v2' ? <span className="text-[var(--v2-text-muted)] font-normal">(可选)</span> : <span className="text-neutral-400 font-normal">(可选)</span>}
           </label>
           <input
             type="text"
+            id="bet-note"
             value={note}
             onChange={(e) => setNote(e.target.value)}
             placeholder="例如：3串1命中"

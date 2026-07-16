@@ -77,6 +77,9 @@ const AIConfigModal = ({ isOpen, onClose }: AIConfigModalProps) => {
             transition={{ duration: 0.2, ease: [0.34, 1.56, 0.64, 1] }}
             className="bg-white dark:bg-neutral-900 rounded-2xl w-full max-w-lg max-h-[85vh] flex flex-col shadow-2xl"
             onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="ai-config-title"
           >
             <div className="flex items-center justify-between p-5 border-b border-neutral-100 dark:border-neutral-800">
               <div className="flex items-center gap-3">
@@ -84,12 +87,13 @@ const AIConfigModal = ({ isOpen, onClose }: AIConfigModalProps) => {
                   <Brain className="text-primary-500" size={20} />
                 </div>
                 <div>
-                  <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">AI 识别配置</h2>
+                  <h2 id="ai-config-title" className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">AI 识别配置</h2>
                   <p className="text-xs text-neutral-500">配置后可自动识别投注截图</p>
                 </div>
               </div>
               <button
                 onClick={onClose}
+                aria-label="关闭 AI 识别配置"
                 className="w-8 h-8 rounded-lg flex items-center justify-center text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
               >
                 <X size={18} />
@@ -114,10 +118,11 @@ const AIConfigModal = ({ isOpen, onClose }: AIConfigModalProps) => {
                   </div>
 
                   <div>
-                    <label className="flex items-center gap-1.5 text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">
+                    <label htmlFor="ai-api-endpoint" className="flex items-center gap-1.5 text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">
                       <Globe size={14} /> API 地址
                     </label>
                     <input
+                      id="ai-api-endpoint"
                       type="text"
                       value={config.apiEndpoint}
                       onChange={(e) => setConfig({ ...config, apiEndpoint: e.target.value })}
@@ -127,10 +132,11 @@ const AIConfigModal = ({ isOpen, onClose }: AIConfigModalProps) => {
                   </div>
 
                   <div>
-                    <label className="flex items-center gap-1.5 text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">
+                    <label htmlFor="ai-api-key" className="flex items-center gap-1.5 text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">
                       <Key size={14} /> API 密钥
                     </label>
                     <input
+                      id="ai-api-key"
                       type="password"
                       value={config.apiKey}
                       onChange={(e) => setConfig({ ...config, apiKey: e.target.value })}
@@ -140,10 +146,11 @@ const AIConfigModal = ({ isOpen, onClose }: AIConfigModalProps) => {
                   </div>
 
                   <div>
-                    <label className="flex items-center gap-1.5 text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">
+                    <label htmlFor="ai-model" className="flex items-center gap-1.5 text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">
                       <Cpu size={14} /> 模型名称
                     </label>
                     <input
+                      id="ai-model"
                       type="text"
                       value={config.model}
                       onChange={(e) => setConfig({ ...config, model: e.target.value })}
@@ -153,10 +160,11 @@ const AIConfigModal = ({ isOpen, onClose }: AIConfigModalProps) => {
                   </div>
 
                   <div>
-                    <label className="flex items-center gap-1.5 text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">
+                    <label htmlFor="ai-site-url" className="flex items-center gap-1.5 text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">
                       <Globe size={14} /> 官网地址 <span className="text-neutral-400 font-normal">(可选)</span>
                     </label>
                     <input
+                      id="ai-site-url"
                       type="text"
                       value={config.siteUrl}
                       onChange={(e) => setConfig({ ...config, siteUrl: e.target.value })}
@@ -167,7 +175,7 @@ const AIConfigModal = ({ isOpen, onClose }: AIConfigModalProps) => {
                   </div>
 
                   {saveMessage && (
-                    <div className={`text-sm text-center py-2 rounded-xl flex items-center justify-center gap-1.5 ${saveMessage.includes('成功') ? 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400' : 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400'}`}>
+                    <div role="status" className={`text-sm text-center py-2 rounded-xl flex items-center justify-center gap-1.5 ${saveMessage.includes('成功') ? 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400' : 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400'}`}>
                       {saveMessage.includes('成功') && <Check size={14} />}
                       {saveMessage}
                     </div>

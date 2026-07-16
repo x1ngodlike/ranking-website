@@ -14,7 +14,7 @@ PROJECT_DIR="$(dirname "${SCRIPT_DIR}")"
 CONTAINER_NAME="ranking-website"
 IMAGE_NAME="ranking-website"
 PORT=5936
-ADMIN_PASSWORD=${ADMIN_PASSWORD:-"159357"}
+ADMIN_PASSWORD=${ADMIN_PASSWORD:-""}
 DATA_DIR="${PROJECT_DIR}/data"
 UPLOADS_DIR="${PROJECT_DIR}/uploads"
 AUTO_BACKUP_INTERVAL_MS=${AUTO_BACKUP_INTERVAL_MS:-"900000"}
@@ -64,6 +64,10 @@ get_server_ip() {
 
 # 检查 Docker 是否安装
 check_docker() {
+    if [ -z "${ADMIN_PASSWORD}" ]; then
+        log_error "请先通过环境变量 ADMIN_PASSWORD 设置管理员密码"
+        exit 1
+    fi
     if ! command -v docker &> /dev/null; then
         log_error "Docker 未安装，请先安装 Docker"
         exit 1

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { X, Settings, Lock, LogOut, RefreshCw, Eye, EyeOff, Trash2, Database, Brain, Newspaper, Users, AlertTriangle, ChevronRight, Shield, Layers } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -37,6 +37,7 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
   const [newsCount, setNewsCount] = useState(0);
   const [isRefreshingNews, setIsRefreshingNews] = useState(false);
   const [newsMessage, setNewsMessage] = useState('');
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
 
   const fetchNewsCount = async () => {
     try {
@@ -76,6 +77,16 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
   useEffect(() => {
     if (isOpen && isAdminLoggedIn) fetchNewsCount();
   }, [isOpen, isAdminLoggedIn]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    closeButtonRef.current?.focus();
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
   const handleLogin = async () => {
     setIsLoggingIn(true);
@@ -130,6 +141,9 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
             transition={{ duration: 0.2, ease: [0.34, 1.56, 0.64, 1] }}
             className={`${designVersion === 'v2' ? 'bg-[var(--v2-bg-card)] border border-[var(--v2-border)] rounded-xl' : 'bg-white dark:bg-neutral-900 rounded-2xl'} w-full max-w-lg max-h-[85vh] flex flex-col shadow-2xl`}
             onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="settings-title"
           >
             {/* Header */}
             <div className="flex items-center justify-between p-5 border-b border-neutral-100 dark:border-neutral-800">
@@ -138,7 +152,7 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                   <Settings className="text-primary-500" size={20} />
                 </div>
                 <div className="flex items-center gap-2">
-                  <h2 className={`text-lg font-semibold ${designVersion === 'v2' ? 'font-v2-display text-[var(--v2-text)]' : 'text-neutral-900 dark:text-neutral-100'}`}>设置</h2>
+                  <h2 id="settings-title" className={`text-lg font-semibold ${designVersion === 'v2' ? 'font-v2-display text-[var(--v2-text)]' : 'text-neutral-900 dark:text-neutral-100'}`}>设置</h2>
                   {isAdminLoggedIn && (
                     <span className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 border border-green-200 dark:border-green-900/40">
                       <Shield size={10} />
@@ -148,7 +162,9 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                 </div>
               </div>
               <button
+                ref={closeButtonRef}
                 onClick={onClose}
+                aria-label="关闭设置"
                 className="w-8 h-8 rounded-lg flex items-center justify-center text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
               >
                 <X size={18} />
@@ -162,6 +178,7 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                 <div className="space-y-4">
                   <div className="relative">
                     <input
+                      aria-label="管理员密码"
                       type={showPassword ? 'text' : 'password'}
                       value={password}
                       onChange={(e) => { setPassword(e.target.value); setLoginError(''); }}
@@ -172,6 +189,7 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                     />
                     <button
                       type="button"
+                      aria-label={showPassword ? '隐藏密码' : '显示密码'}
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300"
                     >
