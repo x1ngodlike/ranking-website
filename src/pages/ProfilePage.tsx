@@ -16,7 +16,6 @@ const ProfilePage = () => {
   const users = useAppStore((state) => state.users);
   const bets = useAppStore((state) => state.bets);
   const designVersion = useAppStore((s) => s.designVersion);
-  const isAdminLoggedIn = useAppStore((state) => state.isAdminLoggedIn);
   const [showForm, setShowForm] = useState(false);
 
   const rankings = useMemo(
@@ -207,15 +206,13 @@ const ProfilePage = () => {
           <h2 className={designVersion === 'v2' ? 'font-v2-display font-bold text-2xl md:text-3xl text-[var(--v2-text)]' : 'font-display text-2xl text-blue-600 dark:text-blue-400'}>
             中奖记录
           </h2>
-          {isAdminLoggedIn && (
-            <button
-              onClick={() => setShowForm(true)}
-              className={`flex min-h-11 items-center gap-2 ${designVersion === 'v2' ? 'px-5 py-2.5 rounded-lg bg-profit-500 text-white font-v2-body font-bold text-sm hover:bg-profit-600 active:scale-[0.98] transition-all shadow-sm shadow-profit-500/25' : 'btn-gold'}`}
-            >
-              <Plus size={16} />
-              新增记录
-            </button>
-          )}
+          <button
+            onClick={() => setShowForm(true)}
+            className={`flex min-h-11 items-center gap-2 ${designVersion === 'v2' ? 'px-5 py-2.5 rounded-lg bg-profit-500 text-white font-v2-body font-bold text-sm hover:bg-profit-600 active:scale-[0.98] transition-all shadow-sm shadow-profit-500/25' : 'btn-gold'}`}
+          >
+            <Plus size={16} />
+            新增记录
+          </button>
         </div>
         <BetList bets={userBets} showUser={false} canDelete={true} />
       </motion.div>

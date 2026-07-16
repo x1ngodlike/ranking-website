@@ -81,6 +81,12 @@ export const api = {
       body: JSON.stringify(data),
     }, true),
 
+  createBet: (environment: string, input: CreateBetInput) =>
+    request<{ success: boolean; bet: Bet }>('/api/bets', {
+      method: 'POST',
+      body: JSON.stringify({ environment, ...input }),
+    }),
+
   syncMatches: (environment: string) =>
     request<{ success: boolean; count?: number; liveCount?: number; message?: string }>(
       `/api/matches/sync?environment=${encodeURIComponent(environment)}`,
@@ -113,6 +119,19 @@ export const api = {
       body: JSON.stringify({ oldPassword, newPassword }),
     }, true),
 
+  getFootballConfig: (environment: string) =>
+    request<{ success: boolean; config: FootballConfigStatus }>(
+      `/api/admin/football-config?environment=${encodeURIComponent(environment)}`,
+      {},
+      true
+    ),
+
+  saveFootballConfig: (environment: string, config: { apiKey?: string; competition: string }) =>
+    request<{ success: boolean; config: FootballConfigStatus }>('/api/admin/football-config', {
+      method: 'POST',
+      body: JSON.stringify({ environment, ...config }),
+    }, true),
+
   uploadAvatar: async (file: File | Blob, filename = 'avatar.png'): Promise<string> => {
     const formData = new FormData();
     formData.append('file', file, filename);
@@ -123,7 +142,7 @@ export const api = {
   uploadBetImage: async (file: File | Blob, filename = 'bet.jpg'): Promise<string> => {
     const formData = new FormData();
     formData.append('file', file, filename);
-    const data = await uploadRequest<{ url: string }>('/api/upload/bet', formData, true);
+    const data = await uploadRequest<{ url: string }>('/api/upload/bet', formData);
     return data.url;
   },
 
@@ -201,6 +220,13 @@ export const api = {
       true
     ),
 };
+
+export type CreateBetInput = Pick<Bet, 'userId' | 'date' | 'winAmount' | 'note' | 'imageUrl'>;
+
+export interface FootballConfigStatus {
+  competition: string;
+  apiKeyConfigured: boolean;
+}
 
 export interface AIPrediction {
   matchNumber: number;

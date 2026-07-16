@@ -127,7 +127,7 @@ const ImageUploader = ({ value, onChange, maxSizeMB = 5 }: ImageUploaderProps) =
       <input
         ref={inputRef}
         type="file"
-        accept="image/*"
+        accept="image/jpeg,image/png,image/webp"
         className="hidden"
         onChange={(e) => {
           const file = e.target.files?.[0];
@@ -146,7 +146,7 @@ const ImageUploader = ({ value, onChange, maxSizeMB = 5 }: ImageUploaderProps) =
           支持粘贴图片（Ctrl/Cmd + V）
         </p>
         <p className="text-xs text-neutral-400 dark:text-neutral-500">
-          最大 {maxSizeMB}MB，支持 JPG/PNG/GIF
+          最大 {maxSizeMB}MB，支持 JPG/PNG/WebP
         </p>
       </div>
       {isUploading && (

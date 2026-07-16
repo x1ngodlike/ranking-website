@@ -55,6 +55,7 @@ interface AppState {
   removeUser: (userId: string) => void;
 
   addBet: (bet: Bet) => void;
+  createBet: (bet: Omit<Bet, 'id' | 'createdAt' | 'aiComment' | 'aiRecognizing'>) => Promise<Bet>;
   removeBet: (betId: string) => void;
   updateBet: (betId: string, updates: Partial<Bet>) => void;
 
@@ -286,6 +287,12 @@ const createStoreActions = (set: StoreSet, get: StoreGet) => ({
     saveToServer(get());
   },
 
+  createBet: async (bet) => {
+    const result = await api.createBet(get().environment, bet);
+    set((state: AppState) => ({ bets: [result.bet, ...state.bets] }));
+    return result.bet;
+  },
+
   removeBet: (betId: string) => {
     set((state: AppState) => ({ bets: state.bets.filter((b) => b.id !== betId) }));
     saveToServer(get());
@@ -367,7 +374,6 @@ const createStoreActions = (set: StoreSet, get: StoreGet) => ({
     const newConfig = { ...get().apiConfig, ...config };
     set({ apiConfig: newConfig });
     saveApiConfigToStorage(config);
-    saveToServer(get());
   },
 
   syncMatchesFromApi: async () => {

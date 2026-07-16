@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useAppStore } from '@/store/useAppStore';
-import { X, Settings, RefreshCw, Key, Globe, Clock, Lock, Eye, EyeOff, Info } from 'lucide-react';
+import { X, Settings, RefreshCw, Key, Globe, Clock, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { api } from '@/utils/api';
 
 interface ApiSettingsModalProps {
   isOpen: boolean;
@@ -9,63 +10,73 @@ interface ApiSettingsModalProps {
 }
 
 const ApiSettingsModal = ({ isOpen, onClose }: ApiSettingsModalProps) => {
-  const apiConfig = useAppStore((state) => state.apiConfig);
   const setApiConfig = useAppStore((state) => state.setApiConfig);
   const syncMatchesFromApi = useAppStore((state) => state.syncMatchesFromApi);
   const isRefreshing = useAppStore((state) => state.isRefreshing);
   const lastRefreshTime = useAppStore((state) => state.lastRefreshTime);
   const refreshError = useAppStore((state) => state.refreshError);
   const isAdminLoggedIn = useAppStore((state) => state.isAdminLoggedIn);
-  const adminLogin = useAppStore((state) => state.adminLogin);
+  const environment = useAppStore((state) => state.environment);
 
   const [apiKey, setApiKey] = useState('');
   const [competitionId, setCompetitionId] = useState('2000');
+  const [apiKeyConfigured, setApiKeyConfigured] = useState(false);
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [loginError, setLoginError] = useState('');
-  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [isLoadingConfig, setIsLoadingConfig] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    if (isOpen) {
-      setApiKey(apiConfig.apiKey);
-      setCompetitionId('2000');
-      setSyncMessage(null);
-      setPassword('');
-      setLoginError('');
-    }
-  }, [isOpen, apiConfig.apiKey]);
+    if (!isOpen || !isAdminLoggedIn) return;
+    let active = true;
+    setApiKey('');
+    setSyncMessage(null);
+    setIsLoadingConfig(true);
+    api.getFootballConfig(environment)
+      .then((result) => {
+        if (!active) return;
+        setCompetitionId(result.config.competition || '2000');
+        setApiKeyConfigured(result.config.apiKeyConfigured);
+      })
+      .catch((error) => {
+        if (active) setSyncMessage(error instanceof Error ? error.message : '加载配置失败');
+      })
+      .finally(() => {
+        if (active) setIsLoadingConfig(false);
+      });
+    return () => { active = false; };
+  }, [environment, isAdminLoggedIn, isOpen]);
 
-  const handleLogin = async () => {
-    if (!password.trim()) return;
-    setIsLoggingIn(true);
-    setLoginError('');
-    const success = await adminLogin(password);
-    setIsLoggingIn(false);
-    if (!success) {
-      setLoginError('密码错误');
-    }
-    setPassword('');
-  };
-
-  const saveCurrentSettings = () => {
+  const saveCurrentSettings = async () => {
+    const nextKey = apiKey.trim();
+    const result = await api.saveFootballConfig(environment, {
+      competition: competitionId,
+      ...(nextKey ? { apiKey: nextKey } : {}),
+    });
+    setApiKeyConfigured(result.config.apiKeyConfigured);
     setApiConfig({
-      apiKey: apiKey.trim(),
+      ...(nextKey ? { apiKey: nextKey } : {}),
+      competition: result.config.competition,
       autoRefresh: true,
     });
+    setApiKey('');
   };
 
   const handleSave = async () => {
-    setApiConfig({
-      apiKey: apiKey.trim(),
-      autoRefresh: true,
-    });
-    setSyncMessage('设置已保存');
-    setTimeout(() => setSyncMessage(null), 2000);
+    setIsSaving(true);
+    setSyncMessage(null);
+    try {
+      await saveCurrentSettings();
+      setSyncMessage('设置已保存');
+      setTimeout(() => setSyncMessage(null), 2000);
+    } catch (error) {
+      setSyncMessage(error instanceof Error ? error.message : '保存失败');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleSync = async () => {
-    if (!apiKey.trim()) {
+    if (!apiKeyConfigured && !apiKey.trim()) {
       setSyncMessage('请先输入 API Key');
       setTimeout(() => setSyncMessage(null), 2000);
       return;
@@ -73,17 +84,20 @@ const ApiSettingsModal = ({ isOpen, onClose }: ApiSettingsModalProps) => {
 
     try {
       setSyncMessage(null);
-      saveCurrentSettings();
+      setIsSaving(true);
+      await saveCurrentSettings();
 
       const result = await syncMatchesFromApi();
       setSyncMessage(`同步成功！共 ${result.added} 场比赛`);
       setTimeout(() => setSyncMessage(null), 4000);
-    } catch {
-      // 静默失败
+    } catch (error) {
+      setSyncMessage(error instanceof Error ? error.message : '同步失败');
+    } finally {
+      setIsSaving(false);
     }
   };
 
-  if (!isOpen) return null;
+  if (!isOpen || !isAdminLoggedIn) return null;
 
   return (
     <AnimatePresence>
@@ -101,6 +115,9 @@ const ApiSettingsModal = ({ isOpen, onClose }: ApiSettingsModalProps) => {
           transition={{ type: 'spring', damping: 25, stiffness: 300 }}
           className="w-full max-w-lg bg-white dark:bg-neutral-800 border border-primary/20 rounded-2xl shadow-2xl overflow-hidden"
           onClick={(e) => e.stopPropagation()}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="football-api-settings-title"
         >
           <div className="flex items-center justify-between p-5 border-b border-neutral-200 dark:border-neutral-700">
             <div className="flex items-center gap-3">
@@ -108,7 +125,7 @@ const ApiSettingsModal = ({ isOpen, onClose }: ApiSettingsModalProps) => {
                 <Settings size={20} className="text-primary-400" />
               </div>
               <div>
-                <h2 className="font-display text-xl text-gradient-gold">
+                <h2 id="football-api-settings-title" className="font-display text-xl text-gradient-gold">
                   API 设置
                 </h2>
                 <p className="text-xs text-neutral-500 dark:text-neutral-500">配置足球数据 API 实现实时比分</p>
@@ -116,6 +133,7 @@ const ApiSettingsModal = ({ isOpen, onClose }: ApiSettingsModalProps) => {
             </div>
             <button
               onClick={onClose}
+              aria-label="关闭赛程 API 设置"
               className="p-2 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors text-neutral-500 dark:text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200"
             >
               <X size={20} />
@@ -123,62 +141,19 @@ const ApiSettingsModal = ({ isOpen, onClose }: ApiSettingsModalProps) => {
           </div>
 
           <div className="p-5 space-y-5 max-h-[70vh] overflow-y-auto">
-            {!isAdminLoggedIn && (
-              <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30">
-                <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 mb-3">
-                  <Lock size={18} />
-                  <span className="font-medium">管理员专享</span>
-                </div>
-                <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-3">
-                  API 设置仅限管理员修改，请先登录
-                </p>
-                <div className="flex gap-2">
-                  <div className="relative flex-1">
-                    <input
-                      type={showPassword ? 'text' : 'password'}
-                      value={password}
-                      onChange={(e) => {
-                        setPassword(e.target.value);
-                        setLoginError('');
-                      }}
-                      onKeyDown={(e) => e.key === 'Enter' && !isLoggingIn && handleLogin()}
-                      placeholder="管理员密码"
-                      disabled={isLoggingIn}
-                      className="w-full px-4 py-2.5 pr-10 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-neutral-800 dark:text-neutral-200 text-sm focus:outline-none focus:border-primary-500/50 transition-colors disabled:opacity-50"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300"
-                    >
-                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                    </button>
-                  </div>
-                  <button
-                    onClick={handleLogin}
-                    disabled={isLoggingIn || !password.trim()}
-                    className="px-4 py-2.5 rounded-xl bg-primary-500 text-white hover:bg-primary-600 transition-colors whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-                  >
-                    {isLoggingIn ? '登录中...' : '登录'}
-                  </button>
-                </div>
-                {loginError && (
-                  <p className="text-sm text-red-500 mt-2">{loginError}</p>
-                )}
-              </div>
-            )}
-
             <div>
-              <label className="flex items-center gap-2 text-sm text-neutral-500 dark:text-neutral-400 mb-2">
+              <label htmlFor="football-api-key" className="flex items-center gap-2 text-sm text-neutral-500 dark:text-neutral-400 mb-2">
                 <Key size={16} className="text-primary-400" />
-                API Key {!isAdminLoggedIn && <span className="text-xs text-neutral-400">(仅查看)</span>}
+                API Key
               </label>
               <input
-                type="text"
+                id="football-api-key"
+                type="password"
                 value={apiKey}
                 onChange={(e) => setApiKey(e.target.value)}
-                placeholder="输入你的 football-data.org API Key"
-                disabled={!isAdminLoggedIn}
+                placeholder={apiKeyConfigured ? '已配置；留空表示保持不变' : '输入你的 football-data.org API Key'}
+                disabled={isLoadingConfig || isSaving}
+                autoComplete="off"
                 className="w-full px-4 py-3 rounded-xl bg-neutral-50 dark:bg-neutral-950 border border-primary/20 text-neutral-800 dark:text-neutral-200 text-sm focus:outline-none focus:border-primary/50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
               />
               <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1.5">
@@ -195,14 +170,15 @@ const ApiSettingsModal = ({ isOpen, onClose }: ApiSettingsModalProps) => {
             </div>
 
             <div>
-              <label className="flex items-center gap-2 text-sm text-neutral-500 dark:text-neutral-400 mb-2">
+              <label htmlFor="football-competition" className="flex items-center gap-2 text-sm text-neutral-500 dark:text-neutral-400 mb-2">
                 <Globe size={16} className="text-primary-400" />
-                赛事选择 {!isAdminLoggedIn && <span className="text-xs text-neutral-400">(仅查看)</span>}
+                赛事选择
               </label>
               <select
+                id="football-competition"
                 value={competitionId}
                 onChange={(e) => setCompetitionId(e.target.value)}
-                disabled={!isAdminLoggedIn}
+                disabled={isLoadingConfig || isSaving}
                 className="w-full px-4 py-3 rounded-xl bg-neutral-50 dark:bg-neutral-950 border border-primary/20 text-neutral-800 dark:text-neutral-200 text-sm focus:outline-none focus:border-primary/50 transition-colors appearance-none cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 <option value="2000">国际足联世界杯 (FIFA World Cup)</option>
@@ -239,7 +215,7 @@ const ApiSettingsModal = ({ isOpen, onClose }: ApiSettingsModalProps) => {
             )}
 
             {syncMessage && (
-              <div className="p-3 rounded-xl bg-profit-500/20 border border-profit-500/30 text-profit-400 text-sm text-center">
+              <div role="status" className="p-3 rounded-xl bg-profit-500/20 border border-profit-500/30 text-profit-400 text-sm text-center">
                 {syncMessage}
               </div>
             )}
@@ -254,7 +230,7 @@ const ApiSettingsModal = ({ isOpen, onClose }: ApiSettingsModalProps) => {
           <div className="flex items-center gap-3 p-5 border-t border-neutral-200 dark:border-neutral-700">
             <button
               onClick={handleSync}
-              disabled={!apiKey.trim() || isRefreshing || !isAdminLoggedIn}
+              disabled={(!apiKeyConfigured && !apiKey.trim()) || isRefreshing || isSaving || isLoadingConfig}
               className="flex-1 btn-outline flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <RefreshCw
@@ -265,10 +241,10 @@ const ApiSettingsModal = ({ isOpen, onClose }: ApiSettingsModalProps) => {
             </button>
             <button
               onClick={handleSave}
-              disabled={!isAdminLoggedIn}
+              disabled={isSaving || isLoadingConfig}
               className="flex-1 btn-primary flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              保存设置
+              {isSaving ? '保存中…' : '保存设置'}
             </button>
           </div>
         </motion.div>

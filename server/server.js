@@ -10,7 +10,14 @@ const { initAIConfig, getAIConfig, saveAIConfig } = require('./aiConfig');
 const { recognizeBetImage } = require('./aiRecognition');
 const { initNewsService, fetchAllNews, getAllNews, getNewsForTeams } = require('./footballNews');
 const { predictMatches, getPredictionHistory, getLatestPrediction, updatePredictionResults } = require('./aiPrediction');
-const { ENVIRONMENTS, parseEnvironment, getImageExtension, toPublicData } = require('./validation');
+const {
+  ENVIRONMENTS,
+  parseEnvironment,
+  getImageExtension,
+  toPublicData,
+  validateBetInput,
+  mergeFootballConfig,
+} = require('./validation');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -32,9 +39,12 @@ const BET_IMAGE_MAX_SIZE = 10 * 1024 * 1024;
 const FOOTBALL_API_BASE = 'https://api.football-data.org/v4/';
 const LOGIN_WINDOW_MS = 15 * 60 * 1000;
 const LOGIN_MAX_ATTEMPTS = 5;
+const PUBLIC_WRITE_WINDOW_MS = 15 * 60 * 1000;
+const PUBLIC_WRITE_MAX_ATTEMPTS = 20;
 
 let adminTokens = new Set();
 const loginAttempts = new Map();
+const publicWriteAttempts = new Map();
 
 const generateToken = () => {
   const token = crypto.randomBytes(32).toString('hex');
@@ -50,6 +60,19 @@ const requireAuth = (req, res, next) => {
     return next();
   }
   res.status(401).json({ success: false, message: '未授权，请先登录' });
+};
+
+const limitPublicWrites = (req, res, next) => {
+  const attemptKey = req.ip || req.socket.remoteAddress || 'unknown';
+  const now = Date.now();
+  const recentAttempts = (publicWriteAttempts.get(attemptKey) || []).filter(
+    (timestamp) => now - timestamp < PUBLIC_WRITE_WINDOW_MS
+  );
+  if (recentAttempts.length >= PUBLIC_WRITE_MAX_ATTEMPTS) {
+    return res.status(429).json({ success: false, message: '操作过于频繁，请稍后重试' });
+  }
+  publicWriteAttempts.set(attemptKey, [...recentAttempts, now]);
+  return next();
 };
 
 const ensureDir = (dir) => {
@@ -211,6 +234,30 @@ const writeData = (env, data) => {
   };
   return serializedWrite(getDataFile(env), dataToSave);
 };
+
+const appendBet = (env, input) => enqueueWrite(() => {
+  const data = readData(env);
+  if (!data.users.some((user) => user.id === input.userId)) {
+    const error = new Error('所选用户不存在');
+    error.statusCode = 400;
+    throw error;
+  }
+  const bet = {
+    id: crypto.randomUUID(),
+    userId: input.userId,
+    date: input.date,
+    winAmount: input.winAmount,
+    ...(input.note ? { note: input.note } : {}),
+    ...(input.imageUrl ? { imageUrl: input.imageUrl } : {}),
+    createdAt: new Date().toISOString(),
+  };
+  const nextData = {
+    ...data,
+    bets: [bet, ...(Array.isArray(data.bets) ? data.bets : [])],
+  };
+  writeJsonFile(getDataFile(env), nextData);
+  return bet;
+});
 
 const getWinner = (match) => {
   if (match.status !== 'finished' || match.homeScore === null || match.awayScore === null) return null;
@@ -694,6 +741,23 @@ app.get('/api/data', (req, res) => {
   res.json({ ...toPublicData(data), matches, environment });
 });
 
+app.post('/api/bets', limitPublicWrites, async (req, res) => {
+  try {
+    const { environment = 'production', ...input } = req.body;
+    const validationError = validateBetInput(input);
+    if (validationError) {
+      return res.status(400).json({ success: false, message: validationError });
+    }
+    const bet = await appendBet(environment, input);
+    return res.status(201).json({ success: true, bet });
+  } catch (error) {
+    if (error.statusCode) {
+      return res.status(error.statusCode).json({ success: false, message: error.message });
+    }
+    return handleError(res, error, '新增中奖记录失败');
+  }
+});
+
 app.post('/api/data', requireAuth, async (req, res) => {
   try {
     const { environment = 'production', matches, ...data } = req.body;
@@ -703,7 +767,13 @@ app.post('/api/data', requireAuth, async (req, res) => {
     if (matches !== undefined && !Array.isArray(matches)) {
       return res.status(400).json({ success: false, message: '赛程数据格式无效' });
     }
-    await writeData(environment, data);
+    const existingData = readData(environment);
+    await writeData(environment, {
+      ...data,
+      apiKey: typeof data.apiKey === 'string' && data.apiKey.trim()
+        ? data.apiKey.trim()
+        : existingData.apiKey,
+    });
     if (matches) {
       await writeMatches(environment, matches);
     }
@@ -924,6 +994,42 @@ app.get('/api/admin/session', requireAuth, (req, res) => {
   res.json({ success: true });
 });
 
+app.get('/api/admin/football-config', requireAuth, (req, res) => {
+  const environment = req.query.environment || 'production';
+  const data = readData(environment);
+  res.json({
+    success: true,
+    config: {
+      competition: data.competition || '2000',
+      apiKeyConfigured: Boolean(data.apiKey),
+    },
+  });
+});
+
+app.post('/api/admin/football-config', requireAuth, async (req, res) => {
+  try {
+    const { environment = 'production', apiKey, competition } = req.body;
+    if (apiKey !== undefined && (typeof apiKey !== 'string' || apiKey.length > 512)) {
+      return res.status(400).json({ success: false, message: 'API Key 格式无效' });
+    }
+    if (typeof competition !== 'string' || !/^[A-Za-z0-9_-]{2,20}$/.test(competition)) {
+      return res.status(400).json({ success: false, message: '赛事编号无效' });
+    }
+    const config = await enqueueWrite(() => {
+      const data = readData(environment);
+      const nextData = mergeFootballConfig(data, { apiKey, competition });
+      writeJsonFile(getDataFile(environment), nextData);
+      return {
+        competition: nextData.competition,
+        apiKeyConfigured: Boolean(nextData.apiKey),
+      };
+    });
+    return res.json({ success: true, config });
+  } catch (error) {
+    return handleError(res, error, '保存赛程 API 配置失败');
+  }
+});
+
 app.get('/api/ai-config', requireAuth, (req, res) => {
   const config = getAIConfig();
   res.json({ success: true, config });
@@ -967,7 +1073,7 @@ app.post('/api/upload/avatar', requireAuth, upload.single('file'), (req, res) =>
   res.json({ success: true, url });
 });
 
-app.post('/api/upload/bet', requireAuth, uploadBet.single('file'), (req, res) => {
+app.post('/api/upload/bet', limitPublicWrites, uploadBet.single('file'), (req, res) => {
   if (!req.file) {
     return res.status(400).json({ success: false, message: 'No file uploaded' });
   }

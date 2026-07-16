@@ -53,24 +53,14 @@ const MatchesPage = () => {
   const selectedItemRef = useRef<HTMLButtonElement>(null);
 
   const matches = useAppStore((state) => state.matches);
-  const currentUserId = useAppStore((state) => state.currentUserId);
-  const users = useAppStore((state) => state.users);
-  const apiConfig = useAppStore((state) => state.apiConfig);
   const isRefreshing = useAppStore((state) => state.isRefreshing);
-  const lastRefreshTime = useAppStore((state) => state.lastRefreshTime);
   const refreshError = useAppStore((state) => state.refreshError);
   const syncMatchesFromApi = useAppStore((state) => state.syncMatchesFromApi);
   const setRefreshError = useAppStore((state) => state.setRefreshError);
   const isAdminLoggedIn = useAppStore((state) => state.isAdminLoggedIn);
   const designVersion = useAppStore((s) => s.designVersion);
 
-  const currentUser = useMemo(
-    () => users.find((u) => u.id === currentUserId) || null,
-    [users, currentUserId]
-  );
-
-  const isAdmin = currentUser?.isAdmin || false;
-  const canManageApi = isAdmin || isAdminLoggedIn;
+  const canManageApi = isAdminLoggedIn;
 
   const matchDates = useMemo(() => {
     const dateSet = new Set<string>();
@@ -143,19 +133,13 @@ const MatchesPage = () => {
 
   const handleFullSync = useCallback(async () => {
     if (isRefreshing) return;
-    if (!apiConfig.apiKey) {
-      setShowApiSettings(true);
-      return;
-    }
     try {
       setRefreshError(null);
       await syncMatchesFromApi();
     } catch {
       // 静默失败
     }
-  }, [isRefreshing, apiConfig.apiKey, syncMatchesFromApi, setRefreshError]);
-
-  const hasLiveMatches = matches.some((m) => m.status === 'live');
+  }, [isRefreshing, syncMatchesFromApi, setRefreshError]);
 
   const tabs = [
     { key: 'all', label: '全部', icon: CalendarDays },
@@ -475,30 +459,6 @@ const MatchesPage = () => {
       </AnimatePresence>
 
       <AnimatePresence>
-        {apiConfig.apiKey && (
-          <motion.div
-            initial={{ opacity: 0, y: -10, height: 0 }}
-            animate={{ opacity: 1, y: 0, height: 'auto' }}
-            exit={{ opacity: 0, y: -10, height: 0 }}
-            className="flex items-center justify-center gap-2 mb-6 text-sm"
-          >
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-profit-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-profit-500" />
-            </span>
-            <span className="text-profit-500">
-              自动同步中（{hasLiveMatches ? '比赛中，每1分钟' : '无比赛，每4小时'}）
-            </span>
-            {lastRefreshTime && (
-              <span className="text-neutral-500 dark:text-neutral-400">
-                · 上次: {new Date(lastRefreshTime).toLocaleTimeString('zh-CN')}
-              </span>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
         {refreshError && (
           <motion.div
             initial={{ opacity: 0, y: -10, height: 0 }}
@@ -514,38 +474,6 @@ const MatchesPage = () => {
         )}
       </AnimatePresence>
 
-      {!apiConfig.apiKey && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          className={designVersion === 'v2'
-            ? 'rounded-xl p-5 border border-[var(--v2-border)] bg-[var(--v2-bg-card)] mb-8'
-            : 'card mb-8 border-primary/20 bg-primary-500/5'
-          }
-        >
-          <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
-            <div className={designVersion === 'v2' ? 'w-12 h-12 rounded-lg bg-v2-primary-500/10 flex items-center justify-center flex-shrink-0' : 'w-12 h-12 rounded-full bg-primary-500/20 flex items-center justify-center flex-shrink-0'}>
-              <Settings size={24} className={designVersion === 'v2' ? 'text-v2-primary-500' : 'text-primary-500'} />
-            </div>
-            <div className="flex-1">
-              <h3 className={designVersion === 'v2' ? 'font-v2-display text-lg text-[var(--v2-text)] mb-1 font-semibold' : 'font-display text-lg text-primary-500 mb-1'}>
-                配置 API 实现实时比分
-              </h3>
-              <p className={designVersion === 'v2' ? 'text-sm font-v2-body text-[var(--v2-text-secondary)]' : 'text-sm text-neutral-600 dark:text-neutral-400'}>
-                接入 football-data.org 免费 API，自动同步比赛赛程和实时比分。免费版每天 100 次请求，完全够用。
-              </p>
-            </div>
-            <button
-              onClick={() => setShowApiSettings(true)}
-              className="btn-primary flex items-center gap-2 flex-shrink-0"
-            >
-              去配置
-            </button>
-          </div>
-        </motion.div>
-      )}
-
       <AnimatePresence mode="wait">
         {viewMode === 'timeline' ? (
           filteredMatches.length > 0 ? (
@@ -558,7 +486,7 @@ const MatchesPage = () => {
               className="space-y-4"
             >
               {filteredMatches.map((match) => (
-                <MatchCard key={match.id} match={match} isAdmin={isAdmin} />
+                <MatchCard key={match.id} match={match} isAdmin={isAdminLoggedIn} />
               ))}
             </motion.div>
           ) : (
@@ -599,10 +527,12 @@ const MatchesPage = () => {
         )}
       </AnimatePresence>
 
-      <ApiSettingsModal
-        isOpen={showApiSettings}
-        onClose={() => setShowApiSettings(false)}
-      />
+      {isAdminLoggedIn && (
+        <ApiSettingsModal
+          isOpen={showApiSettings}
+          onClose={() => setShowApiSettings(false)}
+        />
+      )}
     </div>
   );
 };

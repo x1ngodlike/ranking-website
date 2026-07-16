@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useAppStore } from '@/store/useAppStore';
-import { generateId } from '@/utils/helpers';
 import { api } from '@/utils/api';
 import { X, Calendar } from 'lucide-react';
 import Avatar from '@/components/Avatar';
@@ -15,8 +14,9 @@ interface BetFormProps {
 
 const BetForm = ({ onClose, preSelectedUserId, bet }: BetFormProps) => {
   const users = useAppStore((state) => state.users);
-  const addBet = useAppStore((state) => state.addBet);
+  const createBet = useAppStore((state) => state.createBet);
   const updateBet = useAppStore((state) => state.updateBet);
+  const isAdminLoggedIn = useAppStore((state) => state.isAdminLoggedIn);
   const designVersion = useAppStore((s) => s.designVersion);
 
   const isEditMode = !!bet;
@@ -26,6 +26,8 @@ const BetForm = ({ onClose, preSelectedUserId, bet }: BetFormProps) => {
   const [winAmount, setWinAmount] = useState(bet?.winAmount?.toString() || '');
   const [note, setNote] = useState(bet?.note || '');
   const [imageUrl, setImageUrl] = useState<string | undefined>(bet?.imageUrl);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
 
   useEffect(() => {
     if (isEditMode && bet) return;
@@ -41,37 +43,41 @@ const BetForm = ({ onClose, preSelectedUserId, bet }: BetFormProps) => {
     if (!selectedUserId || !winAmount) return;
 
     const winNum = parseFloat(winAmount);
+    if (!Number.isFinite(winNum) || winNum < 0) {
+      setSubmitError('请输入有效的中奖金额');
+      return;
+    }
+    setIsSubmitting(true);
+    setSubmitError('');
 
-    if (isEditMode && bet) {
-      updateBet(bet.id, {
+    try {
+      if (isEditMode && bet) {
+        updateBet(bet.id, {
+          userId: selectedUserId,
+          date,
+          winAmount: winNum,
+          note: note || undefined,
+          imageUrl: imageUrl || undefined,
+        });
+        onClose?.();
+        return;
+      }
+
+      const newBet = await createBet({
         userId: selectedUserId,
         date,
         winAmount: winNum,
         note: note || undefined,
         imageUrl: imageUrl || undefined,
       });
-    } else {
-      const newBet: Bet = {
-        id: generateId(),
-        userId: selectedUserId,
-        date,
-        winAmount: winNum,
-        note: note || undefined,
-        imageUrl: imageUrl || undefined,
-        createdAt: new Date().toISOString(),
-        // 如果有图片且中奖，先标记为识别中
-        aiRecognizing: imageUrl && winNum > 0 ? true : undefined,
-      };
-      addBet(newBet);
 
-      // 先关闭表单，让列表显示"AI识别中..."
       setWinAmount('');
       setNote('');
       setImageUrl(undefined);
       onClose?.();
 
-      // 新增记录成功后，如果有图片则自动AI识别
-      if (imageUrl && winNum > 0) {
+      // AI 调用会产生外部成本，仅已登录管理员自动触发。
+      if (isAdminLoggedIn && imageUrl && winNum > 0) {
         try {
           const res = await api.recognizeBetImage(imageUrl, winNum);
           if (res.success && res.result?.comment) {
@@ -88,6 +94,10 @@ const BetForm = ({ onClose, preSelectedUserId, bet }: BetFormProps) => {
           updateBet(newBet.id, { aiRecognizing: undefined });
         }
       }
+    } catch (error) {
+      setSubmitError(error instanceof Error ? error.message : '新增记录失败，请稍后重试');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -200,6 +210,7 @@ const BetForm = ({ onClose, preSelectedUserId, bet }: BetFormProps) => {
             value={note}
             onChange={(e) => setNote(e.target.value)}
             placeholder="例如：3串1命中"
+            maxLength={500}
             className={designVersion === 'v2' ? 'w-full px-4 py-2.5 rounded-lg border border-[var(--v2-border)] bg-[var(--v2-bg)] text-[var(--v2-text)] text-sm font-v2-body focus:border-v2-primary-500 focus:outline-none transition-colors' : 'w-full px-4 py-3 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-neutral-800 dark:text-neutral-200 focus:outline-none focus:border-primary-500/50 transition-colors'}
           />
         </div>
@@ -211,12 +222,16 @@ const BetForm = ({ onClose, preSelectedUserId, bet }: BetFormProps) => {
           <ImageUploader value={imageUrl} onChange={setImageUrl} />
         </div>
 
+        {submitError && (
+          <p role="alert" className="text-sm text-red-500">{submitError}</p>
+        )}
+
         <button
           type="submit"
-          disabled={!selectedUserId || !winAmount}
+          disabled={!selectedUserId || !winAmount || isSubmitting}
           className={`w-full py-3 disabled:opacity-50 disabled:cursor-not-allowed ${designVersion === 'v2' ? 'rounded-lg bg-v2-primary-500 text-white font-v2-body font-semibold hover:bg-v2-primary-600 transition-colors' : 'btn-gold'}`}
         >
-          {isEditMode ? '保存修改' : '确认记录'}
+          {isSubmitting ? '提交中…' : isEditMode ? '保存修改' : '确认记录'}
         </button>
       </form>
     </div>
