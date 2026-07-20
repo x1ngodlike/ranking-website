@@ -913,8 +913,8 @@ app.get('/api/badges/:userId', (req, res) => {
 
   // 检查特殊日期是否有中奖
   const milestoneDates = {
-    '2026-06-15': dailyStats['2026-06-15']?.wins > 0,
     '2026-07-19': dailyStats['2026-07-19']?.wins > 0,
+    '2026-07-20': dailyStats['2026-07-20']?.wins > 0,
   };
 
   // 计算已获得的徽章
